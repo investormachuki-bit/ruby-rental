@@ -1,21 +1,71 @@
+import AppShell from "@/components/layout/AppShell";
+
 export default function HomePage() {
   return (
-    <main className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="text-center px-6">
-        <h1 className="text-4xl font-bold tracking-tight text-gray-900">
-          Ruby Rental
-        </h1>
+    <AppShell>
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">
+            Dashboard
+          </h1>
 
-        <p className="mt-3 text-gray-600">
-          Simple Rental Management for Every Landlord.
-        </p>
+          <p className="mt-1 text-gray-600">
+            Welcome to Ruby Rental.
+          </p>
+        </div>
 
-        <div className="mt-10 inline-flex items-center rounded-xl border bg-white px-5 py-3 shadow-sm">
-          <span className="text-sm font-medium text-green-600">
-            🚀 Deployment Successful
-          </span>
+        <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
+          <div className="rounded-xl bg-white p-6 shadow-sm border">
+            <p className="text-sm text-gray-500">
+              Monthly Rent
+            </p>
+
+            <h2 className="mt-2 text-3xl font-bold">
+              KSh 0
+            </h2>
+          </div>
+
+          <div className="rounded-xl bg-white p-6 shadow-sm border">
+            <p className="text-sm text-gray-500">
+              Collected
+            </p>
+
+            <h2 className="mt-2 text-3xl font-bold">
+              KSh 0
+            </h2>
+          </div>
+
+          <div className="rounded-xl bg-white p-6 shadow-sm border">
+            <p className="text-sm text-gray-500">
+              Outstanding
+            </p>
+
+            <h2 className="mt-2 text-3xl font-bold text-red-600">
+              KSh 0
+            </h2>
+          </div>
+
+          <div className="rounded-xl bg-white p-6 shadow-sm border">
+            <p className="text-sm text-gray-500">
+              Vacant Units
+            </p>
+
+            <h2 className="mt-2 text-3xl font-bold">
+              0
+            </h2>
+          </div>
+        </div>
+
+        <div className="rounded-xl border bg-white p-6 shadow-sm">
+          <h3 className="text-lg font-semibold">
+            Recent Activity
+          </h3>
+
+          <p className="mt-4 text-gray-500">
+            No activity available.
+          </p>
         </div>
       </div>
-    </main>
+    </AppShell>
   );
 }
