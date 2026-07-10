@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import Sidebar from "./Sidebar";
 import Topbar from "./Topbar";
 
@@ -6,26 +9,30 @@ type AppShellProps = {
 };
 
 export default function AppShell({ children }: AppShellProps) {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
   return (
     <div className="min-h-screen bg-slate-100">
-      {/* Desktop */}
-      <div className="hidden md:flex">
-        <Sidebar />
+      {/* Mobile Overlay */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black/50 md:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
 
-        <div className="flex flex-1 flex-col">
-          <Topbar />
+      <Sidebar
+        sidebarOpen={sidebarOpen}
+        setSidebarOpen={setSidebarOpen}
+      />
 
-          <main className="flex-1 p-6">
-            {children}
-          </main>
-        </div>
-      </div>
+      <div className="md:ml-64">
+        <Topbar
+          sidebarOpen={sidebarOpen}
+          setSidebarOpen={setSidebarOpen}
+        />
 
-      {/* Mobile */}
-      <div className="md:hidden">
-        <Topbar />
-
-        <main className="p-4">
+        <main className="p-4 md:p-6">
           {children}
         </main>
       </div>
