@@ -1,47 +1,81 @@
+"use client";
+
 import Logo from "./Logo";
 
-export default function Sidebar() {
+type SidebarProps = {
+  sidebarOpen: boolean;
+  setSidebarOpen: (open: boolean) => void;
+};
+
+export default function Sidebar({
+  sidebarOpen,
+  setSidebarOpen,
+}: SidebarProps) {
+  const menuItems = [
+    "Dashboard",
+    "Properties",
+    "Units",
+    "Tenants",
+    "Rent",
+    "Expenses",
+    "Reports",
+    "Settings",
+  ];
+
   return (
-    <aside className="w-64 min-h-screen bg-white border-r border-gray-200">
-      <div className="p-6 border-b border-gray-200">
-        <Logo />
-      </div>
+    <>
+      {/* Desktop Sidebar */}
+      <aside className="fixed left-0 top-0 hidden h-screen w-64 border-r border-gray-200 bg-white md:flex md:flex-col">
+        <div className="border-b border-gray-200 p-6">
+          <Logo />
+        </div>
 
-      <nav className="p-4">
-        <ul className="space-y-2">
-          <li className="rounded-lg bg-gray-100 px-4 py-3 font-medium text-gray-900">
-            Dashboard
-          </li>
+        <nav className="flex-1 p-4">
+          <ul className="space-y-2">
+            {menuItems.map((item, index) => (
+              <li
+                key={item}
+                className={`cursor-pointer rounded-lg px-4 py-3 transition ${
+                  index === 0
+                    ? "bg-gray-100 font-semibold text-gray-900"
+                    : "text-gray-600 hover:bg-gray-100"
+                }`}
+              >
+                {item}
+              </li>
+            ))}
+          </ul>
+        </nav>
+      </aside>
 
-          <li className="rounded-lg px-4 py-3 text-gray-600 hover:bg-gray-100">
-            Properties
-          </li>
+      {/* Mobile Sidebar */}
+      <aside
+        className={`fixed left-0 top-0 z-50 h-screen w-64 transform bg-white shadow-xl transition-transform duration-300 md:hidden ${
+          sidebarOpen ? "translate-x-0" : "-translate-x-full"
+        }`}
+      >
+        <div className="border-b border-gray-200 p-6">
+          <Logo />
+        </div>
 
-          <li className="rounded-lg px-4 py-3 text-gray-600 hover:bg-gray-100">
-            Units
-          </li>
-
-          <li className="rounded-lg px-4 py-3 text-gray-600 hover:bg-gray-100">
-            Tenants
-          </li>
-
-          <li className="rounded-lg px-4 py-3 text-gray-600 hover:bg-gray-100">
-            Rent
-          </li>
-
-          <li className="rounded-lg px-4 py-3 text-gray-600 hover:bg-gray-100">
-            Expenses
-          </li>
-
-          <li className="rounded-lg px-4 py-3 text-gray-600 hover:bg-gray-100">
-            Reports
-          </li>
-
-          <li className="rounded-lg px-4 py-3 text-gray-600 hover:bg-gray-100">
-            Settings
-          </li>
-        </ul>
-      </nav>
-    </aside>
+        <nav className="p-4">
+          <ul className="space-y-2">
+            {menuItems.map((item, index) => (
+              <li
+                key={item}
+                onClick={() => setSidebarOpen(false)}
+                className={`cursor-pointer rounded-lg px-4 py-3 transition ${
+                  index === 0
+                    ? "bg-gray-100 font-semibold text-gray-900"
+                    : "text-gray-600 hover:bg-gray-100"
+                }`}
+              >
+                {item}
+              </li>
+            ))}
+          </ul>
+        </nav>
+      </aside>
+    </>
   );
 }
