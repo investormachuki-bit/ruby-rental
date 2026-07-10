@@ -14,54 +14,56 @@ export default function HomePage() {
           </p>
         </div>
 
-        <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
-          <div className="rounded-xl bg-white p-6 shadow-sm border">
+        {/* Dashboard Cards */}
+        <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+          <div className="rounded-xl border bg-white p-4 shadow-sm">
             <p className="text-sm text-gray-500">
               Monthly Rent
             </p>
 
-            <h2 className="mt-2 text-3xl font-bold">
+            <h2 className="mt-1 text-2xl font-bold">
               KSh 0
             </h2>
           </div>
 
-          <div className="rounded-xl bg-white p-6 shadow-sm border">
+          <div className="rounded-xl border bg-white p-4 shadow-sm">
             <p className="text-sm text-gray-500">
               Collected
             </p>
 
-            <h2 className="mt-2 text-3xl font-bold">
+            <h2 className="mt-1 text-2xl font-bold">
               KSh 0
             </h2>
           </div>
 
-          <div className="rounded-xl bg-white p-6 shadow-sm border">
+          <div className="rounded-xl border bg-white p-4 shadow-sm">
             <p className="text-sm text-gray-500">
               Outstanding
             </p>
 
-            <h2 className="mt-2 text-3xl font-bold text-red-600">
+            <h2 className="mt-1 text-2xl font-bold text-red-600">
               KSh 0
             </h2>
           </div>
 
-          <div className="rounded-xl bg-white p-6 shadow-sm border">
+          <div className="rounded-xl border bg-white p-4 shadow-sm">
             <p className="text-sm text-gray-500">
               Vacant Units
             </p>
 
-            <h2 className="mt-2 text-3xl font-bold">
+            <h2 className="mt-1 text-2xl font-bold">
               0
             </h2>
           </div>
         </div>
 
-        <div className="rounded-xl border bg-white p-6 shadow-sm">
-          <h3 className="text-lg font-semibold">
+        {/* Recent Activity */}
+        <div className="rounded-xl border bg-white p-5 shadow-sm">
+          <h3 className="text-lg font-semibold text-gray-900">
             Recent Activity
           </h3>
 
-          <p className="mt-4 text-gray-500">
+          <p className="mt-3 text-gray-500">
             No activity available.
           </p>
         </div>
