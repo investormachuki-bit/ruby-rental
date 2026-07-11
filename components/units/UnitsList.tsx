@@ -2,15 +2,7 @@
 
 import { useMemo, useState } from "react";
 import UnitCard from "./UnitCard";
-
-type Unit = {
-  id: string;
-  unit_number: string;
-  floor_name: string | null;
-  monthly_rent: number;
-  deposit: number;
-  status: string;
-};
+import { Unit } from "@/types/unit";
 
 type Props = {
   units: Unit[];
@@ -21,32 +13,112 @@ export default function UnitsList({
 }: Props) {
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("All");
+  const [floor, setFloor] = useState("All");
+  const [sort, setSort] = useState("Unit Number");
+
+  const floors = [
+    "All",
+    ...Array.from(
+      new Set(
+        units
+          .map((u) => u.floor_name)
+          .filter(Boolean)
+      )
+    ),
+  ];
 
   const filteredUnits = useMemo(() => {
-    return units.filter((unit) => {
-      const matchesSearch =
+    let results = [...units];
+
+    // Search
+    results = results.filter((unit) => {
+      return (
         unit.unit_number
           .toLowerCase()
           .includes(search.toLowerCase()) ||
         (unit.floor_name ?? "")
           .toLowerCase()
-          .includes(search.toLowerCase());
-
-      const matchesStatus =
-        status === "All"
-          ? true
-          : unit.status === status;
-
-      return matchesSearch && matchesStatus;
+          .includes(search.toLowerCase())
+      );
     });
-  }, [units, search, status]);
+
+    // Status
+    if (status !== "All") {
+      results = results.filter(
+        (u) => u.status === status
+      );
+    }
+
+    // Floor
+    if (floor !== "All") {
+      results = results.filter(
+        (u) => u.floor_name === floor
+      );
+    }
+
+    // Sorting
+    switch (sort) {
+      case "Rent Low → High":
+        results.sort(
+          (a, b) =>
+            a.monthly_rent - b.monthly_rent
+        );
+        break;
+
+      case "Rent High → Low":
+        results.sort(
+          (a, b) =>
+            b.monthly_rent - a.monthly_rent
+        );
+        break;
+
+      case "Newest":
+        results.sort(
+          (a, b) =>
+            new Date(
+              b.created_at
+            ).getTime() -
+            new Date(
+              a.created_at
+            ).getTime()
+        );
+        break;
+
+      case "Oldest":
+        results.sort(
+          (a, b) =>
+            new Date(
+              a.created_at
+            ).getTime() -
+            new Date(
+              b.created_at
+            ).getTime()
+        );
+        break;
+
+      default:
+        results.sort(
+          (a, b) =>
+            a.unit_sequence -
+            b.unit_sequence
+        );
+    }
+
+    return results;
+  }, [
+    units,
+    search,
+    status,
+    floor,
+    sort,
+  ]);
 
   return (
     <div className="space-y-6">
 
       {/* Header */}
 
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+      <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
 
         <div>
 
@@ -55,38 +127,87 @@ export default function UnitsList({
           </h2>
 
           <p className="text-gray-500">
-            {filteredUnits.length} unit(s)
+            Showing{" "}
+            {filteredUnits.length} of{" "}
+            {units.length} units
           </p>
 
         </div>
 
-        <div className="flex flex-col gap-3 sm:flex-row">
+      </div>
 
-          <input
-            type="text"
-            placeholder="Search unit..."
-            value={search}
-            onChange={(e) =>
-              setSearch(e.target.value)
-            }
-            className="rounded-xl border px-4 py-3 outline-none focus:border-black"
-          />
+      {/* Filters */}
 
-          <select
-            value={status}
-            onChange={(e) =>
-              setStatus(e.target.value)
-            }
-            className="rounded-xl border px-4 py-3 outline-none focus:border-black"
-          >
-            <option>All</option>
-            <option>Vacant</option>
-            <option>Occupied</option>
-            <option>Reserved</option>
-            <option>Maintenance</option>
-          </select>
+      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
 
-        </div>
+        <input
+          type="text"
+          placeholder="🔍 Search unit..."
+          value={search}
+          onChange={(e) =>
+            setSearch(e.target.value)
+          }
+          className="rounded-xl border px-4 py-3 outline-none focus:border-black"
+        />
+
+        <select
+          value={status}
+          onChange={(e) =>
+            setStatus(e.target.value)
+          }
+          className="rounded-xl border px-4 py-3"
+        >
+          <option>All</option>
+          <option>Vacant</option>
+          <option>Occupied</option>
+          <option>Reserved</option>
+          <option>Maintenance</option>
+        </select>
+
+        <select
+          value={floor}
+          onChange={(e) =>
+            setFloor(e.target.value)
+          }
+          className="rounded-xl border px-4 py-3"
+        >
+          {floors.map((floorName) => (
+            <option
+              key={floorName}
+              value={floorName}
+            >
+              {floorName}
+            </option>
+          ))}
+        </select>
+
+        <select
+          value={sort}
+          onChange={(e) =>
+            setSort(e.target.value)
+          }
+          className="rounded-xl border px-4 py-3"
+        >
+          <option>
+            Unit Number
+          </option>
+
+          <option>
+            Rent Low → High
+          </option>
+
+          <option>
+            Rent High → Low
+          </option>
+
+          <option>
+            Newest
+          </option>
+
+          <option>
+            Oldest
+          </option>
+        </select>
 
       </div>
 
@@ -100,18 +221,20 @@ export default function UnitsList({
           </h3>
 
           <p className="mt-2 text-gray-500">
-            Try changing your search or filters.
+            Try changing your filters.
           </p>
 
         </div>
       ) : (
         <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+
           {filteredUnits.map((unit) => (
             <UnitCard
               key={unit.id}
               unit={unit}
             />
           ))}
+
         </div>
       )}
 
