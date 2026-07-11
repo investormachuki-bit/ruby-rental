@@ -1,13 +1,7 @@
 "use client";
 
-type Unit = {
-  id: string;
-  unit_number: string;
-  floor_name: string | null;
-  monthly_rent: number;
-  deposit: number;
-  status: string;
-};
+import Link from "next/link";
+import { Unit } from "@/types/unit";
 
 type Props = {
   unit: Unit;
@@ -105,12 +99,15 @@ export default function UnitCard({
       <div className="grid grid-cols-2 gap-3 border-t bg-gray-50 p-4">
 
         <button className="rounded-lg bg-black py-3 font-medium text-white transition hover:bg-gray-800">
-          👤 Assign Tenant
+          👤 Assign Occupant
         </button>
 
-        <button className="rounded-lg border py-3 font-medium transition hover:bg-gray-100">
+        <Link
+          href={`/units/${unit.id}`}
+          className="rounded-lg border py-3 text-center font-medium transition hover:bg-gray-100"
+        >
           📄 View Details
-        </button>
+        </Link>
 
       </div>
 
