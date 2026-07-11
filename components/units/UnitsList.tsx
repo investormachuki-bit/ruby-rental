@@ -16,13 +16,15 @@ export default function UnitsList({
   const [floor, setFloor] = useState("All");
   const [sort, setSort] = useState("Unit Number");
 
-  const floors = [
+  const floors: string[] = [
     "All",
     ...Array.from(
       new Set(
         units
-          .map((u) => u.floor_name)
-          .filter(Boolean)
+          .map((u) => u.floor_name ?? "")
+          .filter(
+            (name): name is string => name !== ""
+          )
       )
     ),
   ];
@@ -121,7 +123,6 @@ export default function UnitsList({
       <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
 
         <div>
-
           <h2 className="text-2xl font-bold">
             Units
           </h2>
@@ -131,7 +132,6 @@ export default function UnitsList({
             {filteredUnits.length} of{" "}
             {units.length} units
           </p>
-
         </div>
 
       </div>
@@ -157,11 +157,11 @@ export default function UnitsList({
           }
           className="rounded-xl border px-4 py-3"
         >
-          <option>All</option>
-          <option>Vacant</option>
-          <option>Occupied</option>
-          <option>Reserved</option>
-          <option>Maintenance</option>
+          <option value="All">All Statuses</option>
+          <option value="Vacant">Vacant</option>
+          <option value="Occupied">Occupied</option>
+          <option value="Reserved">Reserved</option>
+          <option value="Maintenance">Maintenance</option>
         </select>
 
         <select
@@ -188,30 +188,30 @@ export default function UnitsList({
           }
           className="rounded-xl border px-4 py-3"
         >
-          <option>
+          <option value="Unit Number">
             Unit Number
           </option>
 
-          <option>
+          <option value="Rent Low → High">
             Rent Low → High
           </option>
 
-          <option>
+          <option value="Rent High → Low">
             Rent High → Low
           </option>
 
-          <option>
+          <option value="Newest">
             Newest
           </option>
 
-          <option>
+          <option value="Oldest">
             Oldest
           </option>
         </select>
 
       </div>
 
-      {/* Empty */}
+      {/* Units */}
 
       {filteredUnits.length === 0 ? (
         <div className="rounded-2xl border bg-white p-10 text-center shadow-sm">
