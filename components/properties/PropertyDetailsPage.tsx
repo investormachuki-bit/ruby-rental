@@ -1,8 +1,15 @@
 "use client";
 
 import { useEffect, useState } from "react";
+
+import Breadcrumb from "@/components/common/Breadcrumb";
+import KpiCard from "@/components/common/KpiCard";
 import BulkUnitGenerator from "@/components/units/BulkUnitGenerator";
 import UnitsList from "@/components/units/UnitsList";
+
+import { Property } from "@/types/property";
+import { Unit } from "@/types/unit";
+
 import { getPropertyDetails } from "@/services/properties/getPropertyDetails";
 import { getPropertyUnitStats } from "@/services/units/getPropertyUnitStats";
 import { getPropertyUnits } from "@/services/units/getPropertyUnits";
@@ -14,7 +21,11 @@ type Props = {
 export default function PropertyDetailsPage({
   propertyId,
 }: Props) {
-  const [property, setProperty] = useState<any>(null);
+  const [property, setProperty] =
+    useState<Property | null>(null);
+
+  const [units, setUnits] =
+    useState<Unit[]>([]);
 
   const [stats, setStats] = useState({
     totalUnits: 0,
@@ -23,9 +34,8 @@ export default function PropertyDetailsPage({
     monthlyIncome: 0,
   });
 
-  const [units, setUnits] = useState<any[]>([]);
-
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] =
+    useState(true);
 
   const [showBulkGenerator, setShowBulkGenerator] =
     useState(false);
@@ -74,13 +84,39 @@ export default function PropertyDetailsPage({
     );
   }
 
+  const occupancy =
+    stats.totalUnits === 0
+      ? 0
+      : Math.round(
+          (stats.occupied /
+            stats.totalUnits) *
+            100
+        );
+
   return (
     <>
       <main className="space-y-8 p-6">
 
+        <Breadcrumb
+          items={[
+            {
+              label: "Dashboard",
+              href: "/",
+            },
+            {
+              label: "Properties",
+              href: "/properties",
+            },
+            {
+              label: property.name,
+            },
+          ]}
+        />
+
         {/* Header */}
 
         <div>
+
           <h1 className="text-4xl font-bold">
             {property.name}
           </h1>
@@ -88,51 +124,80 @@ export default function PropertyDetailsPage({
           <p className="mt-2 text-lg text-gray-500">
             {property.property_type}
           </p>
+
         </div>
 
-        {/* Statistics */}
+        {/* KPI Cards */}
 
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
 
-          <div className="rounded-xl border bg-white p-5 shadow-sm">
-            <p className="text-gray-500">
-              Total Units
-            </p>
+          <KpiCard
+            title="Total Units"
+            value={stats.totalUnits}
+            icon="🏠"
+            color="blue"
+          />
 
-            <h2 className="mt-2 text-4xl font-bold">
-              {stats.totalUnits}
+          <KpiCard
+            title="Occupied"
+            value={stats.occupied}
+            icon="👥"
+            color="green"
+          />
+
+          <KpiCard
+            title="Vacant"
+            value={stats.vacant}
+            icon="🚪"
+            color="orange"
+          />
+
+          <KpiCard
+            title="Expected Monthly Rent"
+            value={`KSh ${stats.monthlyIncome.toLocaleString()}`}
+            icon="💰"
+            color="purple"
+          />
+
+        </div>
+
+        {/* Occupancy */}
+
+        <div className="rounded-2xl border bg-white p-6 shadow-sm">
+
+          <div className="mb-4 flex items-center justify-between">
+
+            <h2 className="text-xl font-semibold">
+              Occupancy
             </h2>
+
+            <span className="text-lg font-bold">
+              {occupancy}%
+            </span>
+
           </div>
 
-          <div className="rounded-xl border bg-white p-5 shadow-sm">
-            <p className="text-gray-500">
-              Occupied
-            </p>
+          <div className="h-3 overflow-hidden rounded-full bg-gray-200">
 
-            <h2 className="mt-2 text-4xl font-bold text-green-600">
-              {stats.occupied}
-            </h2>
+            <div
+              className="h-full rounded-full bg-green-500 transition-all"
+              style={{
+                width: `${occupancy}%`,
+              }}
+            />
+
           </div>
 
-          <div className="rounded-xl border bg-white p-5 shadow-sm">
-            <p className="text-gray-500">
-              Vacant
-            </p>
+          <div className="mt-4 flex justify-between text-sm text-gray-600">
 
-            <h2 className="mt-2 text-4xl font-bold text-orange-500">
-              {stats.vacant}
-            </h2>
-          </div>
+            <span>
+              {stats.occupied} Occupied
+            </span>
 
-          <div className="rounded-xl border bg-white p-5 shadow-sm">
-            <p className="text-gray-500">
-              Monthly Income
-            </p>
+            <span>
+              {stats.vacant} Vacant
+            </span>
 
-            <h2 className="mt-2 text-3xl font-bold">
-              KSh{" "}
-              {stats.monthlyIncome.toLocaleString()}
-            </h2>
           </div>
 
         </div>
@@ -141,7 +206,7 @@ export default function PropertyDetailsPage({
 
         <div className="flex flex-wrap gap-4">
 
-          <button className="rounded-xl bg-black px-6 py-3 font-semibold text-white hover:bg-gray-800">
+          <button className="rounded-xl bg-black px-6 py-3 font-semibold text-white transition hover:bg-gray-800">
             + Add Unit
           </button>
 
@@ -149,7 +214,7 @@ export default function PropertyDetailsPage({
             onClick={() =>
               setShowBulkGenerator(true)
             }
-            className="rounded-xl border px-6 py-3 font-semibold hover:bg-gray-100"
+            className="rounded-xl border px-6 py-3 font-semibold transition hover:bg-gray-100"
           >
             ⚡ Bulk Generate Units
           </button>
@@ -188,6 +253,7 @@ export default function PropertyDetailsPage({
 
         </div>
       )}
+
     </>
   );
 }
