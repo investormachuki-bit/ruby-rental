@@ -14,7 +14,7 @@ export type BulkUnitInput = {
 export async function bulkCreateUnits(
   input: BulkUnitInput
 ) {
-  // Get logged in user
+  // Get logged-in user
   const {
     data: { session },
   } = await supabase.auth.getSession();
@@ -23,7 +23,7 @@ export async function bulkCreateUnits(
     throw new Error("You are not logged in.");
   }
 
-  // Get profile
+  // Get user's profile
   const profile = await getProfile(session.user.id);
 
   if (!profile) {
@@ -38,6 +38,7 @@ export async function bulkCreateUnits(
       property_id: input.propertyId,
 
       unit_number: `${input.prefix}${i}`,
+      unit_sequence: i,
       floor_name: input.floorName ?? null,
 
       monthly_rent: input.monthlyRent,
