@@ -1,5 +1,8 @@
 "use client";
 
+import { useMemo, useState } from "react";
+import UnitCard from "./UnitCard";
+
 type Unit = {
   id: string;
   unit_number: string;
@@ -16,94 +19,101 @@ type Props = {
 export default function UnitsList({
   units,
 }: Props) {
-  if (units.length === 0) {
-    return (
-      <div className="rounded-xl border bg-white p-8 text-center shadow-sm">
-        <h2 className="text-xl font-semibold">
-          No Units Yet
-        </h2>
+  const [search, setSearch] = useState("");
+  const [status, setStatus] = useState("All");
 
-        <p className="mt-2 text-gray-500">
-          Generate or add units to this property.
-        </p>
-      </div>
-    );
-  }
+  const filteredUnits = useMemo(() => {
+    return units.filter((unit) => {
+      const matchesSearch =
+        unit.unit_number
+          .toLowerCase()
+          .includes(search.toLowerCase()) ||
+        (unit.floor_name ?? "")
+          .toLowerCase()
+          .includes(search.toLowerCase());
+
+      const matchesStatus =
+        status === "All"
+          ? true
+          : unit.status === status;
+
+      return matchesSearch && matchesStatus;
+    });
+  }, [units, search, status]);
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
 
-      <h2 className="text-2xl font-bold">
-        Units
-      </h2>
+      {/* Header */}
 
-      {units.map((unit) => (
-        <div
-          key={unit.id}
-          className="rounded-xl border bg-white p-5 shadow-sm"
-        >
-          <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
 
-            <div>
-              <h3 className="text-xl font-bold">
-                {unit.unit_number}
-              </h3>
+        <div>
 
-              <p className="text-gray-500">
-                {unit.floor_name || "-"}
-              </p>
-            </div>
+          <h2 className="text-2xl font-bold">
+            Units
+          </h2>
 
-            <span
-              className={`rounded-full px-3 py-1 text-sm font-semibold ${
-                unit.status === "Occupied"
-                  ? "bg-green-100 text-green-700"
-                  : "bg-orange-100 text-orange-700"
-              }`}
-            >
-              {unit.status}
-            </span>
-
-          </div>
-
-          <div className="mt-5 grid grid-cols-2 gap-4">
-
-            <div>
-              <p className="text-gray-500 text-sm">
-                Rent
-              </p>
-
-              <p className="font-semibold">
-                KSh{" "}
-                {Number(
-                  unit.monthly_rent
-                ).toLocaleString()}
-              </p>
-            </div>
-
-            <div>
-              <p className="text-gray-500 text-sm">
-                Deposit
-              </p>
-
-              <p className="font-semibold">
-                KSh{" "}
-                {Number(
-                  unit.deposit
-                ).toLocaleString()}
-              </p>
-            </div>
-
-          </div>
-
-          <button
-            className="mt-5 w-full rounded-lg bg-black py-3 font-semibold text-white"
-          >
-            Open Unit
-          </button>
+          <p className="text-gray-500">
+            {filteredUnits.length} unit(s)
+          </p>
 
         </div>
-      ))}
+
+        <div className="flex flex-col gap-3 sm:flex-row">
+
+          <input
+            type="text"
+            placeholder="Search unit..."
+            value={search}
+            onChange={(e) =>
+              setSearch(e.target.value)
+            }
+            className="rounded-xl border px-4 py-3 outline-none focus:border-black"
+          />
+
+          <select
+            value={status}
+            onChange={(e) =>
+              setStatus(e.target.value)
+            }
+            className="rounded-xl border px-4 py-3 outline-none focus:border-black"
+          >
+            <option>All</option>
+            <option>Vacant</option>
+            <option>Occupied</option>
+            <option>Reserved</option>
+            <option>Maintenance</option>
+          </select>
+
+        </div>
+
+      </div>
+
+      {/* Empty */}
+
+      {filteredUnits.length === 0 ? (
+        <div className="rounded-2xl border bg-white p-10 text-center shadow-sm">
+
+          <h3 className="text-xl font-semibold">
+            No Units Found
+          </h3>
+
+          <p className="mt-2 text-gray-500">
+            Try changing your search or filters.
+          </p>
+
+        </div>
+      ) : (
+        <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+          {filteredUnits.map((unit) => (
+            <UnitCard
+              key={unit.id}
+              unit={unit}
+            />
+          ))}
+        </div>
+      )}
 
     </div>
   );
