@@ -32,10 +32,10 @@ export async function register({
     throw new Error("User was not created.");
   }
 
-  // Create organization
-  const { data: organization, error: organizationError } =
+  // Create workspace
+  const { data: workspace, error: workspaceError } =
     await supabase
-      .from("organizations")
+      .from("workspaces")
       .insert({
         name: businessName,
         brand_name: businessName,
@@ -45,18 +45,19 @@ export async function register({
       .select()
       .single();
 
-  if (organizationError) {
-    throw organizationError;
+  if (workspaceError) {
+    throw workspaceError;
   }
 
   // Create profile
   const { error: profileError } =
     await supabase.from("profiles").insert({
       id: user.id,
-      organization_id: organization.id,
+      workspace_id: workspace.id,
       full_name: fullName,
       phone,
       role: "Owner",
+      is_active: true,
     });
 
   if (profileError) {
