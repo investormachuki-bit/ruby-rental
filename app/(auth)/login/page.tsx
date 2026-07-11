@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 
 export default function LoginPage() {
@@ -51,9 +52,7 @@ export default function LoginPage() {
               type="email"
               required
               value={email}
-              onChange={(e) =>
-                setEmail(e.target.value)
-              }
+              onChange={(e) => setEmail(e.target.value)}
               className="w-full rounded-xl border p-3 outline-none focus:border-black"
             />
           </div>
@@ -67,9 +66,7 @@ export default function LoginPage() {
               type="password"
               required
               value={password}
-              onChange={(e) =>
-                setPassword(e.target.value)
-              }
+              onChange={(e) => setPassword(e.target.value)}
               className="w-full rounded-xl border p-3 outline-none focus:border-black"
             />
           </div>
@@ -81,6 +78,16 @@ export default function LoginPage() {
             {loading ? "Signing In..." : "Sign In"}
           </button>
         </form>
+
+        <div className="mt-6 text-center text-sm text-gray-500">
+          Don't have an account?{" "}
+          <Link
+            href="/register"
+            className="font-semibold text-black hover:underline"
+          >
+            Create Account
+          </Link>
+        </div>
       </div>
     </main>
   );
