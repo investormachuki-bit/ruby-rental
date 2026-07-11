@@ -1,8 +1,8 @@
 import { supabase } from "@/lib/supabase";
+import { getProfile } from "@/services/auth/getProfile";
 
 export type BulkUnitInput = {
   propertyId: string;
-  workspaceId: string;
   prefix: string;
   start: number;
   end: number;
@@ -14,11 +14,27 @@ export type BulkUnitInput = {
 export async function bulkCreateUnits(
   input: BulkUnitInput
 ) {
+  // Get logged in user
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
+  if (!session) {
+    throw new Error("You are not logged in.");
+  }
+
+  // Get profile
+  const profile = await getProfile(session.user.id);
+
+  if (!profile) {
+    throw new Error("Profile not found.");
+  }
+
   const units = [];
 
   for (let i = input.start; i <= input.end; i++) {
     units.push({
-      workspace_id: input.workspaceId,
+      workspace_id: profile.workspace_id,
       property_id: input.propertyId,
 
       unit_number: `${input.prefix}${i}`,
@@ -43,5 +59,9 @@ export async function bulkCreateUnits(
     .from("units")
     .insert(units);
 
-  if (error) throw error;
+  if (error) {
+    throw error;
+  }
+
+  return true;
 }
