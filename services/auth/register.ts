@@ -15,7 +15,7 @@ export async function register({
   email,
   password,
 }: RegisterData) {
-  // Create authentication user
+  // STEP 1: Create authentication user
   const { data: authData, error: authError } =
     await supabase.auth.signUp({
       email,
@@ -23,16 +23,16 @@ export async function register({
     });
 
   if (authError) {
-    throw authError;
+    throw new Error("AUTH: " + authError.message);
   }
 
   const user = authData.user;
 
   if (!user) {
-    throw new Error("User was not created.");
+    throw new Error("AUTH: User was not created.");
   }
 
-  // Create workspace
+  // STEP 2: Create workspace
   const { data: workspace, error: workspaceError } =
     await supabase
       .from("workspaces")
@@ -46,22 +46,28 @@ export async function register({
       .single();
 
   if (workspaceError) {
-    throw workspaceError;
+    throw new Error("WORKSPACE: " + workspaceError.message);
   }
 
-  // Create profile
+  if (!workspace) {
+    throw new Error("WORKSPACE: Workspace was not created.");
+  }
+
+  // STEP 3: Create profile
   const { error: profileError } =
-    await supabase.from("profiles").insert({
-      id: user.id,
-      workspace_id: workspace.id,
-      full_name: fullName,
-      phone,
-      role: "Owner",
-      is_active: true,
-    });
+    await supabase
+      .from("profiles")
+      .insert({
+        id: user.id,
+        workspace_id: workspace.id,
+        full_name: fullName,
+        phone,
+        role: "Owner",
+        is_active: true,
+      });
 
   if (profileError) {
-    throw profileError;
+    throw new Error("PROFILE: " + profileError.message);
   }
 
   return user;
