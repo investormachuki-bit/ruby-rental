@@ -5,7 +5,9 @@ export async function getPropertyUnits(
 ) {
   const { data, error } = await supabase
     .from("units")
-    .select("*")
+    .select(`
+      *
+    `)
     .eq("property_id", propertyId)
     .order("unit_sequence", {
       ascending: true,
