@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabase";
+import { getPropertyDetails } from "@/services/properties/getPropertyDetails";
+import { getPropertyUnitStats } from "@/services/units/getPropertyUnitStats";
 
 type Props = {
   propertyId: string;
@@ -11,75 +12,132 @@ export default function PropertyDetailsPage({
   propertyId,
 }: Props) {
   const [property, setProperty] = useState<any>(null);
+  const [stats, setStats] = useState({
+    totalUnits: 0,
+    occupied: 0,
+    vacant: 0,
+    monthlyIncome: 0,
+  });
+
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    loadProperty();
+    loadPage();
   }, []);
 
-  async function loadProperty() {
-    const { data } = await supabase
-      .from("properties")
-      .select("*")
-      .eq("id", propertyId)
-      .single();
+  async function loadPage() {
+    try {
+      const [propertyData, statsData] = await Promise.all([
+        getPropertyDetails(propertyId),
+        getPropertyUnitStats(propertyId),
+      ]);
 
-    setProperty(data);
+      setProperty(propertyData);
+      setStats(statsData);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="p-8">
+        Loading property...
+      </div>
+    );
   }
 
   if (!property) {
     return (
       <div className="p-8">
-        Loading...
+        Property not found.
       </div>
     );
   }
 
   return (
-    <main className="p-6 space-y-6">
+    <main className="space-y-8 p-6">
+      {/* Header */}
       <div>
         <h1 className="text-3xl font-bold">
           {property.name}
         </h1>
 
-        <p className="text-gray-500">
+        <p className="mt-1 text-gray-500">
           {property.property_type}
         </p>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-4">
-        <div className="rounded-xl border p-5">
-          <p className="text-gray-500">Units</p>
-          <h2 className="text-3xl font-bold">0</h2>
+      {/* Statistics */}
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+
+        <div className="rounded-xl border bg-white p-5 shadow-sm">
+          <p className="text-gray-500">
+            Total Units
+          </p>
+
+          <h2 className="mt-2 text-3xl font-bold">
+            {stats.totalUnits}
+          </h2>
         </div>
 
-        <div className="rounded-xl border p-5">
-          <p className="text-gray-500">Occupied</p>
-          <h2 className="text-3xl font-bold">0</h2>
+        <div className="rounded-xl border bg-white p-5 shadow-sm">
+          <p className="text-gray-500">
+            Occupied
+          </p>
+
+          <h2 className="mt-2 text-3xl font-bold text-green-600">
+            {stats.occupied}
+          </h2>
         </div>
 
-        <div className="rounded-xl border p-5">
-          <p className="text-gray-500">Vacant</p>
-          <h2 className="text-3xl font-bold">0</h2>
+        <div className="rounded-xl border bg-white p-5 shadow-sm">
+          <p className="text-gray-500">
+            Vacant
+          </p>
+
+          <h2 className="mt-2 text-3xl font-bold text-orange-500">
+            {stats.vacant}
+          </h2>
         </div>
 
-        <div className="rounded-xl border p-5">
+        <div className="rounded-xl border bg-white p-5 shadow-sm">
           <p className="text-gray-500">
             Monthly Income
           </p>
-          <h2 className="text-3xl font-bold">
-            KSh 0
+
+          <h2 className="mt-2 text-2xl font-bold">
+            KSh{" "}
+            {stats.monthlyIncome.toLocaleString()}
           </h2>
         </div>
+
       </div>
 
-      <div className="flex gap-4">
-        <button className="rounded-xl bg-black px-5 py-3 font-semibold text-white">
+      {/* Actions */}
+      <div className="flex flex-wrap gap-4">
+
+        <button className="rounded-xl bg-black px-6 py-3 font-semibold text-white hover:bg-gray-800">
           + Add Unit
         </button>
 
-        <button className="rounded-xl border px-5 py-3 font-semibold">
-          Bulk Generate Units
+        <button className="rounded-xl border px-6 py-3 font-semibold hover:bg-gray-100">
+          ⚡ Bulk Generate Units
         </button>
+
+      </div>
+
+      {/* Activity */}
+      <div className="rounded-xl border bg-white p-6 shadow-sm">
+        <h2 className="text-xl font-semibold">
+          Recent Activity
+        </h2>
+
+        <p className="mt-3 text-gray-500">
+          No activity yet.
+        </p>
       </div>
     </main>
   );
