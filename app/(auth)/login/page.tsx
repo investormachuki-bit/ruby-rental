@@ -2,9 +2,12 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 
 export default function LoginPage() {
+  const router = useRouter();
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -19,13 +22,15 @@ export default function LoginPage() {
       password,
     });
 
+    setLoading(false);
+
     if (error) {
       alert(error.message);
-    } else {
-      window.location.href = "/";
+      return;
     }
 
-    setLoading(false);
+    router.replace("/");
+    router.refresh();
   }
 
   return (
@@ -39,10 +44,7 @@ export default function LoginPage() {
           Sign in to continue.
         </p>
 
-        <form
-          onSubmit={handleLogin}
-          className="space-y-5"
-        >
+        <form onSubmit={handleLogin} className="space-y-5">
           <div>
             <label className="mb-2 block text-sm font-medium">
               Email
@@ -73,7 +75,7 @@ export default function LoginPage() {
 
           <button
             disabled={loading}
-            className="w-full rounded-xl bg-black py-3 font-semibold text-white transition hover:bg-gray-800"
+            className="w-full rounded-xl bg-black py-3 font-semibold text-white"
           >
             {loading ? "Signing In..." : "Sign In"}
           </button>
