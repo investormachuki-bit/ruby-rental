@@ -7,7 +7,13 @@ export async function getPropertyUnits(
     .from("units")
     .select("*")
     .eq("property_id", propertyId)
-    .order("unit_number");
+    .order("unit_sequence", {
+      ascending: true,
+      nullsFirst: false,
+    })
+    .order("unit_number", {
+      ascending: true,
+    });
 
   if (error) {
     throw error;
