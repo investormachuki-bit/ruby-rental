@@ -3,11 +3,14 @@
 import { useEffect, useState } from "react";
 
 import Breadcrumb from "@/components/common/Breadcrumb";
+
 import EditUnitModal from "@/components/units/EditUnitModal";
+
 import MeterReadingModal from "@/components/utilities/MeterReadingModal";
+import SetupUtilityMeterModal from "@/components/utilities/SetupUtilityMeterModal";
 
 import { getUnit } from "@/services/units/getUnit";
-import { getLatestReading } from "@/services/utilities/getLatestReading";
+import { getUtilityMeters } from "@/services/utilities/getUtilityMeters";
 
 import { Unit } from "@/types/unit";
 
@@ -18,61 +21,48 @@ type Props = {
 export default function UnitDetailsPage({
   unitId,
 }: Props) {
+  const [loading, setLoading] =
+    useState(true);
+
   const [unit, setUnit] =
     useState<any>(null);
 
-  const [loading, setLoading] =
-    useState(true);
+  const [meters, setMeters] =
+    useState<any[]>([]);
+
+  const [selectedMeter, setSelectedMeter] =
+    useState<any>(null);
 
   const [showEdit, setShowEdit] =
     useState(false);
 
   const [
-    showWaterModal,
-    setShowWaterModal,
+    showSetupMeter,
+    setShowSetupMeter,
   ] = useState(false);
 
   const [
-    showElectricityModal,
-    setShowElectricityModal,
+    showReadingModal,
+    setShowReadingModal,
   ] = useState(false);
-
-  const [latestWater, setLatestWater] =
-    useState<any>(null);
-
-  const [
-    latestElectricity,
-    setLatestElectricity,
-  ] = useState<any>(null);
 
   useEffect(() => {
-    loadUnit();
+    loadPage();
   }, []);
 
-  async function loadUnit() {
+  async function loadPage() {
     try {
       setLoading(true);
 
-      const data = await getUnit(unitId);
+      const propertyUnit =
+        await getUnit(unitId);
 
-      setUnit(data);
+      const utilityMeters =
+        await getUtilityMeters(unitId);
 
-      const water =
-        await getLatestReading(
-          unitId,
-          "Water"
-        );
+      setUnit(propertyUnit);
 
-      const electricity =
-        await getLatestReading(
-          unitId,
-          "Electricity"
-        );
-
-      setLatestWater(water);
-      setLatestElectricity(
-        electricity
-      );
+      setMeters(utilityMeters);
     } catch (error) {
       console.error(error);
     } finally {
@@ -164,32 +154,6 @@ export default function UnitDetailsPage({
               />
 
               <Info
-                label="Water Type"
-                value={unit.water_type}
-              />
-
-              <Info
-                label="Water Rate"
-                value={`KSh ${Number(
-                  unit.water_amount
-                ).toLocaleString()}`}
-              />
-
-              <Info
-                label="Electricity Type"
-                value={
-                  unit.electricity_type
-                }
-              />
-
-              <Info
-                label="Electricity Rate"
-                value={`KSh ${Number(
-                  unit.electricity_amount
-                ).toLocaleString()}`}
-              />
-
-              <Info
                 label="Garbage Fee"
                 value={`KSh ${Number(
                   unit.garbage_fee
@@ -228,168 +192,164 @@ export default function UnitDetailsPage({
             <h2 className="mb-6 text-xl font-semibold">
               Utilities
             </h2>
+                        {meters.length === 0 && (
+              <div className="rounded-xl border border-dashed p-6 text-center text-gray-500">
+                No utility meters found.
+              </div>
+            )}
 
-            {/* Water */}
+            {meters.map((meter) => (
+              <div
+                key={meter.id}
+                className="mb-6 rounded-2xl border p-5"
+              >
+                <div className="flex items-start justify-between">
 
-            <div className="mb-8">
+                  <div>
 
-              <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-semibold">
+                      {meter.utility_type === "Water"
+                        ? "🚰 Water"
+                        : meter.utility_type ===
+                          "Electricity"
+                        ? "⚡ Electricity"
+                        : meter.utility_type}
+                    </h3>
 
-                <div>
+                    <div className="mt-2">
 
-                  <h3 className="font-semibold">
-                    🚰 Water
-                  </h3>
+                      {meter.status ===
+                      "Pending Setup" ? (
+                        <span className="rounded-full bg-yellow-100 px-3 py-1 text-sm font-medium text-yellow-800">
+                          🟡 Pending Setup
+                        </span>
+                      ) : (
+                        <span className="rounded-full bg-green-100 px-3 py-1 text-sm font-medium text-green-800">
+                          🟢 Active
+                        </span>
+                      )}
 
-                  <p className="text-sm text-gray-500">
-                    {unit.water_type}
-                  </p>
+                    </div>
+
+                  </div>
+
+                  {meter.status ===
+                  "Pending Setup" ? (
+                    <button
+                      onClick={() => {
+                        setSelectedMeter(
+                          meter
+                        );
+                        setShowSetupMeter(
+                          true
+                        );
+                      }}
+                      className="rounded-xl bg-black px-4 py-2 text-white hover:bg-gray-800"
+                    >
+                      Setup Meter
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => {
+                        setSelectedMeter(
+                          meter
+                        );
+                        setShowReadingModal(
+                          true
+                        );
+                      }}
+                      className="rounded-xl bg-black px-4 py-2 text-white hover:bg-gray-800"
+                    >
+                      Record Reading
+                    </button>
+                  )}
 
                 </div>
 
-                <button
-                  onClick={() =>
-                    setShowWaterModal(
-                      true
-                    )
-                  }
-                  className="rounded-lg bg-black px-4 py-2 text-white"
-                >
-                  Record Reading
-                </button>
+                <div className="mt-5 grid gap-4 md:grid-cols-2">
+
+                  <Info
+                    label="Meter Number"
+                    value={
+                      meter.meter_number ||
+                      "Not Assigned"
+                    }
+                  />
+
+                  <Info
+                    label="Rate"
+                    value={`KSh ${Number(
+                      meter.unit_rate
+                    ).toLocaleString()}`}
+                  />
+
+                  <Info
+                    label="Opening Reading"
+                    value={String(
+                      Number(
+                        meter.opening_reading
+                      )
+                    )}
+                  />
+
+                  <Info
+                    label="Current Reading"
+                    value={
+                      meter.latest_reading
+                        ? String(
+                            meter
+                              .latest_reading
+                              .current_reading
+                          )
+                        : "-"
+                    }
+                  />
+
+                  <Info
+                    label="Last Bill"
+                    value={
+                      meter.latest_reading
+                        ? `KSh ${Number(
+                            meter
+                              .latest_reading
+                              .amount
+                          ).toLocaleString()}`
+                        : "-"
+                    }
+                  />
+
+                  <Info
+                    label="Location"
+                    value={
+                      meter.meter_location ||
+                      "-"
+                    }
+                  />
+
+                </div>
+
+                {meter.status ===
+                  "Active" && (
+                  <div className="mt-5 flex flex-wrap gap-3">
+
+                    <button className="rounded-xl border px-4 py-2 hover:bg-gray-100">
+                      📜 History
+                    </button>
+
+                    <button className="rounded-xl border px-4 py-2 hover:bg-gray-100">
+                      🔄 Replace Meter
+                    </button>
+
+                  </div>
+                )}
 
               </div>
-
-              <div className="mt-4 grid grid-cols-3 gap-3">
-
-                <div className="rounded-lg bg-gray-50 p-3">
-
-                  <p className="text-xs text-gray-500">
-                    Rate
-                  </p>
-
-                  <strong>
-                    KSh {unit.water_amount}
-                  </strong>
-
-                </div>
-
-                <div className="rounded-lg bg-gray-50 p-3">
-
-                  <p className="text-xs text-gray-500">
-                    Last Reading
-                  </p>
-
-                  <strong>
-                    {latestWater?.current_reading ??
-                      0}
-                  </strong>
-
-                </div>
-
-                <div className="rounded-lg bg-gray-50 p-3">
-
-                  <p className="text-xs text-gray-500">
-                    Last Bill
-                  </p>
-
-                  <strong>
-                    KSh{" "}
-                    {Number(
-                      latestWater?.amount ??
-                        0
-                    ).toLocaleString()}
-                  </strong>
-
-                </div>
-
-              </div>
-
-            </div>
-                        {/* Electricity */}
-
-            <div>
-
-              <div className="flex items-center justify-between">
-
-                <div>
-
-                  <h3 className="font-semibold">
-                    ⚡ Electricity
-                  </h3>
-
-                  <p className="text-sm text-gray-500">
-                    {unit.electricity_type}
-                  </p>
-
-                </div>
-
-                <button
-                  onClick={() =>
-                    setShowElectricityModal(
-                      true
-                    )
-                  }
-                  className="rounded-lg bg-black px-4 py-2 text-white"
-                >
-                  Record Reading
-                </button>
-
-              </div>
-
-              <div className="mt-4 grid grid-cols-3 gap-3">
-
-                <div className="rounded-lg bg-gray-50 p-3">
-
-                  <p className="text-xs text-gray-500">
-                    Rate
-                  </p>
-
-                  <strong>
-                    KSh{" "}
-                    {unit.electricity_amount}
-                  </strong>
-
-                </div>
-
-                <div className="rounded-lg bg-gray-50 p-3">
-
-                  <p className="text-xs text-gray-500">
-                    Last Reading
-                  </p>
-
-                  <strong>
-                    {latestElectricity?.current_reading ??
-                      0}
-                  </strong>
-
-                </div>
-
-                <div className="rounded-lg bg-gray-50 p-3">
-
-                  <p className="text-xs text-gray-500">
-                    Last Bill
-                  </p>
-
-                  <strong>
-                    KSh{" "}
-                    {Number(
-                      latestElectricity?.amount ??
-                        0
-                    ).toLocaleString()}
-                  </strong>
-
-                </div>
-
-              </div>
-
-            </div>
+            ))}
 
           </div>
 
         </div>
-
-        {/* Actions */}
+                {/* Actions */}
 
         <div className="rounded-2xl border bg-white p-6 shadow-sm">
 
@@ -428,56 +388,77 @@ export default function UnitDetailsPage({
           }
           onSaved={() => {
             setShowEdit(false);
-            loadUnit();
+            loadPage();
           }}
         />
       )}
 
-      {/* Water Reading */}
+      {/* Setup Meter */}
 
-      {showWaterModal && (
-        <MeterReadingModal
-          workspaceId={unit.workspace_id}
-          propertyId={unit.property_id}
-          unitId={unit.id}
-          utilityType="Water"
-          unitRate={Number(
-            unit.water_amount
-          )}
-          onClose={() =>
-            setShowWaterModal(false)
-          }
-          onSaved={() => {
-            setShowWaterModal(false);
-            loadUnit();
-          }}
-        />
-      )}
+      {showSetupMeter &&
+        selectedMeter && (
+          <SetupUtilityMeterModal
+            meter={selectedMeter}
+            onClose={() => {
+              setShowSetupMeter(
+                false
+              );
+              setSelectedMeter(
+                null
+              );
+            }}
+            onSaved={() => {
+              setShowSetupMeter(
+                false
+              );
+              setSelectedMeter(
+                null
+              );
+              loadPage();
+            }}
+          />
+        )}
 
-      {/* Electricity Reading */}
+      {/* Record Reading */}
 
-      {showElectricityModal && (
-        <MeterReadingModal
-          workspaceId={unit.workspace_id}
-          propertyId={unit.property_id}
-          unitId={unit.id}
-          utilityType="Electricity"
-          unitRate={Number(
-            unit.electricity_amount
-          )}
-          onClose={() =>
-            setShowElectricityModal(
-              false
-            )
-          }
-          onSaved={() => {
-            setShowElectricityModal(
-              false
-            );
-            loadUnit();
-          }}
-        />
-      )}
+      {showReadingModal &&
+        selectedMeter && (
+          <MeterReadingModal
+            meter={selectedMeter}
+            workspaceId={
+              selectedMeter.workspace_id
+            }
+            propertyId={
+              selectedMeter.property_id
+            }
+            unitId={
+              selectedMeter.unit_id
+            }
+            utilityType={
+              selectedMeter.utility_type
+            }
+            unitRate={Number(
+              selectedMeter.unit_rate
+            )}
+            onClose={() => {
+              setShowReadingModal(
+                false
+              );
+              setSelectedMeter(
+                null
+              );
+            }}
+            onSaved={() => {
+              setShowReadingModal(
+                false
+              );
+              setSelectedMeter(
+                null
+              );
+              loadPage();
+            }}
+          />
+        )}
 
     </>
   );
@@ -497,8 +478,11 @@ function Info({
         {label}
       </span>
 
-      <strong>{value}</strong>
+      <strong className="text-right">
+        {value}
+      </strong>
 
     </div>
   );
 }
+        
