@@ -231,3 +231,30 @@ export default function SetupUtilityMeterModal({
           </div>
 
         </div>
+                <div className="flex justify-end gap-3 border-t p-6">
+
+          <button
+            onClick={onClose}
+            disabled={loading}
+            className="rounded-xl border px-6 py-3"
+          >
+            Cancel
+          </button>
+
+          <button
+            onClick={handleSave}
+            disabled={loading}
+            className="rounded-xl bg-black px-6 py-3 font-semibold text-white hover:bg-gray-800 disabled:opacity-50"
+          >
+            {loading
+              ? "Activating..."
+              : "Activate Meter"}
+          </button>
+
+        </div>
+
+      </div>
+
+    </div>
+  );
+}
