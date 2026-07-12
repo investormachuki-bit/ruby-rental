@@ -1,5 +1,10 @@
+import AppShell from "@/components/layout/AppShell";
 import OccupantsPage from "@/components/occupants/OccupantsPage";
 
 export default function Page() {
-  return <OccupantsPage />;
+  return (
+    <AppShell>
+      <OccupantsPage />
+    </AppShell>
+  );
 }
