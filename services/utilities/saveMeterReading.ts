@@ -27,7 +27,28 @@ export async function saveMeterReading({
   unit_rate,
   notes,
 }: SaveMeterReadingData) {
-  // Get previous reading
+  const billingMonth = new Date(reading_date);
+
+  billingMonth.setDate(1);
+
+  const billing_month = billingMonth
+    .toISOString()
+    .split("T")[0];
+
+  const { data: existing } = await supabase
+    .from("meter_readings")
+    .select("id")
+    .eq("unit_id", unit_id)
+    .eq("utility_type", utility_type)
+    .eq("billing_month", billing_month)
+    .maybeSingle();
+
+  if (existing) {
+    throw new Error(
+      `${utility_type} reading for this billing month already exists.`
+    );
+  }
+
   const latest = await getLatestReading(
     unit_id,
     utility_type
@@ -45,7 +66,8 @@ export async function saveMeterReading({
   const unitsUsed =
     current_reading - previousReading;
 
-  const amount = unitsUsed * unit_rate;
+  const amount =
+    unitsUsed * unit_rate;
 
   const { data, error } = await supabase
     .from("meter_readings")
@@ -57,6 +79,8 @@ export async function saveMeterReading({
       utility_type,
 
       reading_date,
+
+      billing_month,
 
       previous_reading: previousReading,
 
