@@ -25,6 +25,7 @@ export type CreateOccupantInput = {
 export async function createOccupant(
   input: CreateOccupantInput
 ) {
+  // Get logged in user
   const {
     data: { session },
   } = await supabase.auth.getSession();
@@ -33,6 +34,7 @@ export async function createOccupant(
     throw new Error("You are not logged in.");
   }
 
+  // Get profile
   const profile = await getProfile(
     session.user.id
   );
@@ -41,38 +43,46 @@ export async function createOccupant(
     throw new Error("Profile not found.");
   }
 
-  // Generate next occupant code
-  const { count } = await supabase
-    .from("occupants")
-    .select("*", {
-      count: "exact",
-      head: true,
-    })
-    .eq(
-      "workspace_id",
-      profile.workspace_id
-    );
+  // Generate Occupant Code from PostgreSQL
+  const {
+    data: occupantCode,
+    error: codeError,
+  } = await supabase.rpc(
+    "generate_occupant_code",
+    {
+      p_workspace_id:
+        profile.workspace_id,
+    }
+  );
 
-  const occupantCode = `TEN-${String(
-    (count ?? 0) + 1
-  ).padStart(6, "0")}`;
+  if (codeError) {
+    throw codeError;
+  }
 
+  // Create occupant
   const { data, error } = await supabase
     .from("occupants")
     .insert({
-      workspace_id: profile.workspace_id,
+      workspace_id:
+        profile.workspace_id,
 
-      property_id: input.propertyId,
+      property_id:
+        input.propertyId,
 
-      unit_id: input.unitId ?? null,
+      unit_id:
+        input.unitId ?? null,
 
-      occupant_code: occupantCode,
+      occupant_code:
+        occupantCode,
 
-      full_name: input.fullName.trim(),
+      full_name:
+        input.fullName.trim(),
 
-      phone: input.phone.trim(),
+      phone:
+        input.phone.trim(),
 
-      email: input.email?.trim() || null,
+      email:
+        input.email?.trim() || null,
 
       id_number:
         input.idNumber?.trim() || null,
@@ -106,16 +116,20 @@ export async function createOccupant(
     throw error;
   }
 
-  // If assigned to a unit,
-  // automatically mark the unit occupied.
-
+  // If the occupant is assigned to a unit,
+  // automatically mark the unit as occupied.
   if (input.unitId) {
-    await supabase
-      .from("units")
-      .update({
-        status: "Occupied",
-      })
-      .eq("id", input.unitId);
+    const { error: unitError } =
+      await supabase
+        .from("units")
+        .update({
+          status: "Occupied",
+        })
+        .eq("id", input.unitId);
+
+    if (unitError) {
+      throw unitError;
+    }
   }
 
   return data;
