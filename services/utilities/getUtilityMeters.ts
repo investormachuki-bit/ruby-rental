@@ -10,15 +10,18 @@ export async function getUtilityMeters(
       latest_reading:meter_readings(
         id,
         reading_date,
+        billing_month,
         previous_reading,
         current_reading,
         units_used,
-        amount,
-        billing_month
+        amount
       )
     `)
     .eq("unit_id", unitId)
-    .eq("status", "Active")
+    .in("status", [
+      "Pending Setup",
+      "Active",
+    ])
     .order("utility_type", {
       ascending: true,
     });
@@ -27,12 +30,11 @@ export async function getUtilityMeters(
     throw error;
   }
 
-  const meters =
-    (data ?? []).map((meter: any) => {
-      const readings =
-        meter.latest_reading ?? [];
-
-      readings.sort(
+  return (data ?? []).map(
+    (meter: any) => {
+      const readings = [
+        ...(meter.latest_reading ?? []),
+      ].sort(
         (a: any, b: any) =>
           new Date(
             b.reading_date
@@ -49,7 +51,6 @@ export async function getUtilityMeters(
             ? readings[0]
             : null,
       };
-    });
-
-  return meters;
+    }
+  );
 }
