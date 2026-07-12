@@ -2,6 +2,8 @@ import { supabase } from "@/lib/supabase";
 import { getLatestReading } from "./getLatestReading";
 
 type SaveMeterReadingData = {
+  meter_id: string;
+
   workspace_id: string;
   property_id: string;
   unit_id: string;
@@ -18,30 +20,50 @@ type SaveMeterReadingData = {
 };
 
 export async function saveMeterReading({
+  meter_id,
+
   workspace_id,
   property_id,
   unit_id,
+
   utility_type,
+
   current_reading,
+
   reading_date,
+
   unit_rate,
+
   notes,
 }: SaveMeterReadingData) {
-  const billingMonth = new Date(reading_date);
+  // -----------------------------------
+  // Billing Month
+  // -----------------------------------
 
-  billingMonth.setDate(1);
+  const billingDate = new Date(reading_date);
 
-  const billing_month = billingMonth
-    .toISOString()
-    .split("T")[0];
+  billingDate.setDate(1);
 
-  const { data: existing } = await supabase
+  const billing_month =
+    billingDate.toISOString().split("T")[0];
+
+  // -----------------------------------
+  // Prevent duplicate readings
+  // -----------------------------------
+
+  const {
+    data: existing,
+    error: existingError,
+  } = await supabase
     .from("meter_readings")
     .select("id")
-    .eq("unit_id", unit_id)
-    .eq("utility_type", utility_type)
+    .eq("meter_id", meter_id)
     .eq("billing_month", billing_month)
     .maybeSingle();
+
+  if (existingError) {
+    throw existingError;
+  }
 
   if (existing) {
     throw new Error(
@@ -49,15 +71,48 @@ export async function saveMeterReading({
     );
   }
 
+  // -----------------------------------
+  // Get latest reading
+  // -----------------------------------
+
   const latest = await getLatestReading(
     unit_id,
     utility_type
   );
 
-  const previousReading =
-    latest?.current_reading ?? 0;
+  let previousReading = 0;
 
-  if (current_reading < previousReading) {
+  if (latest) {
+    previousReading = Number(
+      latest.current_reading
+    );
+  } else {
+    // First reading
+    const {
+      data: meter,
+      error: meterError,
+    } = await supabase
+      .from("utility_meters")
+      .select("opening_reading")
+      .eq("id", meter_id)
+      .single();
+
+    if (meterError) {
+      throw meterError;
+    }
+
+    previousReading = Number(
+      meter.opening_reading ?? 0
+    );
+  }
+
+  // -----------------------------------
+  // Validation
+  // -----------------------------------
+
+  if (
+    current_reading < previousReading
+  ) {
     throw new Error(
       "Current reading cannot be less than the previous reading."
     );
@@ -69,33 +124,43 @@ export async function saveMeterReading({
   const amount =
     unitsUsed * unit_rate;
 
-  const { data, error } = await supabase
-    .from("meter_readings")
-    .insert({
-      workspace_id,
-      property_id,
-      unit_id,
+  // -----------------------------------
+  // Save reading
+  // -----------------------------------
 
-      utility_type,
+  const { data, error } =
+    await supabase
+      .from("meter_readings")
+      .insert({
+        meter_id,
 
-      reading_date,
+        workspace_id,
 
-      billing_month,
+        property_id,
 
-      previous_reading: previousReading,
+        unit_id,
 
-      current_reading,
+        utility_type,
 
-      units_used: unitsUsed,
+        reading_date,
 
-      unit_rate,
+        billing_month,
 
-      amount,
+        previous_reading:
+          previousReading,
 
-      notes: notes ?? null,
-    })
-    .select()
-    .single();
+        current_reading,
+
+        units_used: unitsUsed,
+
+        unit_rate,
+
+        amount,
+
+        notes: notes ?? null,
+      })
+      .select()
+      .single();
 
   if (error) {
     throw error;
