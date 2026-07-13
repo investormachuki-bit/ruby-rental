@@ -12,7 +12,11 @@ export type CreateLeaseInput = {
   rent_amount: number;
   deposit_amount: number;
 
-  billing_day: number;
+  rent_due_day: number;
+
+  grace_period_days: number;
+
+  lease_type: "Open-ended" | "Fixed Term";
 
   notes?: string;
 };
@@ -49,7 +53,12 @@ export async function createLease(
       rent_amount: input.rent_amount,
       deposit_amount: input.deposit_amount,
 
-      billing_day: input.billing_day,
+      rent_due_day: input.rent_due_day,
+
+      grace_period_days:
+        input.grace_period_days,
+
+      lease_type: input.lease_type,
 
       notes: input.notes ?? "",
 
