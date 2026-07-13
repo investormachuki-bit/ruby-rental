@@ -771,29 +771,26 @@ Coming soon.
 
 </p>
 
-</div>
+    {showPaymentModal &&
+      lease && (
 
-)}
+        <ReceivePaymentModal
+          lease={lease}
+          onCancel={() =>
+            setShowPaymentModal(false)
+          }
+          onSuccess={() => {
+
+            setShowPaymentModal(false);
+
+            loadLease();
+
+          }}
+        />
+
+    )}
 
     </div>
-    {showPaymentModal &&
-  lease && (
-
-    <ReceivePaymentModal
-      lease={lease}
-      onCancel={() =>
-        setShowPaymentModal(false)
-      }
-      onSuccess={() => {
-
-        setShowPaymentModal(false);
-
-        loadLease();
-
-      }}
-    />
-
-)}
 
   );
 
