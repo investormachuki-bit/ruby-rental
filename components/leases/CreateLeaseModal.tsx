@@ -499,13 +499,15 @@ export default function CreateLeaseModal({
                 </option>
 
                 {occupants.map((occupant) => (
-                    value={occupant.id}
-                  >
-                    {occupant.first_name} {occupant.last_name}
-                  </option>
 
-                ))}
+  <option
+    key={occupant.id}
+    value={occupant.id}
+  >
+    {occupant.first_name} {occupant.last_name}
+  </option>
 
+))}
               </select>
 
             </div>
