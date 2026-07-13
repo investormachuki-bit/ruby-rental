@@ -12,9 +12,18 @@ export type UpdateLeaseInput = {
   rent_amount: number;
   deposit_amount: number;
 
-  billing_day: number;
+  rent_due_day: number;
 
-  status: string;
+  grace_period_days: number;
+
+  lease_type: "Open-ended" | "Fixed Term";
+
+  status:
+    | "Draft"
+    | "Active"
+    | "Notice"
+    | "Expired"
+    | "Terminated";
 
   notes?: string;
 };
@@ -41,16 +50,25 @@ export async function updateLease(
     .from("leases")
     .update({
       property_id: input.property_id,
+
       unit_id: input.unit_id,
+
       occupant_id: input.occupant_id,
 
       start_date: input.start_date,
+
       end_date: input.end_date ?? null,
 
       rent_amount: input.rent_amount,
+
       deposit_amount: input.deposit_amount,
 
-      billing_day: input.billing_day,
+      rent_due_day: input.rent_due_day,
+
+      grace_period_days:
+        input.grace_period_days,
+
+      lease_type: input.lease_type,
 
       status: input.status,
 
