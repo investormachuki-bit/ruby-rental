@@ -2,6 +2,9 @@
 
 import { useEffect, useState } from "react";
 
+import SectionCard from "@/components/common/SectionCard";
+import StickyActionBar from "@/components/common/StickyActionBar";
+
 import { createLease } from "@/services/leases/createLease";
 import { activateLease } from "@/services/leases/activateLease";
 
@@ -18,6 +21,9 @@ type Occupant = {
   id: string;
   first_name: string;
   last_name: string;
+  phone_number?: string;
+  email?: string;
+  id_number?: string;
 };
 
 type Unit = {
@@ -26,6 +32,9 @@ type Unit = {
   monthly_rent: number;
   deposit: number;
   status: string;
+  floor_name?: string;
+  water_type?: string;
+  electricity_type?: string;
 };
 
 type Props = {
@@ -41,6 +50,14 @@ export default function CreateLeaseModal({
   const [loading, setLoading] =
     useState(false);
 
+  const [activateNow, setActivateNow] =
+    useState(false);
+
+  const [leaseType, setLeaseType] =
+    useState<"Open-ended" | "Fixed Term">(
+      "Open-ended"
+    );
+
   const [properties, setProperties] =
     useState<Property[]>([]);
 
@@ -49,21 +66,20 @@ export default function CreateLeaseModal({
 
   const [units, setUnits] =
     useState<Unit[]>([]);
-const [leaseType, setLeaseType] =
-  useState<"Open-ended" | "Fixed Term">(
-    "Open-ended"
-  );
 
-  const [activateNow, setActivateNow] =
-    useState(false);
+  const [selectedUnit, setSelectedUnit] =
+    useState<Unit | null>(null);
+
+  const [selectedOccupant, setSelectedOccupant] =
+    useState<Occupant | null>(null);
 
   const [form, setForm] = useState({
-
-    occupant_id: "",
 
     property_id: "",
 
     unit_id: "",
+
+    occupant_id: "",
 
     start_date: "",
 
@@ -93,15 +109,23 @@ const [leaseType, setLeaseType] =
     const occs =
       await getOccupants();
 
-    setProperties(props);
+    setProperties(props ?? []);
 
-    setOccupants(occs);
+    setOccupants(occs ?? []);
 
   }
     useEffect(() => {
 
     if (!form.property_id) {
+
       setUnits([]);
+      setSelectedUnit(null);
+
+      setForm((prev) => ({
+        ...prev,
+        unit_id: "",
+      }));
+
       return;
     }
 
@@ -116,12 +140,12 @@ const [leaseType, setLeaseType] =
     const data =
       await getPropertyUnits(propertyId);
 
-    setUnits(
-      data.filter(
-        (unit: Unit) =>
-          unit.status === "Vacant"
-      )
+    const vacantUnits = (data ?? []).filter(
+      (unit: Unit) =>
+        unit.status === "Vacant"
     );
+
+    setUnits(vacantUnits);
 
   }
 
@@ -133,10 +157,11 @@ const [leaseType, setLeaseType] =
     >
   ) {
 
+    const { name, value } = e.target;
+
     setForm((prev) => ({
       ...prev,
-      [e.target.name]:
-        e.target.value,
+      [name]: value,
     }));
 
   }
@@ -152,21 +177,41 @@ const [leaseType, setLeaseType] =
 
     if (!unit) return;
 
+    setSelectedUnit(unit);
+
     setForm((prev) => ({
       ...prev,
 
-      unit_id: unitId,
+      unit_id: unit.id,
 
       rent_amount:
-        String(
-          unit.monthly_rent
-        ),
+        String(unit.monthly_rent),
 
       deposit_amount:
-        String(
-          unit.deposit
-        ),
+        String(unit.deposit),
 
+    }));
+
+  }
+
+  function handleOccupantChange(
+    occupantId: string
+  ) {
+
+    const occupant =
+      occupants.find(
+        (o) => o.id === occupantId
+      );
+
+    if (!occupant) return;
+
+    setSelectedOccupant(
+      occupant
+    );
+
+    setForm((prev) => ({
+      ...prev,
+      occupant_id: occupant.id,
     }));
 
   }
@@ -218,11 +263,11 @@ const [leaseType, setLeaseType] =
               form.grace_period_days
             ),
 
-          notes:
-            form.notes,
-
           lease_type:
             leaseType,
+
+          notes:
+            form.notes,
 
         });
 
@@ -241,7 +286,7 @@ const [leaseType, setLeaseType] =
       console.error(error);
 
       alert(
-        "Failed to save lease."
+        "Failed to create lease."
       );
 
     } finally {
@@ -255,65 +300,38 @@ const [leaseType, setLeaseType] =
   return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
 
-      <div className="max-h-[95vh] w-full max-w-4xl overflow-y-auto rounded-2xl bg-white shadow-2xl">
+      <div className="flex max-h-[95vh] w-full max-w-5xl flex-col overflow-hidden rounded-2xl bg-gray-50 shadow-2xl">
 
-        <div className="border-b p-6">
+        {/* Header */}
+
+        <div className="border-b bg-white p-6">
 
           <h2 className="text-2xl font-bold">
             Create New Lease
           </h2>
 
           <p className="mt-2 text-gray-500">
-            Create a rental agreement between an occupant and a unit.
+            Create a lease agreement between a vacant unit and an occupant.
           </p>
 
         </div>
 
-        <div className="space-y-8 p-6">
+        {/* Body */}
 
-          {/* Occupancy */}
+        <div className="flex-1 space-y-6 overflow-y-auto p-6">
 
-          <div className="rounded-2xl border p-6">
+          {/* Property & Unit */}
 
-            <h3 className="mb-5 text-lg font-semibold">
-              Occupancy
-            </h3>
+          <SectionCard
+            title="🏢 Property & Unit"
+            description="Select the property and a vacant unit."
+            completed={
+              form.property_id !== "" &&
+              form.unit_id !== ""
+            }
+          >
 
-            <div className="grid gap-5 md:grid-cols-3">
-
-              <div>
-
-                <label className="mb-2 block font-medium">
-                  Occupant
-                </label>
-
-                <select
-                  name="occupant_id"
-                  value={form.occupant_id}
-                  onChange={handleChange}
-                  className="w-full rounded-xl border p-3"
-                >
-                  <option value="">
-                    Select Occupant
-                  </option>
-
-                  {occupants.map(
-                    (occupant) => (
-
-                      <option
-                        key={occupant.id}
-                        value={occupant.id}
-                      >
-                        {occupant.first_name}{" "}
-                        {occupant.last_name}
-                      </option>
-
-                    )
-                  )}
-
-                </select>
-
-              </div>
+            <div className="grid gap-5 lg:grid-cols-2">
 
               <div>
 
@@ -325,24 +343,23 @@ const [leaseType, setLeaseType] =
                   name="property_id"
                   value={form.property_id}
                   onChange={handleChange}
-                  className="w-full rounded-xl border p-3"
+                  className="w-full rounded-xl border bg-white p-3"
                 >
+
                   <option value="">
                     Select Property
                   </option>
 
-                  {properties.map(
-                    (property) => (
+                  {properties.map((property) => (
 
-                      <option
-                        key={property.id}
-                        value={property.id}
-                      >
-                        {property.name}
-                      </option>
+                    <option
+                      key={property.id}
+                      value={property.id}
+                    >
+                      {property.name}
+                    </option>
 
-                    )
-                  )}
+                  ))}
 
                 </select>
 
@@ -351,7 +368,7 @@ const [leaseType, setLeaseType] =
               <div>
 
                 <label className="mb-2 block font-medium">
-                  Unit
+                  Vacant Unit
                 </label>
 
                 <select
@@ -361,24 +378,23 @@ const [leaseType, setLeaseType] =
                       e.target.value
                     )
                   }
-                  className="w-full rounded-xl border p-3"
+                  className="w-full rounded-xl border bg-white p-3"
                 >
+
                   <option value="">
-                    Select Vacant Unit
+                    Select Unit
                   </option>
 
-                  {units.map(
-                    (unit) => (
+                  {units.map((unit) => (
 
-                      <option
-                        key={unit.id}
-                        value={unit.id}
-                      >
-                        {unit.unit_number}
-                      </option>
+                    <option
+                      key={unit.id}
+                      value={unit.id}
+                    >
+                      {unit.unit_number}
+                    </option>
 
-                    )
-                  )}
+                  ))}
 
                 </select>
 
@@ -386,19 +402,124 @@ const [leaseType, setLeaseType] =
 
             </div>
 
-          </div>
+            {selectedUnit && (
 
-          {/* Lease Terms */}
+              <div className="mt-6 rounded-xl border bg-slate-50 p-5">
 
-          <div className="rounded-2xl border p-6">
+                <h4 className="mb-4 font-semibold">
+                  Selected Unit
+                </h4>
 
-            <h3 className="mb-5 text-lg font-semibold">
-              Lease Terms
-            </h3>
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
 
-            <div className="space-y-5">
+                  <div>
 
-              <div className="flex gap-6">
+                    <p className="text-xs uppercase text-gray-500">
+                      Unit
+                    </p>
+
+                    <p className="font-semibold">
+                      {selectedUnit.unit_number}
+                    </p>
+
+                  </div>
+
+                  <div>
+
+                    <p className="text-xs uppercase text-gray-500">
+                      Monthly Rent
+                    </p>
+
+                    <p className="font-semibold">
+                      KSh {selectedUnit.monthly_rent.toLocaleString()}
+                    </p>
+
+                  </div>
+
+                  <div>
+
+                    <p className="text-xs uppercase text-gray-500">
+                      Deposit
+                    </p>
+
+                    <p className="font-semibold">
+                      KSh {selectedUnit.deposit.toLocaleString()}
+                    </p>
+
+                  </div>
+
+                  <div>
+
+                    <p className="text-xs uppercase text-gray-500">
+                      Floor
+                    </p>
+
+                    <p className="font-semibold">
+                      {selectedUnit.floor_name ?? "-"}
+                    </p>
+
+                  </div>
+
+                </div>
+
+              </div>
+
+            )}
+
+          </SectionCard>
+
+          {/* Occupant */}
+
+          <SectionCard
+            title="👤 Occupant"
+            description="Assign the occupant to the selected unit."
+            completed={
+              form.occupant_id !== ""
+            }
+          >
+
+            <div>
+
+              <label className="mb-2 block font-medium">
+                Occupant
+              </label>
+
+              <select
+                value={form.occupant_id}
+                onChange={(e) =>
+                  handleOccupantChange(
+                    e.target.value
+                  )
+                }
+                className="w-full rounded-xl border bg-white p-3"
+              >
+
+                <option value="">
+                  Select Occupant
+                </option>
+
+                {occupants.map((occupant) => (
+
+                  <option
+                    key={occupant.id}
+                    value
+                              {/* Lease Terms */}
+
+          <SectionCard
+            title="📄 Lease Terms"
+            description="Configure the lease period."
+            completed={
+              form.start_date !== "" &&
+              (
+                leaseType === "Open-ended" ||
+                form.end_date !== ""
+              )
+            }
+          >
+
+            <div className="space-y-6">
+
+              <div className="flex flex-wrap gap-6">
 
                 <label className="flex items-center gap-2">
 
@@ -453,7 +574,7 @@ const [leaseType, setLeaseType] =
                     name="start_date"
                     value={form.start_date}
                     onChange={handleChange}
-                    className="w-full rounded-xl border p-3"
+                    className="w-full rounded-xl border bg-white p-3"
                   />
 
                 </div>
@@ -472,7 +593,7 @@ const [leaseType, setLeaseType] =
                       name="end_date"
                       value={form.end_date}
                       onChange={handleChange}
-                      className="w-full rounded-xl border p-3"
+                      className="w-full rounded-xl border bg-white p-3"
                     />
 
                   </div>
@@ -483,16 +604,20 @@ const [leaseType, setLeaseType] =
 
             </div>
 
-          </div>
-                    {/* Financial Terms */}
+          </SectionCard>
 
-          <div className="rounded-2xl border p-6">
+          {/* Financial Terms */}
 
-            <h3 className="mb-5 text-lg font-semibold">
-              Financial Terms
-            </h3>
+          <SectionCard
+            title="💰 Financial Terms"
+            description="Configure rent and payment schedule."
+            completed={
+              form.rent_amount !== "" &&
+              form.deposit_amount !== ""
+            }
+          >
 
-            <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-4">
+            <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
 
               <div>
 
@@ -505,7 +630,7 @@ const [leaseType, setLeaseType] =
                   name="rent_amount"
                   value={form.rent_amount}
                   onChange={handleChange}
-                  className="w-full rounded-xl border p-3"
+                  className="w-full rounded-xl border bg-white p-3"
                 />
 
               </div>
@@ -521,7 +646,7 @@ const [leaseType, setLeaseType] =
                   name="deposit_amount"
                   value={form.deposit_amount}
                   onChange={handleChange}
-                  className="w-full rounded-xl border p-3"
+                  className="w-full rounded-xl border bg-white p-3"
                 />
 
               </div>
@@ -536,19 +661,23 @@ const [leaseType, setLeaseType] =
                   name="rent_due_day"
                   value={form.rent_due_day}
                   onChange={handleChange}
-                  className="w-full rounded-xl border p-3"
+                  className="w-full rounded-xl border bg-white p-3"
                 >
+
                   {Array.from(
                     { length: 31 },
                     (_, i) => i + 1
                   ).map((day) => (
+
                     <option
                       key={day}
                       value={day}
                     >
                       {day}
                     </option>
+
                   ))}
+
                 </select>
 
               </div>
@@ -561,52 +690,60 @@ const [leaseType, setLeaseType] =
 
                 <select
                   name="grace_period_days"
-                  value={form.grace_period_days}
+                  value={
+                    form.grace_period_days
+                  }
                   onChange={handleChange}
-                  className="w-full rounded-xl border p-3"
+                  className="w-full rounded-xl border bg-white p-3"
                 >
+
                   {[0,1,2,3,5,7,10,14,21,30].map(
                     (days) => (
+
                       <option
                         key={days}
                         value={days}
                       >
-                        {days} Day{days === 1 ? "" : "s"}
+                        {days} Day
+                        {days === 1 ? "" : "s"}
                       </option>
+
                     )
                   )}
+
                 </select>
 
               </div>
 
             </div>
 
-          </div>
+          </SectionCard>
+                        {/* Notes */}
 
-          {/* Notes */}
-
-          <div className="rounded-2xl border p-6">
-
-            <h3 className="mb-5 text-lg font-semibold">
-              Notes
-            </h3>
+          <SectionCard
+            title="📝 Notes"
+            description="Optional notes for this lease."
+          >
 
             <textarea
               rows={5}
               name="notes"
               value={form.notes}
               onChange={handleChange}
-              placeholder="Optional notes..."
-              className="w-full rounded-xl border p-3"
+              placeholder="Enter any additional notes..."
+              className="w-full rounded-xl border bg-white p-4"
             />
 
-          </div>
+          </SectionCard>
 
-          {/* Activate Immediately */}
+          {/* Activation */}
 
-          <div className="rounded-2xl border bg-blue-50 p-5">
+          <SectionCard
+            title="🚀 Activation"
+            description="Choose whether to activate this lease immediately."
+          >
 
-            <label className="flex items-center gap-3">
+            <label className="flex items-start gap-3">
 
               <input
                 type="checkbox"
@@ -616,6 +753,7 @@ const [leaseType, setLeaseType] =
                     e.target.checked
                   )
                 }
+                className="mt-1"
               />
 
               <div>
@@ -624,60 +762,39 @@ const [leaseType, setLeaseType] =
                   Activate Lease Immediately
                 </p>
 
-                <p className="text-sm text-gray-600">
-                  The unit will become occupied
-                  and the occupant will become
-                  active immediately after saving.
+                <p className="mt-1 text-sm text-gray-500">
+                  When enabled, the lease will be activated
+                  immediately after saving. The selected unit
+                  becomes <strong>Occupied</strong> and the
+                  selected occupant becomes
+                  <strong> Active</strong>.
                 </p>
 
               </div>
 
             </label>
 
-          </div>
+          </SectionCard>
 
         </div>
 
-        {/* Footer */}
-
-        <div className="flex flex-col-reverse gap-3 border-t p-6 md:flex-row md:justify-end">
-
-          <button
-            onClick={onCancel}
-            disabled={loading}
-            className="rounded-xl border px-6 py-3"
-          >
-            Cancel
-          </button>
-
-          <button
-            disabled={loading}
-            onClick={() => {
-              setActivateNow(false);
-              handleSubmit();
-            }}
-            className="rounded-xl bg-gray-700 px-6 py-3 font-semibold text-white hover:bg-gray-800"
-          >
-            Save Draft
-          </button>
-
-          <button
-            disabled={loading}
-            onClick={() => {
-              setActivateNow(true);
-              handleSubmit();
-            }}
-            className="rounded-xl bg-black px-6 py-3 font-semibold text-white hover:bg-gray-900"
-          >
-            {loading
-              ? "Saving..."
-              : "Activate Lease"}
-          </button>
-
-        </div>
+        <StickyActionBar
+          loading={loading}
+          onCancel={onCancel}
+          onSaveDraft={() => {
+            setActivateNow(false);
+            handleSubmit();
+          }}
+          onPrimary={() => {
+            setActivateNow(true);
+            handleSubmit();
+          }}
+          primaryText="Activate Lease"
+        />
 
       </div>
 
     </div>
+
   );
 }
