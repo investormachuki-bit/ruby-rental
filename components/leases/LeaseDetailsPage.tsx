@@ -62,26 +62,6 @@ const [showPaymentModal, setShowPaymentModal] =
 
 }
 
-    try {
-
-      setLoading(true);
-
-      const data =
-        await getLease(leaseId);
-
-      setLease(data);
-
-    } catch (error) {
-
-      console.error(error);
-
-    } finally {
-
-      setLoading(false);
-
-    }
-
-  }
 
   if (loading) {
 
