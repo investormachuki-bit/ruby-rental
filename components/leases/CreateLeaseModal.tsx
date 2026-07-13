@@ -49,9 +49,10 @@ export default function CreateLeaseModal({
 
   const [units, setUnits] =
     useState<Unit[]>([]);
-
-  const [leaseType, setLeaseType] =
-    useState("Open-ended");
+const [leaseType, setLeaseType] =
+  useState<"Open-ended" | "Fixed Term">(
+    "Open-ended"
+  );
 
   const [activateNow, setActivateNow] =
     useState(false);
