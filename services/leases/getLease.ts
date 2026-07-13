@@ -9,48 +9,45 @@ export async function getLease(
   } = await supabase.auth.getSession();
 
   if (!session) {
-    throw new Error("You are not logged in.");
+    throw new Error("Not authenticated.");
   }
 
-  const profile = await getProfile(session.user.id);
+  const profile =
+    await getProfile(session.user.id);
 
-  if (!profile) {
-    throw new Error("Profile not found.");
-  }
-
-  const { data, error } = await supabase
-    .from("leases")
-    .select(`
-      *,
-      property:properties(
-        id,
-        name,
-        property_type
-      ),
-      unit:units(
-        id,
-        unit_number,
-        floor_name,
-        monthly_rent,
-        deposit
-      ),
-      occupant:occupants(
-        id,
-        occupant_code,
-        first_name,
-        last_name,
-        phone_number,
-        email,
-        id_number
+  const { data, error } =
+    await supabase
+      .from("leases")
+      .select(`
+        *,
+        property:properties(
+          id,
+          name,
+          county,
+          town
+        ),
+        unit:units(
+          id,
+          unit_number,
+          floor_name
+        ),
+        occupant:occupants(
+          id,
+          first_name,
+          last_name,
+          phone_number,
+          email,
+          id_number
+        )
+      `)
+      .eq(
+        "workspace_id",
+        profile.workspace_id
       )
-    `)
-    .eq("workspace_id", profile.workspace_id)
-    .eq("id", leaseId)
-    .single();
+      .eq("id", leaseId)
+      .single();
 
-  if (error) {
-    throw error;
-  }
+  if (error) throw error;
 
   return data;
 }
