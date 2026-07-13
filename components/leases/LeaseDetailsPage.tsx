@@ -732,43 +732,41 @@ payment.amount
 
 )}
 
-{activeTab !==
-"Overview" &&
-activeTab !==
-"Payments" && (
+{activeTab !== "Overview" &&
+  activeTab !== "Payments" && (
 
-<div className="rounded-2xl border border-dashed bg-white p-16 text-center">
+  <div className="rounded-2xl border border-dashed bg-white p-16 text-center">
 
-<h2 className="text-2xl font-bold">
+    <h2 className="text-2xl font-bold">
+      {activeTab}
+    </h2>
 
-{activeTab}
+    <p className="mt-3 text-gray-500">
+      Coming soon.
+    </p>
 
-</h2>
+  </div>
 
-<p className="mt-3 text-gray-500">
+)}
 
-Coming soon.
+{showPaymentModal &&
+  lease && (
 
-</p>
+  <ReceivePaymentModal
+    lease={lease}
+    onCancel={() =>
+      setShowPaymentModal(false)
+    }
+    onSuccess={() => {
 
-    {showPaymentModal &&
-      lease && (
+      setShowPaymentModal(false);
 
-        <ReceivePaymentModal
-          lease={lease}
-          onCancel={() =>
-            setShowPaymentModal(false)
-          }
-          onSuccess={() => {
+      loadLease();
 
-            setShowPaymentModal(false);
+    }}
+  />
 
-            loadLease();
-
-          }}
-        />
-
-    )}
+)}
 
     </div>
 
