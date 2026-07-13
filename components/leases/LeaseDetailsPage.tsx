@@ -5,6 +5,8 @@ import Link from "next/link";
 
 import Breadcrumb from "@/components/common/Breadcrumb";
 import { getLease } from "@/services/leases/getLease";
+import ReceivePaymentModal from "@/components/payments/ReceivePaymentModal";
+import { getPayments } from "@/services/payments/getPayments";
 
 type Props = {
   leaseId: string;
@@ -22,12 +24,43 @@ export default function LeaseDetailsPage({
 
   const [activeTab, setActiveTab] =
     useState("Overview");
+  const [payments, setPayments] =
+  useState<any[]>([]);
+
+const [showPaymentModal, setShowPaymentModal] =
+  useState(false);
 
   useEffect(() => {
     loadLease();
   }, []);
 
   async function loadLease() {
+
+  try {
+
+    setLoading(true);
+
+    const data =
+      await getLease(leaseId);
+
+    setLease(data);
+
+    const paymentData =
+      await getPayments(leaseId);
+
+    setPayments(paymentData);
+
+  } catch (error) {
+
+    console.error(error);
+
+  } finally {
+
+    setLoading(false);
+
+  }
+
+}
 
     try {
 
@@ -139,8 +172,12 @@ export default function LeaseDetailsPage({
           >
             {lease.status}
           </span>
-
-          <button className="rounded-xl bg-black px-5 py-3 font-semibold text-white">
+<button
+  onClick={() =>
+    setShowPaymentModal(true)
+  }
+  className="rounded-xl bg-black px-5 py-3 font-semibold text-white"
+>
 
             Record Payment
 
@@ -590,24 +627,173 @@ export default function LeaseDetailsPage({
         </div>
 
       )}
+{activeTab ===
+"Payments" && (
 
-      {activeTab !== "Overview" && (
+<div className="rounded-2xl border bg-white shadow-sm">
 
-        <div className="rounded-2xl border border-dashed bg-white p-16 text-center shadow-sm">
+<div className="flex items-center justify-between border-b p-6">
 
-          <h2 className="text-2xl font-bold">
-            {activeTab}
-          </h2>
+<div>
 
-          <p className="mt-3 text-gray-500">
-            This section will be built next.
-          </p>
+<h3 className="text-xl font-bold">
+Payments
+</h3>
 
-        </div>
+<p className="text-gray-500">
+Payment history for this lease.
+</p>
 
-      )}
+</div>
+
+<button
+onClick={() =>
+setShowPaymentModal(true)
+}
+className="rounded-xl bg-black px-5 py-3 font-semibold text-white"
+>
++ Receive Payment
+</button>
+
+</div>
+
+{payments.length === 0 ? (
+
+<div className="p-12 text-center text-gray-500">
+
+No payments recorded.
+
+</div>
+
+) : (
+
+<div className="overflow-x-auto">
+
+<table className="min-w-full">
+
+<thead className="bg-gray-50">
+
+<tr>
+
+<th className="p-4 text-left">
+Date
+</th>
+
+<th className="p-4 text-left">
+Receipt
+</th>
+
+<th className="p-4 text-left">
+Method
+</th>
+
+<th className="p-4 text-left">
+Type
+</th>
+
+<th className="p-4 text-right">
+Amount
+</th>
+
+</tr>
+
+</thead>
+
+<tbody>
+
+{payments.map(
+(payment) => (
+
+<tr
+key={payment.id}
+className="border-t"
+>
+
+<td className="p-4">
+{payment.payment_date}
+</td>
+
+<td className="p-4">
+{payment.receipt_number}
+</td>
+
+<td className="p-4">
+{payment.payment_method}
+</td>
+
+<td className="p-4">
+{payment.payment_type}
+</td>
+
+<td className="p-4 text-right font-semibold">
+
+KSh{" "}
+
+{Number(
+payment.amount
+).toLocaleString()}
+
+</td>
+
+</tr>
+
+)
+)}
+
+</tbody>
+
+</table>
+
+</div>
+
+)}
+
+</div>
+
+)}
+
+{activeTab !==
+"Overview" &&
+activeTab !==
+"Payments" && (
+
+<div className="rounded-2xl border border-dashed bg-white p-16 text-center">
+
+<h2 className="text-2xl font-bold">
+
+{activeTab}
+
+</h2>
+
+<p className="mt-3 text-gray-500">
+
+Coming soon.
+
+</p>
+
+</div>
+
+)}
 
     </div>
+    {showPaymentModal &&
+  lease && (
+
+    <ReceivePaymentModal
+      lease={lease}
+      onCancel={() =>
+        setShowPaymentModal(false)
+      }
+      onSuccess={() => {
+
+        setShowPaymentModal(false);
+
+        loadLease();
+
+      }}
+    />
+
+)}
 
   );
 
