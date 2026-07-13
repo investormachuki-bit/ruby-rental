@@ -499,11 +499,77 @@ export default function CreateLeaseModal({
                 </option>
 
                 {occupants.map((occupant) => (
+                    value={occupant.id}
+                  >
+                    {occupant.first_name} {occupant.last_name}
+                  </option>
 
-                  <option
-                    key={occupant.id}
-                    value
-                              {/* Lease Terms */}
+                ))}
+
+              </select>
+
+            </div>
+
+            {selectedOccupant && (
+
+              <div className="mt-6 rounded-xl border bg-slate-50 p-5">
+
+                <h4 className="mb-4 font-semibold">
+                  Selected Occupant
+                </h4>
+
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+
+                  <div>
+                    <p className="text-xs uppercase text-gray-500">
+                      Name
+                    </p>
+
+                    <p className="font-semibold">
+                      {selectedOccupant.first_name}{" "}
+                      {selectedOccupant.last_name}
+                    </p>
+                  </div>
+
+                  <div>
+                    <p className="text-xs uppercase text-gray-500">
+                      Phone
+                    </p>
+
+                    <p className="font-semibold">
+                      {selectedOccupant.phone_number ?? "-"}
+                    </p>
+                  </div>
+
+                  <div>
+                    <p className="text-xs uppercase text-gray-500">
+                      ID Number
+                    </p>
+
+                    <p className="font-semibold">
+                      {selectedOccupant.id_number ?? "-"}
+                    </p>
+                  </div>
+
+                  <div>
+                    <p className="text-xs uppercase text-gray-500">
+                      Email
+                    </p>
+
+                    <p className="font-semibold">
+                      {selectedOccupant.email ?? "-"}
+                    </p>
+                  </div>
+
+                </div>
+
+              </div>
+
+            )}
+
+          </SectionCard>
+
+          {/* Lease Terms */}
 
           <SectionCard
             title="📄 Lease Terms"
@@ -522,41 +588,25 @@ export default function CreateLeaseModal({
               <div className="flex flex-wrap gap-6">
 
                 <label className="flex items-center gap-2">
-
                   <input
                     type="radio"
-                    checked={
-                      leaseType ===
-                      "Open-ended"
-                    }
+                    checked={leaseType === "Open-ended"}
                     onChange={() =>
-                      setLeaseType(
-                        "Open-ended"
-                      )
+                      setLeaseType("Open-ended")
                     }
                   />
-
                   Open-ended
-
                 </label>
 
                 <label className="flex items-center gap-2">
-
                   <input
                     type="radio"
-                    checked={
-                      leaseType ===
-                      "Fixed Term"
-                    }
+                    checked={leaseType === "Fixed Term"}
                     onChange={() =>
-                      setLeaseType(
-                        "Fixed Term"
-                      )
+                      setLeaseType("Fixed Term")
                     }
                   />
-
                   Fixed Term
-
                 </label>
 
               </div>
@@ -579,8 +629,7 @@ export default function CreateLeaseModal({
 
                 </div>
 
-                {leaseType ===
-                  "Fixed Term" && (
+                {leaseType === "Fixed Term" && (
 
                   <div>
 
@@ -616,8 +665,7 @@ export default function CreateLeaseModal({
               form.deposit_amount !== ""
             }
           >
-
-            <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
+                        <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
 
               <div>
 
@@ -663,21 +711,11 @@ export default function CreateLeaseModal({
                   onChange={handleChange}
                   className="w-full rounded-xl border bg-white p-3"
                 >
-
-                  {Array.from(
-                    { length: 31 },
-                    (_, i) => i + 1
-                  ).map((day) => (
-
-                    <option
-                      key={day}
-                      value={day}
-                    >
+                  {Array.from({ length: 31 }, (_, i) => i + 1).map((day) => (
+                    <option key={day} value={day}>
                       {day}
                     </option>
-
                   ))}
-
                 </select>
 
               </div>
@@ -690,27 +728,18 @@ export default function CreateLeaseModal({
 
                 <select
                   name="grace_period_days"
-                  value={
-                    form.grace_period_days
-                  }
+                  value={form.grace_period_days}
                   onChange={handleChange}
                   className="w-full rounded-xl border bg-white p-3"
                 >
-
-                  {[0,1,2,3,5,7,10,14,21,30].map(
-                    (days) => (
-
-                      <option
-                        key={days}
-                        value={days}
-                      >
-                        {days} Day
-                        {days === 1 ? "" : "s"}
-                      </option>
-
-                    )
-                  )}
-
+                  {[0, 1, 2, 3, 5, 7, 10, 14, 21, 30].map((days) => (
+                    <option
+                      key={days}
+                      value={days}
+                    >
+                      {days} Day{days === 1 ? "" : "s"}
+                    </option>
+                  ))}
                 </select>
 
               </div>
@@ -718,7 +747,6 @@ export default function CreateLeaseModal({
             </div>
 
           </SectionCard>
-                        {/* Notes */}
 
           <SectionCard
             title="📝 Notes"
@@ -730,49 +758,9 @@ export default function CreateLeaseModal({
               name="notes"
               value={form.notes}
               onChange={handleChange}
-              placeholder="Enter any additional notes..."
+              placeholder="Enter additional notes..."
               className="w-full rounded-xl border bg-white p-4"
             />
-
-          </SectionCard>
-
-          {/* Activation */}
-
-          <SectionCard
-            title="🚀 Activation"
-            description="Choose whether to activate this lease immediately."
-          >
-
-            <label className="flex items-start gap-3">
-
-              <input
-                type="checkbox"
-                checked={activateNow}
-                onChange={(e) =>
-                  setActivateNow(
-                    e.target.checked
-                  )
-                }
-                className="mt-1"
-              />
-
-              <div>
-
-                <p className="font-semibold">
-                  Activate Lease Immediately
-                </p>
-
-                <p className="mt-1 text-sm text-gray-500">
-                  When enabled, the lease will be activated
-                  immediately after saving. The selected unit
-                  becomes <strong>Occupied</strong> and the
-                  selected occupant becomes
-                  <strong> Active</strong>.
-                </p>
-
-              </div>
-
-            </label>
 
           </SectionCard>
 
@@ -798,3 +786,5 @@ export default function CreateLeaseModal({
 
   );
 }
+                  
+          
