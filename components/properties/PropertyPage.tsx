@@ -17,6 +17,13 @@ type Property = {
   address: string | null;
   description: string | null;
   is_active: boolean;
+
+  total_units: number;
+  occupied_units: number;
+  vacant_units: number;
+
+  monthly_income: number;
+  occupancy_rate: number;
 };
 
 export default function PropertyPage() {
@@ -70,18 +77,57 @@ export default function PropertyPage() {
             .includes(
               search.toLowerCase()
             ) ||
-          (property.town ?? "")
+          (property.county ?? "")
             .toLowerCase()
             .includes(
               search.toLowerCase()
             ) ||
-          (property.county ?? "")
+          (property.town ?? "")
             .toLowerCase()
             .includes(
               search.toLowerCase()
             )
       );
     }, [properties, search]);
+
+  const totalMonthlyIncome =
+    properties.reduce(
+      (sum, property) =>
+        sum + property.monthly_income,
+      0
+    );
+
+  const totalUnits =
+    properties.reduce(
+      (sum, property) =>
+        sum + property.total_units,
+      0
+    );
+
+  const occupiedUnits =
+    properties.reduce(
+      (sum, property) =>
+        sum +
+        property.occupied_units,
+      0
+    );
+
+  const vacantUnits =
+    properties.reduce(
+      (sum, property) =>
+        sum +
+        property.vacant_units,
+      0
+    );
+
+  const overallOccupancy =
+    totalUnits === 0
+      ? 0
+      : Math.round(
+          (occupiedUnits /
+            totalUnits) *
+            100
+        );
 
   return (
     <>
@@ -110,7 +156,8 @@ export default function PropertyPage() {
             </h1>
 
             <p className="mt-2 text-gray-500">
-              Manage all your rental properties.
+              Manage all your rental
+              properties.
             </p>
 
           </div>
@@ -145,15 +192,11 @@ export default function PropertyPage() {
           <div className="rounded-2xl border bg-white p-5 shadow-sm">
 
             <p className="text-sm text-gray-500">
-              Active
+              Occupancy
             </p>
 
             <h2 className="mt-2 text-3xl font-bold text-green-600">
-              {
-                properties.filter(
-                  (p) => p.is_active
-                ).length
-              }
+              {overallOccupancy}%
             </h2>
 
           </div>
@@ -161,15 +204,11 @@ export default function PropertyPage() {
           <div className="rounded-2xl border bg-white p-5 shadow-sm">
 
             <p className="text-sm text-gray-500">
-              Inactive
+              Vacant Units
             </p>
 
-            <h2 className="mt-2 text-3xl font-bold text-red-600">
-              {
-                properties.filter(
-                  (p) => !p.is_active
-                ).length
-              }
+            <h2 className="mt-2 text-3xl font-bold text-orange-500">
+              {vacantUnits}
             </h2>
 
           </div>
@@ -177,11 +216,12 @@ export default function PropertyPage() {
           <div className="rounded-2xl border bg-white p-5 shadow-sm">
 
             <p className="text-sm text-gray-500">
-              Portfolio
+              Monthly Income
             </p>
 
             <h2 className="mt-2 text-3xl font-bold">
-              100%
+              KSh{" "}
+              {totalMonthlyIncome.toLocaleString()}
             </h2>
 
           </div>
@@ -213,8 +253,6 @@ export default function PropertyPage() {
 
         ) : filteredProperties.length === 0 ? (
 
-          /* Empty State */
-
           <div className="rounded-2xl border border-dashed bg-white p-12 text-center shadow-sm">
 
             <h2 className="text-2xl font-semibold">
@@ -224,7 +262,7 @@ export default function PropertyPage() {
             <p className="mt-3 text-gray-500">
               {search
                 ? "No properties match your search."
-                : "Create your first property to start managing your rental business."}
+                : "Create your first property to start managing your rental portfolio."}
             </p>
 
             {!search && (
@@ -242,8 +280,6 @@ export default function PropertyPage() {
 
         ) : (
 
-          /* Property Cards */
-
           <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
 
             {filteredProperties.map(
@@ -251,7 +287,7 @@ export default function PropertyPage() {
 
                 <div
                   key={property.id}
-                  className="overflow-hidden rounded-2xl border bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-lg"
+                  className="overflow-hidden rounded-2xl border bg-white shadow-sm transition duration-200 hover:-translate-y-1 hover:shadow-lg"
                 >
 
                   <Link
@@ -311,7 +347,7 @@ export default function PropertyPage() {
 
                     <div className="mt-6 border-t pt-5">
 
-                      <div className="grid grid-cols-2 gap-4 text-center">
+                      <div className="grid grid-cols-2 gap-5 text-center">
 
                         <div>
 
@@ -320,7 +356,7 @@ export default function PropertyPage() {
                           </p>
 
                           <p className="mt-2 text-2xl font-bold">
-                            0
+                            {property.total_units}
                           </p>
 
                         </div>
@@ -332,7 +368,7 @@ export default function PropertyPage() {
                           </p>
 
                           <p className="mt-2 text-2xl font-bold text-green-600">
-                            0
+                            {property.occupied_units}
                           </p>
 
                         </div>
@@ -344,7 +380,7 @@ export default function PropertyPage() {
                           </p>
 
                           <p className="mt-2 text-2xl font-bold text-orange-500">
-                            0
+                            {property.vacant_units}
                           </p>
 
                         </div>
@@ -352,14 +388,42 @@ export default function PropertyPage() {
                         <div>
 
                           <p className="text-xs uppercase tracking-wide text-gray-500">
-                            Monthly Rent
+                            Monthly Income
                           </p>
 
                           <p className="mt-2 text-lg font-bold">
-                            KSh 0
+                            KSh{" "}
+                            {property.monthly_income.toLocaleString()}
                           </p>
 
                         </div>
+
+                      </div>
+
+                    </div>
+
+                    <div className="mt-6">
+
+                      <div className="mb-2 flex items-center justify-between">
+
+                        <span className="text-sm text-gray-500">
+                          Occupancy
+                        </span>
+
+                        <span className="font-semibold">
+                          {property.occupancy_rate}%
+                        </span>
+
+                      </div>
+
+                      <div className="h-2 overflow-hidden rounded-full bg-gray-200">
+
+                        <div
+                          className="h-full rounded-full bg-green-600 transition-all"
+                          style={{
+                            width: `${property.occupancy_rate}%`,
+                          }}
+                        />
 
                       </div>
 
@@ -371,7 +435,7 @@ export default function PropertyPage() {
 
                     <Link
                       href={`/properties/${property.id}`}
-                      className="flex-1 rounded-xl bg-black py-2.5 text-center font-medium text-white transition hover:bg-gray-800"
+                      className="flex-1 rounded-xl bg-black py-2.5 text-center font-medium text-white hover:bg-gray-800"
                     >
                       Open Property
                     </Link>
@@ -432,4 +496,4 @@ export default function PropertyPage() {
     </>
   );
 }
-              
+        
