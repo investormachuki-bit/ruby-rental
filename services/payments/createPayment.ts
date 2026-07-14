@@ -1,7 +1,15 @@
 import { supabase } from "@/lib/supabase";
+
 import { getProfile } from "@/services/auth/getProfile";
 
+import { createReceipt } from "@/services/receipts/createReceipt";
+
+import { updatePaymentAllocationTotals } from "@/services/payments/updatePaymentAllocationTotals";
+
 type CreatePaymentInput = {
+
+  invoice_id: string;
+
   lease_id: string;
 
   property_id: string;
@@ -32,6 +40,7 @@ type CreatePaymentInput = {
   reference_number?: string;
 
   notes?: string;
+
 };
 
 export async function createPayment(
@@ -63,7 +72,6 @@ export async function createPayment(
     );
 
   }
-    // Generate receipt number
 
   const today = new Date();
 
@@ -85,28 +93,37 @@ export async function createPayment(
     await supabase
       .from("payments")
       .select("*", {
+
         count: "exact",
+
         head: true,
+
       })
       .eq(
         "workspace_id",
         profile.workspace_id
       );
 
-  const sequence = String(
-    (count ?? 0) + 1
-  ).padStart(6, "0");
+  const sequence =
+    String(
+      (count ?? 0) + 1
+    ).padStart(6, "0");
 
   const receiptNumber =
     `${prefix}-${sequence}`;
-
-  const { data, error } =
+    const {
+    data: payment,
+    error,
+  } =
     await supabase
       .from("payments")
       .insert({
 
         workspace_id:
           profile.workspace_id,
+
+        invoice_id:
+          input.invoice_id,
 
         lease_id:
           input.lease_id,
@@ -135,6 +152,14 @@ export async function createPayment(
         amount:
           input.amount,
 
+        allocated_amount: 0,
+
+        unallocated_amount:
+          input.amount,
+
+        status:
+          "Unallocated",
+
         reference_number:
           input.reference_number ??
           null,
@@ -155,6 +180,69 @@ export async function createPayment(
 
   }
 
-  return data;
+  const { error: allocationError } =
+    await supabase.rpc(
+      "allocate_payment_to_invoices",
+      {
+
+        p_workspace_id:
+          profile.workspace_id,
+
+        p_payment_id:
+          payment.id,
+
+        p_amount:
+          input.amount,
+
+      }
+    );
+
+  if (allocationError) {
+
+    throw allocationError;
+
+  }
+
+  await updatePaymentAllocationTotals(
+    payment.id
+  );
+
+  const receipt =
+    await createReceipt({
+
+      payment_id:
+        payment.id,
+
+      amount:
+        input.amount,
+
+      receipt_date:
+        input.payment_date,
+
+      notes:
+        input.notes,
+
+    });
+        payment_id:
+        payment.id,
+
+      amount:
+        input.amount,
+
+      receipt_date:
+        input.payment_date,
+
+      notes:
+        input.notes,
+
+    });
+
+  return {
+
+    payment,
+
+    receipt,
+
+  };
 
 }
