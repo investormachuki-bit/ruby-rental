@@ -84,62 +84,74 @@ export default function Sidebar({
     return pathname.startsWith(href);
   }
 
-  const renderMenu = () => (
-    <ul className="space-y-2">
-      {menuItems.map((item) => {
-        const Icon = item.icon;
-        const active = isActive(item.href);
-
-        return (
-          <li key={item.name}>
-            <Link
-              href={item.href}
-              onClick={() =>
-                setSidebarOpen(false)
-              }
-              className={`group flex items-center gap-3 rounded-2xl px-4 py-3 transition-all duration-200 ${
-                active
-                  ? "bg-[#D4AF37] text-black shadow-md"
-                  : "text-gray-300 hover:bg-white/10 hover:text-white"
-              }`}
-            >
-              <Icon size={20} />
-
-              <span className="flex-1 font-medium">
-                {item.name}
-              </span>
-
-              {active && (
-                <div className="h-2 w-2 rounded-full bg-black" />
-              )}
-            </Link>
-          </li>
-        );
-      })}
-    </ul>
-  );
+  const linkClass = (href: string) =>
+    `group flex items-center gap-3 rounded-2xl px-4 py-3 transition-all duration-200 ${
+      isActive(href)
+        ? "bg-[#D4AF37] text-[#0F0F10] shadow-lg"
+        : "text-gray-400 hover:bg-white/5 hover:text-white"
+    }`;
 
   return (
     <>
-      {/* Desktop */}
+      {/* Desktop Sidebar */}
 
-      <aside className="fixed left-0 top-0 hidden h-screen w-64 border-r border-gray-800 bg-[#111111] md:flex md:flex-col">
+      <aside className="fixed left-0 top-0 hidden h-screen w-64 flex-col border-r border-[#232323] bg-[#0F0F10] md:flex">
 
-        <div className="border-b border-gray-800 p-6">
+        {/* Logo */}
+
+        <div className="border-b border-[#232323] p-6">
 
           <Logo />
 
         </div>
 
-        <div className="flex-1 overflow-y-auto p-4">
+        {/* Navigation */}
 
-          {renderMenu()}
+        <nav className="flex-1 overflow-y-auto px-4 py-5">
 
-        </div>
+          <ul className="space-y-2">
 
-        <div className="border-t border-gray-800 p-5">
+            {menuItems.map((item) => {
+              const Icon = item.icon;
 
-          <p className="text-center text-xs tracking-wider text-gray-500">
+              return (
+                <li key={item.name}>
+
+                  <Link
+                    href={item.href}
+                    className={linkClass(item.href)}
+                  >
+
+                    <Icon
+                      size={20}
+                      className={
+                        isActive(item.href)
+                          ? "text-[#0F0F10]"
+                          : "text-gray-500 transition group-hover:text-[#D4AF37]"
+                      }
+                    />
+
+                    <span className="font-semibold tracking-wide">
+
+                      {item.name}
+
+                    </span>
+
+                  </Link>
+
+                </li>
+              );
+            })}
+
+          </ul>
+
+        </nav>
+
+        {/* Footer */}
+
+        <div className="border-t border-[#232323] p-5">
+
+          <p className="text-center text-xs text-gray-600">
 
             Ruby Rental v1.0
 
@@ -149,31 +161,74 @@ export default function Sidebar({
 
       </aside>
 
-      {/* Mobile */}
+      {/* Mobile Sidebar */}
 
       <aside
-        className={`fixed left-0 top-0 z-50 flex h-screen w-64 flex-col bg-[#111111] shadow-2xl transition-transform duration-300 md:hidden ${
+        className={`fixed left-0 top-0 z-50 h-screen w-64 transform border-r border-[#232323] bg-[#0F0F10] shadow-2xl transition-transform duration-300 md:hidden ${
           sidebarOpen
             ? "translate-x-0"
             : "-translate-x-full"
         }`}
       >
 
-        <div className="border-b border-gray-800 p-6">
+        {/* Logo */}
+
+        <div className="border-b border-[#232323] p-6">
 
           <Logo />
 
         </div>
 
-        <div className="flex-1 overflow-y-auto p-4">
+        {/* Navigation */}
 
-          {renderMenu()}
+        <nav className="overflow-y-auto px-4 py-5">
 
-        </div>
+          <ul className="space-y-2">
 
-        <div className="border-t border-gray-800 p-5">
+            {menuItems.map((item) => {
+              const Icon = item.icon;
 
-          <p className="text-center text-xs tracking-wider text-gray-500">
+              return (
+                <li key={item.name}>
+
+                  <Link
+                    href={item.href}
+                    onClick={() =>
+                      setSidebarOpen(false)
+                    }
+                    className={linkClass(item.href)}
+                  >
+
+                    <Icon
+                      size={20}
+                      className={
+                        isActive(item.href)
+                          ? "text-[#0F0F10]"
+                          : "text-gray-500 transition group-hover:text-[#D4AF37]"
+                      }
+                    />
+
+                    <span className="font-semibold tracking-wide">
+
+                      {item.name}
+
+                    </span>
+
+                  </Link>
+
+                </li>
+              );
+            })}
+
+          </ul>
+
+        </nav>
+
+        {/* Footer */}
+
+        <div className="border-t border-[#232323] p-5">
+
+          <p className="text-center text-xs text-gray-600">
 
             Ruby Rental v1.0
 
