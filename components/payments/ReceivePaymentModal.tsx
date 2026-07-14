@@ -6,12 +6,8 @@ import SectionCard from "@/components/common/SectionCard";
 import StickyActionBar from "@/components/common/StickyActionBar";
 
 import { createPayment } from "@/services/payments/createPayment";
-
 type Lease = {
-
   id: string;
-
-  invoice_id: string;
 
   property_id: string;
 
@@ -34,7 +30,6 @@ type Lease = {
     last_name: string;
     phone_number?: string;
   };
-
 };
 
 type Props = {
@@ -112,42 +107,37 @@ export default function ReceivePaymentModal({
 
       await createPayment({
 
-  invoice_id:
-    lease.invoice_id,
-
   lease_id:
     lease.id,
 
-        property_id:
-          lease.property_id,
+  property_id:
+    lease.property_id,
 
-        unit_id:
-          lease.unit_id,
+  unit_id:
+    lease.unit_id,
 
-        occupant_id:
-          lease.occupant_id,
+  occupant_id:
+    lease.occupant_id,
 
-        payment_type:
-          form.payment_type as any,
+  payment_type:
+    form.payment_type as any,
 
-        payment_method:
-          form.payment_method as any,
+  payment_method:
+    form.payment_method as any,
 
-        payment_date:
-          form.payment_date,
+  payment_date:
+    form.payment_date,
 
-        amount:
-          Number(
-            form.amount
-          ),
+  amount:
+    Number(form.amount),
 
-        reference_number:
-          form.reference_number,
+  reference_number:
+    form.reference_number,
 
-        notes:
-          form.notes,
+  notes:
+    form.notes,
 
-      });
+});
 
       onSuccess();
 
