@@ -43,7 +43,7 @@ export async function createOccupant(
     throw new Error("Profile not found.");
   }
 
-  // Generate Occupant Code from PostgreSQL
+  // Generate Occupant Code
   const {
     data: occupantCode,
     error: codeError,
@@ -59,65 +59,87 @@ export async function createOccupant(
     throw codeError;
   }
 
+  // Split full name into first & last
+  const parts = input.fullName
+    .trim()
+    .split(/\s+/);
+
+  const firstName =
+    parts.shift() ?? "";
+
+  const lastName =
+    parts.join(" ");
+
   // Create occupant
-  const { data, error } = await supabase
-    .from("occupants")
-    .insert({
-      workspace_id:
-        profile.workspace_id,
+  const { data, error } =
+    await supabase
+      .from("occupants")
+      .insert({
+        workspace_id:
+          profile.workspace_id,
 
-      property_id:
-        input.propertyId,
+        property_id:
+          input.propertyId,
 
-      unit_id:
-        input.unitId ?? null,
+        unit_id:
+          input.unitId ?? null,
 
-      occupant_code:
-        occupantCode,
+        occupant_code:
+          occupantCode,
 
-      full_name:
-        input.fullName.trim(),
+        // New schema
+        full_name:
+          input.fullName.trim(),
 
-      phone:
-        input.phone.trim(),
+        phone:
+          input.phone.trim(),
 
-      email:
-        input.email?.trim() || null,
+        // Legacy compatibility
+        first_name:
+          firstName,
 
-      id_number:
-        input.idNumber?.trim() || null,
+        last_name:
+          lastName,
 
-      emergency_contact_name:
-        input.emergencyContactName?.trim() ||
-        null,
+        phone_number:
+          input.phone.trim(),
 
-      emergency_contact_phone:
-        input.emergencyContactPhone?.trim() ||
-        null,
+        email:
+          input.email?.trim() || null,
 
-      occupation:
-        input.occupation?.trim() || null,
+        id_number:
+          input.idNumber?.trim() || null,
 
-      employer:
-        input.employer?.trim() || null,
+        emergency_contact_name:
+          input.emergencyContactName?.trim() ||
+          null,
 
-      move_in_date:
-        input.moveInDate || null,
+        emergency_contact_phone:
+          input.emergencyContactPhone?.trim() ||
+          null,
 
-      notes:
-        input.notes?.trim() || null,
+        occupation:
+          input.occupation?.trim() || null,
 
-      is_primary: true,
-    })
-    .select()
-    .single();
+        employer:
+          input.employer?.trim() || null,
+
+        move_in_date:
+          input.moveInDate || null,
+
+        notes:
+          input.notes?.trim() || null,
+
+        is_primary: true,
+      })
+      .select()
+      .single();
 
   if (error) {
     throw error;
   }
 
-  // If the occupant is assigned to a unit,
-  // automatically mark the unit as occupied.
+  // Mark unit occupied
   if (input.unitId) {
     const { error: unitError } =
       await supabase
