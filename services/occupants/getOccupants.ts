@@ -38,7 +38,7 @@ export async function getOccupants() {
       "workspace_id",
       profile.workspace_id
     )
-    .order("full_name", {
+    .order("first_name", {
       ascending: true,
     });
 
