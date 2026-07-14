@@ -9,6 +9,7 @@ import {
   DollarSign,
   Plus,
 } from "lucide-react";
+
 import AppShell from "@/components/layout/AppShell";
 
 import Breadcrumb from "@/components/common/Breadcrumb";
@@ -19,7 +20,6 @@ import Section from "@/components/ui/Section";
 import StatCard from "@/components/ui/StatCard";
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
-import SearchInput from "@/components/ui/SearchInput";
 import Loading from "@/components/ui/Loading";
 import EmptyState from "@/components/ui/EmptyState";
 
@@ -47,8 +47,10 @@ export default function OccupantsPage() {
   const [loading, setLoading] =
     useState(true);
 
-  const [showCreateModal, setShowCreateModal] =
-    useState(false);
+  const [
+    showCreateModal,
+    setShowCreateModal,
+  ] = useState(false);
 
   const [search, setSearch] =
     useState("");
@@ -61,7 +63,8 @@ export default function OccupantsPage() {
     try {
       setLoading(true);
 
-      const data = await getOccupants();
+      const data =
+        await getOccupants();
 
       setOccupants(data ?? []);
     } catch (error) {
@@ -71,33 +74,34 @@ export default function OccupantsPage() {
     }
   }
 
-  const filteredOccupants = useMemo(() => {
-    const keyword = search.toLowerCase();
+  const filteredOccupants =
+    useMemo(() => {
+      const keyword =
+        search.toLowerCase();
 
-    return occupants.filter((occupant) => {
-      return (
-        occupant.full_name
-          ?.toLowerCase()
-          .includes(keyword) ||
+      return occupants.filter(
+        (occupant) =>
+          occupant.full_name
+            ?.toLowerCase()
+            .includes(keyword) ||
 
-        occupant.phone
-          ?.toLowerCase()
-          .includes(keyword) ||
+          occupant.phone
+            ?.toLowerCase()
+            .includes(keyword) ||
 
-        occupant.occupant_code
-          ?.toLowerCase()
-          .includes(keyword) ||
+          occupant.occupant_code
+            ?.toLowerCase()
+            .includes(keyword) ||
 
-        (occupant.property_name ?? "")
-          .toLowerCase()
-          .includes(keyword) ||
+          (occupant.property_name ?? "")
+            .toLowerCase()
+            .includes(keyword) ||
 
-        (occupant.unit_number ?? "")
-          .toLowerCase()
-          .includes(keyword)
+          (occupant.unit_number ?? "")
+            .toLowerCase()
+            .includes(keyword)
       );
-    });
-  }, [occupants, search]);
+    }, [occupants, search]);
 
   const activeOccupants =
     occupants.filter(
@@ -112,12 +116,16 @@ export default function OccupantsPage() {
   const expectedMonthlyRent =
     occupants.reduce(
       (sum, occupant) =>
-        sum + (occupant.monthly_rent ?? 0),
+        sum +
+        (occupant.monthly_rent ?? 0),
       0
     );
-    return (
-  <AppShell>
- <PageContainer>
+
+  return (
+
+    <AppShell>
+
+      <PageContainer>
 
         <Breadcrumb
           items={[
@@ -149,13 +157,13 @@ export default function OccupantsPage() {
             New Occupant
 
           </Button>
-        </PageHeader>
 
-        {/* Summary Cards */}
+        </PageHeader>
+                {/* Summary Cards */}
 
         <Section>
 
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-4">
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-4">
 
             <StatCard
               title="Occupants"
@@ -199,43 +207,29 @@ export default function OccupantsPage() {
           </div>
 
         </Section>
-                {/* Occupants */}
+
+        {/* Occupants */}
 
         <Section>
 
           <Card>
 
-            <div className="mb-6 flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+            <div className="mb-6">
 
-              <div>
+              <h2 className="text-2xl font-bold text-gray-900">
 
-                <h2 className="text-2xl font-bold text-gray-900">
+                Occupants
 
-                  Occupants
+              </h2>
 
-                </h2>
+              <p className="mt-2 text-gray-500">
 
-                <p className="mt-2 text-gray-500">
+                Search and manage every occupant across your rental portfolio.
 
-                  Search and manage every occupant across your rental portfolio.
-
-                </p>
-
-              </div>
-
-              <div className="w-full lg:w-96">
-
-                <SearchInput
-                  value={search}
-                  onChange={setSearch}
-                  placeholder="Search occupants..."
-                />
-
-              </div>
+              </p>
 
             </div>
-
-            {loading ? (
+                        {loading ? (
 
               <Loading
                 title="Loading Occupants"
@@ -263,9 +257,8 @@ export default function OccupantsPage() {
 
           </Card>
 
-                </Section>
-
-      </PageContainer>
+        </Section>
+              </PageContainer>
 
       {showCreateModal && (
 
