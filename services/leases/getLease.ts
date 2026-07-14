@@ -38,6 +38,16 @@ export async function getLease(
           phone_number,
           email,
           id_number
+        ),
+        invoices(
+          id,
+          invoice_number,
+          amount,
+          amount_paid,
+          balance,
+          status,
+          due_date,
+          created_at
         )
       `)
       .eq(
@@ -49,5 +59,25 @@ export async function getLease(
 
   if (error) throw error;
 
-  return data;
+  const unpaidInvoices =
+    (data.invoices ?? [])
+      .filter(
+        (invoice: any) =>
+          invoice.balance > 0
+      )
+      .sort(
+        (a: any, b: any) =>
+          new Date(a.due_date).getTime() -
+          new Date(b.due_date).getTime()
+      );
+
+  return {
+    ...data,
+
+    invoice_id:
+      unpaidInvoices[0]?.id ?? null,
+
+    current_invoice:
+      unpaidInvoices[0] ?? null,
+  };
 }
