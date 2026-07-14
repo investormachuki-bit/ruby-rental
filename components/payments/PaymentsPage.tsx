@@ -340,21 +340,6 @@ export default function PaymentsPage() {
 
         </Section>
               </PageContainer>
-
-      {showReceiveModal && (
-
-        <ReceivePaymentModal
-          onClose={() =>
-            setShowReceiveModal(false)
-          }
-          onSaved={() => {
-            setShowReceiveModal(false);
-            loadPayments();
-          }}
-        />
-
-      )}
-
     </AppShell>
 
   );
