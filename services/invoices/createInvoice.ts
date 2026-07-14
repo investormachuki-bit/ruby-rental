@@ -25,8 +25,6 @@ type CreateInvoiceInput = {
 
   due_date: string;
 
-  amount: number;
-
   notes?: string;
 };
 
@@ -48,7 +46,8 @@ export async function createInvoice(
   if (!profile) {
     throw new Error("Profile not found.");
   }
-    // Generate invoice number
+
+  // Generate Invoice Number
 
   const today = new Date();
 
@@ -120,13 +119,11 @@ export async function createInvoice(
         due_date:
           input.due_date,
 
-        amount:
-          input.amount,
+        amount: 0,
 
         amount_paid: 0,
 
-        balance:
-          input.amount,
+        balance: 0,
 
         status:
           "Unpaid",
