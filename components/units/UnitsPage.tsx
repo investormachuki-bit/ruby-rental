@@ -10,7 +10,6 @@ import {
 } from "lucide-react";
 
 import AppShell from "@/components/layout/AppShell";
-
 import Breadcrumb from "@/components/common/Breadcrumb";
 
 import PageContainer from "@/components/ui/PageContainer";
@@ -23,7 +22,6 @@ import Loading from "@/components/ui/Loading";
 import UnitsList from "@/components/units/UnitsList";
 
 import { getUnits } from "@/services/units/getUnits";
-
 import { Unit } from "@/types/unit";
 
 export default function UnitsPage() {
@@ -41,7 +39,8 @@ export default function UnitsPage() {
     try {
       setLoading(true);
 
-      const data = await getUnits();
+      const data =
+        await getUnits();
 
       setUnits(data);
     } catch (error) {
@@ -61,8 +60,14 @@ export default function UnitsPage() {
       (unit) => unit.status === "Vacant"
     ).length;
 
-  return (
+  const propertyCount =
+    new Set(
+      units.map(
+        (unit) => unit.property_id
+      )
+    ).size;
 
+  return (
     <AppShell>
 
       <PageContainer>
@@ -83,11 +88,12 @@ export default function UnitsPage() {
           title="Units"
           description="View and manage all rental units."
         />
-                {/* Summary */}
+
+        {/* Summary */}
 
         <Section>
 
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-4">
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-4">
 
             <StatCard
               title="Total Units"
@@ -111,7 +117,7 @@ export default function UnitsPage() {
             <StatCard
               title="Vacant"
               value={vacantUnits}
-              subtitle="Available for rent"
+              subtitle="Available for leasing"
               valueClassName="text-amber-500"
               icon={
                 <AlertCircle className="h-6 w-6 text-amber-500" />
@@ -120,13 +126,7 @@ export default function UnitsPage() {
 
             <StatCard
               title="Properties"
-              value={
-                new Set(
-                  units.map(
-                    (unit) => unit.property_id
-                  )
-                ).size
-              }
+              value={propertyCount}
               subtitle="Properties with units"
               icon={
                 <Building2 className="h-6 w-6 text-[#D4AF37]" />
@@ -137,7 +137,7 @@ export default function UnitsPage() {
 
         </Section>
 
-        {/* Units List */}
+        {/* Units */}
 
         <Section>
 
@@ -153,12 +153,13 @@ export default function UnitsPage() {
 
               <p className="mt-2 text-gray-500">
 
-                View and manage every rental unit across your properties.
+                View and manage every rental unit across your portfolio.
 
               </p>
 
             </div>
-                        {loading ? (
+
+            {loading ? (
 
               <Loading
                 title="Loading Units"
@@ -176,9 +177,9 @@ export default function UnitsPage() {
           </Card>
 
         </Section>
-              </PageContainer>
+
+      </PageContainer>
 
     </AppShell>
-
   );
 }
