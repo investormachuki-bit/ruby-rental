@@ -1,13 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-
-import {
-  DollarSign,
-  CheckCircle,
-  Clock,
-  AlertTriangle,
-} from "lucide-react";
+import Link from "next/link";
 
 import AppShell from "@/components/layout/AppShell";
 
@@ -19,12 +13,19 @@ import Section from "@/components/ui/Section";
 import StatCard from "@/components/ui/StatCard";
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
-import SearchInput from "@/components/ui/SearchInput";
 import Loading from "@/components/ui/Loading";
 import EmptyState from "@/components/ui/EmptyState";
 
-import PaymentsList from "./PaymentsList";
-import ReceivePaymentModal from "./ReceivePaymentModal";
+import {
+  DollarSign,
+  CheckCircle2,
+  Clock3,
+  AlertTriangle,
+} from "lucide-react";
+
+import PaymentsList from "@/components/payments/PaymentsList";
+
+import { getPayments } from "@/services/payments/getPayments";
 
 type Payment = {
   id: string;
@@ -52,8 +53,8 @@ type Payment = {
   status:
     | "Paid"
     | "Partial"
-    | "Overdue"
-    | "Pending";
+    | "Pending"
+    | "Overdue";
 };
 
 export default function PaymentsPage() {
@@ -70,9 +71,6 @@ export default function PaymentsPage() {
   const [status, setStatus] =
     useState("All");
 
-  const [showReceiveModal, setShowReceiveModal] =
-    useState(false);
-
   useEffect(() => {
     loadPayments();
   }, []);
@@ -83,11 +81,10 @@ export default function PaymentsPage() {
 
       setLoading(true);
 
-      // TODO:
-      // Replace with Supabase service
-      // getPayments()
+      const data =
+        await getPayments();
 
-      setPayments([]);
+      setPayments(data ?? []);
 
     } catch (error) {
 
@@ -104,69 +101,78 @@ export default function PaymentsPage() {
   const filteredPayments =
     useMemo(() => {
 
-      return payments.filter((payment) => {
+      return payments.filter(
+        (payment) => {
 
-        const keyword =
-          search.toLowerCase();
+          const keyword =
+            search.toLowerCase();
 
-        const matchesSearch =
-          payment.occupant_name
-            .toLowerCase()
-            .includes(keyword) ||
+          const matchesSearch =
 
-          payment.property_name
-            .toLowerCase()
-            .includes(keyword) ||
+            payment.occupant_name
+              .toLowerCase()
+              .includes(keyword) ||
 
-          payment.unit_number
-            .toLowerCase()
-            .includes(keyword);
+            payment.property_name
+              .toLowerCase()
+              .includes(keyword) ||
 
-        const matchesStatus =
-          status === "All" ||
-          payment.status === status;
+            payment.unit_number
+              .toLowerCase()
+              .includes(keyword) ||
 
-        return (
-          matchesSearch &&
-          matchesStatus
-        );
+            payment.receipt_number
+              .toLowerCase()
+              .includes(keyword);
 
-      });
+          const matchesStatus =
+
+            status === "All" ||
+
+            payment.status === status;
+
+          return (
+            matchesSearch &&
+            matchesStatus
+          );
+
+        }
+      );
 
     }, [
       payments,
       search,
       status,
     ]);
-    const expectedAmount =
+
+  const expectedCollections =
     filteredPayments.reduce(
       (sum, payment) =>
         sum + payment.amount_due,
       0
     );
 
-  const collectedAmount =
+  const collected =
     filteredPayments.reduce(
       (sum, payment) =>
         sum + payment.amount_paid,
       0
     );
 
-  const outstandingAmount =
+  const outstanding =
     filteredPayments.reduce(
       (sum, payment) =>
         sum + payment.balance,
       0
     );
 
-  const overduePayments =
+  const overdue =
     filteredPayments.filter(
       (payment) =>
         payment.status ===
         "Overdue"
     ).length;
-
-  return (
+    return (
 
     <AppShell>
 
@@ -188,20 +194,47 @@ export default function PaymentsPage() {
           title="Payments"
           description="Manage rent collections, balances and receipts."
         >
-          <Button
-            variant="primary"
-            onClick={() =>
-              setShowReceiveModal(true)
-            }
-          >
 
-            Record Payment
+          {payments.length > 0 ? (
 
-          </Button>
+            <Button
+              variant="primary"
+              onClick={() => {
+                // Connected during business rules phase
+              }}
+            >
+              Record Payment
+            </Button>
+
+          ) : (
+
+            <Link href="/leases">
+
+              <Button variant="primary">
+
+                Create Lease
+
+              </Button>
+
+            </Link>
+
+          )}
 
         </PageHeader>
 
-        {/* Executive Summary */}
+        {/* Workflow Banner */}
+
+        <div className="mb-6 rounded-2xl border border-amber-200 bg-amber-50 p-4">
+
+          <p className="text-sm text-amber-800">
+
+            Payments are recorded against active leases.
+            Create a lease first before collecting rent.
+
+          </p>
+
+        </div>
+                {/* Executive Summary */}
 
         <Section>
 
@@ -209,47 +242,49 @@ export default function PaymentsPage() {
 
             <StatCard
               title="Expected"
-              value={`KSh ${expectedAmount.toLocaleString()}`}
+              value={`KSh ${expectedCollections.toLocaleString()}`}
               subtitle="Expected collections"
+              valueClassName="text-[#D4AF37]"
               icon={
                 <DollarSign className="h-6 w-6 text-[#D4AF37]" />
               }
-              valueClassName="text-[#D4AF37]"
             />
 
             <StatCard
               title="Collected"
-              value={`KSh ${collectedAmount.toLocaleString()}`}
+              value={`KSh ${collected.toLocaleString()}`}
               subtitle="Payments received"
-              icon={
-                <CheckCircle className="h-6 w-6 text-green-600" />
-              }
               valueClassName="text-green-600"
+              icon={
+                <CheckCircle2 className="h-6 w-6 text-green-600" />
+              }
             />
 
             <StatCard
               title="Outstanding"
-              value={`KSh ${outstandingAmount.toLocaleString()}`}
+              value={`KSh ${outstanding.toLocaleString()}`}
               subtitle="Outstanding balances"
-              icon={
-                <Clock className="h-6 w-6 text-amber-500" />
-              }
               valueClassName="text-amber-500"
+              icon={
+                <Clock3 className="h-6 w-6 text-amber-500" />
+              }
             />
 
             <StatCard
               title="Overdue"
-              value={overduePayments}
+              value={overdue}
               subtitle="Past due payments"
+              valueClassName="text-red-600"
               icon={
                 <AlertTriangle className="h-6 w-6 text-red-600" />
               }
-              valueClassName="text-red-600"
             />
 
           </div>
 
         </Section>
+
+        {/* Payment Records */}
 
         <Section>
 
@@ -259,87 +294,59 @@ export default function PaymentsPage() {
 
               <h2 className="text-2xl font-bold text-gray-900">
 
-                Payment Ledger
+                Payment Records
 
               </h2>
 
               <p className="mt-2 text-gray-500">
 
-                View, search and record rent payments across all properties.
+                Monitor rent collections and outstanding balances across your portfolio.
 
               </p>
 
             </div>
-                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-2">
+                        {loading ? (
 
-              <SearchInput
-                value={search}
-                onChange={setSearch}
-                placeholder="Search occupant, property or unit..."
+              <Loading
+                title="Loading Payments"
+                description="Preparing payment records..."
               />
 
-              <select
-                value={status}
-                onChange={(e) =>
-                  setStatus(e.target.value)
-                }
-                className="rounded-xl border border-gray-200 bg-white px-4 py-3 outline-none transition focus:border-black"
+            ) : filteredPayments.length === 0 ? (
+
+              <EmptyState
+                title="No Payment Records Yet"
+                description="Payments will appear automatically after creating a lease, generating rent invoices and recording tenant payments."
               >
 
-                <option value="All">
-                  All Statuses
-                </option>
+                <Link href="/leases">
 
-                <option value="Paid">
-                  Paid
-                </option>
+                  <Button
+                    variant="secondary"
+                    className="mt-6"
+                  >
 
-                <option value="Partial">
-                  Partial
-                </option>
+                    Go to Leases
 
-                <option value="Pending">
-                  Pending
-                </option>
+                  </Button>
 
-                <option value="Overdue">
-                  Overdue
-                </option>
+                </Link>
 
-              </select>
+              </EmptyState>
 
-            </div>
+            ) : (
 
-            <div className="mt-8">
+              <PaymentsList
+                payments={filteredPayments}
+              />
 
-              {loading ? (
-
-                <Loading
-                  title="Loading Payments"
-                  description="Preparing payment records..."
-                />
-
-              ) : filteredPayments.length === 0 ? (
-
-                <EmptyState
-                  title="No Payments Found"
-                  description="Payment records will appear here once rent invoices and collections have been created."
-                />
-
-              ) : (
-
-                <PaymentsList
-                  payments={filteredPayments}
-                />
-
-              )}
-
-            </div>
+            )}
 
           </Card>
 
         </Section>
               </PageContainer>
+
     </AppShell>
 
   );
