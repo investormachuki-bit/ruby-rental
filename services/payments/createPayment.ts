@@ -202,7 +202,6 @@ export async function createPayment(
     throw allocationError;
 
   }
-
   await updatePaymentAllocationTotals(
     payment.id
   );
@@ -211,19 +210,6 @@ export async function createPayment(
     await createReceipt({
 
       payment_id:
-        payment.id,
-
-      amount:
-        input.amount,
-
-      receipt_date:
-        input.payment_date,
-
-      notes:
-        input.notes,
-
-    });
-        payment_id:
         payment.id,
 
       amount:
