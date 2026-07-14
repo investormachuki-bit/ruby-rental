@@ -7,19 +7,18 @@ import {
   Building2,
   Home,
   DollarSign,
-  Percent,
   Plus,
 } from "lucide-react";
 
 import Breadcrumb from "@/components/common/Breadcrumb";
 
 import PageContainer from "@/components/ui/PageContainer";
-import Section from "@/components/ui/Section";
 import PageHeader from "@/components/ui/PageHeader";
+import Section from "@/components/ui/Section";
 import StatCard from "@/components/ui/StatCard";
-import SearchInput from "@/components/ui/SearchInput";
-import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
+import Button from "@/components/ui/Button";
+import SearchInput from "@/components/ui/SearchInput";
 import Loading from "@/components/ui/Loading";
 import EmptyState from "@/components/ui/EmptyState";
 
@@ -118,16 +117,14 @@ export default function PropertyPage() {
   const occupiedUnits =
     properties.reduce(
       (sum, property) =>
-        sum +
-        property.occupied_units,
+        sum + property.occupied_units,
       0
     );
 
   const vacantUnits =
     properties.reduce(
       (sum, property) =>
-        sum +
-        property.vacant_units,
+        sum + property.vacant_units,
       0
     );
 
@@ -159,7 +156,6 @@ export default function PropertyPage() {
         title="Properties"
         description="Manage all your rental properties."
       >
-
         <Button
           variant="primary"
           onClick={() =>
@@ -174,13 +170,12 @@ export default function PropertyPage() {
           New Property
 
         </Button>
-
       </PageHeader>
 
       <Section>
+              <Section>
 
-        {/* Executive Summary */}
-                <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-4">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-4">
 
           <StatCard
             title="Properties"
@@ -196,7 +191,7 @@ export default function PropertyPage() {
             value={`${overallOccupancy}%`}
             subtitle="Portfolio occupancy"
             icon={
-              <Percent className="h-6 w-6 text-green-600" />
+              <Home className="h-6 w-6 text-green-600" />
             }
             valueClassName="text-green-600"
           />
@@ -214,7 +209,7 @@ export default function PropertyPage() {
           <StatCard
             title="Monthly Income"
             value={`KSh ${totalMonthlyIncome.toLocaleString()}`}
-            subtitle="Expected monthly revenue"
+            subtitle="Expected monthly income"
             icon={
               <DollarSign className="h-6 w-6 text-[#D4AF37]" />
             }
@@ -225,56 +220,74 @@ export default function PropertyPage() {
 
       </Section>
 
-      <Section
-        title="Property Portfolio"
-        description="Search and manage your rental properties."
-      >
+      <Section>
 
-        <SearchInput
-          value={search}
-          onChange={setSearch}
-          placeholder="Search by property name, type, county or town..."
-        />
+        <Card>
 
-        {loading ? (
+          <div className="mb-6 flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
 
-          <Loading
-            title="Loading Properties"
-            description="Fetching your property portfolio..."
-          />
+            <div>
 
-        ) : filteredProperties.length === 0 ? (
+              <h2 className="text-2xl font-bold text-gray-900">
 
-          <EmptyState
-            title="No Properties Found"
-            description={
-              search
-                ? "No properties match your search."
-                : "Create your first property to start managing your rental portfolio."
-            }
-          />
+                Property Portfolio
 
-        ) : (
+              </h2>
+
+              <p className="mt-2 text-gray-500">
+
+                Search and manage all your rental properties.
+
+              </p>
+
+            </div>
+
+            <div className="w-full lg:w-96">
+
+              <SearchInput
+                value={search}
+                onChange={setSearch}
+                placeholder="Search properties..."
+              />
+
+            </div>
+
+          </div>
+
+          {loading ? (
+
+            <Loading
+              title="Loading Properties"
+              description="Preparing your property portfolio..."
+            />
+
+          ) : filteredProperties.length === 0 ? (
+
+            <EmptyState
+              title="No Properties Found"
+              description={
+                search
+                  ? "No properties match your search."
+                  : "Create your first property to start managing your rental portfolio."
+              }
+            />
+
+          ) : (
                   <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
 
-            {filteredProperties.map(
-              (property) => (
+              {filteredProperties.map(
+                (property) => (
 
-                <Card
-                  key={property.id}
-                  className="overflow-hidden transition-all duration-200 hover:-translate-y-1 hover:border-[#D4AF37] hover:shadow-xl"
-                >
-
-                  <Link
-                    href={`/properties/${property.id}`}
-                    className="block"
+                  <Card
+                    key={property.id}
+                    className="overflow-hidden transition-all duration-200 hover:-translate-y-1 hover:border-[#D4AF37] hover:shadow-xl"
                   >
 
                     <div className="flex items-start justify-between">
 
                       <div>
 
-                        <h2 className="text-xl font-bold text-gray-900">
+                        <h2 className="text-2xl font-bold text-gray-900">
 
                           {property.name}
 
@@ -330,7 +343,7 @@ export default function PropertyPage() {
 
                     </div>
 
-                    <div className="mt-6 grid grid-cols-2 gap-5 border-t border-gray-100 pt-5 text-center">
+                    <div className="mt-6 grid grid-cols-2 gap-6 border-t border-gray-100 pt-6">
 
                       <div>
 
@@ -340,7 +353,7 @@ export default function PropertyPage() {
 
                         </p>
 
-                        <p className="mt-2 text-2xl font-bold">
+                        <p className="mt-2 text-3xl font-bold">
 
                           {property.total_units}
 
@@ -356,7 +369,7 @@ export default function PropertyPage() {
 
                         </p>
 
-                        <p className="mt-2 text-2xl font-bold text-green-600">
+                        <p className="mt-2 text-3xl font-bold text-green-600">
 
                           {property.occupied_units}
 
@@ -372,7 +385,7 @@ export default function PropertyPage() {
 
                         </p>
 
-                        <p className="mt-2 text-2xl font-bold text-amber-500">
+                        <p className="mt-2 text-3xl font-bold text-amber-500">
 
                           {property.vacant_units}
 
@@ -418,7 +431,7 @@ export default function PropertyPage() {
 
                       </div>
 
-                      <div className="h-2 overflow-hidden rounded-full bg-gray-200">
+                      <div className="h-3 overflow-hidden rounded-full bg-gray-200">
 
                         <div
                           className="h-full rounded-full bg-green-600 transition-all"
@@ -431,43 +444,48 @@ export default function PropertyPage() {
 
                     </div>
 
-                  </Link>
+                    <div className="mt-8 flex gap-3">
 
-                  <div className="mt-6 flex gap-3 border-t border-gray-100 pt-5">
+                      <Link
+                        href={`/properties/${property.id}`}
+                        className="flex-1"
+                      >
 
-                    <Link
-                      href={`/properties/${property.id}`}
-                      className="flex-1"
-                    >
+                        <Button
+                          variant="primary"
+                          className="w-full rounded-2xl"
+                        >
+
+                          Open Property
+
+                        </Button>
+
+                      </Link>
 
                       <Button
-                        variant="primary"
-                        className="w-full"
+                        variant="secondary"
+                        className="rounded-2xl"
                       >
-                        Open Property
+
+                        ⋮
+
                       </Button>
 
-                    </Link>
+                    </div>
 
-                    <Button
-                      variant="secondary"
-                    >
-                      ⋮
-                    </Button>
+                  </Card>
 
-                  </div>
+                )
+              )}
 
-                </Card>
+            </div>
 
-              )
-            )}
+          )}
 
-          </div>
-
-        )}
+        </Card>
 
       </Section>
-            {/* Create Property Modal */}
+             {/* Create Property Modal */}
 
       {showForm && (
 
@@ -510,4 +528,4 @@ export default function PropertyPage() {
 
     </PageContainer>
   );
-}
+} 
