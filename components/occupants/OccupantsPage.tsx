@@ -117,9 +117,7 @@ export default function OccupantsPage() {
     );
     return (
   <AppShell>
-
-    <PageContainer>
-      <PageContainer>
+ <PageContainer>
 
         <Breadcrumb
           items={[
@@ -265,8 +263,9 @@ export default function OccupantsPage() {
 
           </Card>
 
-        </Section>
-                    </PageContainer>
+                </Section>
+
+      </PageContainer>
 
       {showCreateModal && (
 
