@@ -84,15 +84,28 @@ export default function Sidebar({
     return pathname.startsWith(href);
   }
 
+  const linkClass = (href: string) =>
+    `group flex items-center gap-3 rounded-2xl px-4 py-3 transition-all duration-200 ${
+      isActive(href)
+        ? "bg-[#D4AF37] text-black shadow-md"
+        : "text-gray-300 hover:bg-white/10 hover:text-white"
+    }`;
+
   return (
     <>
       {/* Desktop Sidebar */}
 
-      <aside className="fixed left-0 top-0 hidden h-screen w-64 border-r border-gray-200 bg-white md:flex md:flex-col">
+      <aside className="fixed left-0 top-0 hidden h-screen w-64 flex-col border-r border-gray-800 bg-[#111111] md:flex">
 
-        <div className="border-b border-gray-200 p-6">
+        {/* Logo */}
+
+        <div className="border-b border-gray-800 p-6">
+
           <Logo />
+
         </div>
+
+        {/* Navigation */}
 
         <nav className="flex-1 overflow-y-auto p-4">
 
@@ -106,11 +119,7 @@ export default function Sidebar({
 
                   <Link
                     href={item.href}
-                    className={`flex items-center gap-3 rounded-xl px-4 py-3 transition ${
-                      isActive(item.href)
-                        ? "bg-black text-white"
-                        : "text-gray-600 hover:bg-gray-100"
-                    }`}
+                    className={linkClass(item.href)}
                   >
                     <Icon size={20} />
 
@@ -128,20 +137,34 @@ export default function Sidebar({
 
         </nav>
 
+        {/* Footer */}
+
+        <div className="border-t border-gray-800 p-5">
+
+          <p className="text-center text-xs text-gray-500">
+
+            Ruby Rental v1.0
+
+          </p>
+
+        </div>
+
       </aside>
 
       {/* Mobile Sidebar */}
 
       <aside
-        className={`fixed left-0 top-0 z-50 h-screen w-64 transform border-r border-gray-200 bg-white shadow-xl transition-transform duration-300 md:hidden ${
+        className={`fixed left-0 top-0 z-50 h-screen w-64 transform bg-[#111111] shadow-2xl transition-transform duration-300 md:hidden ${
           sidebarOpen
             ? "translate-x-0"
             : "-translate-x-full"
         }`}
       >
 
-        <div className="border-b border-gray-200 p-6">
+        <div className="border-b border-gray-800 p-6">
+
           <Logo />
+
         </div>
 
         <nav className="overflow-y-auto p-4">
@@ -159,11 +182,7 @@ export default function Sidebar({
                     onClick={() =>
                       setSidebarOpen(false)
                     }
-                    className={`flex items-center gap-3 rounded-xl px-4 py-3 transition ${
-                      isActive(item.href)
-                        ? "bg-black text-white"
-                        : "text-gray-600 hover:bg-gray-100"
-                    }`}
+                    className={linkClass(item.href)}
                   >
                     <Icon size={20} />
 
@@ -180,6 +199,16 @@ export default function Sidebar({
           </ul>
 
         </nav>
+
+        <div className="border-t border-gray-800 p-5">
+
+          <p className="text-center text-xs text-gray-500">
+
+            Ruby Rental v1.0
+
+          </p>
+
+        </div>
 
       </aside>
     </>
