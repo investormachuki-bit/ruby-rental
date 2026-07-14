@@ -182,20 +182,14 @@ export async function createPayment(
 
   const { error: allocationError } =
     await supabase.rpc(
-      "allocate_payment_to_invoices",
-      {
-
-        p_workspace_id:
-          profile.workspace_id,
-
-        p_payment_id:
-          payment.id,
-
-        p_amount:
-          input.amount,
-
-      }
-    );
+  "allocate_payment_to_invoices",
+  {
+    p_workspace_id: profile.workspace_id,
+    p_payment_id: payment.id,
+    p_lease_id: input.lease_id,
+    p_amount: input.amount,
+  }
+);
 
   if (allocationError) {
 
