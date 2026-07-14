@@ -3,7 +3,26 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
+import {
+  Building2,
+  Home,
+  DollarSign,
+  Percent,
+  Plus,
+} from "lucide-react";
+
 import Breadcrumb from "@/components/common/Breadcrumb";
+
+import PageContainer from "@/components/ui/PageContainer";
+import Section from "@/components/ui/Section";
+import PageHeader from "@/components/ui/PageHeader";
+import StatCard from "@/components/ui/StatCard";
+import SearchInput from "@/components/ui/SearchInput";
+import Button from "@/components/ui/Button";
+import Card from "@/components/ui/Card";
+import Loading from "@/components/ui/Loading";
+import EmptyState from "@/components/ui/EmptyState";
+
 import { getProperties } from "@/services/properties/getAll";
 
 import PropertyForm from "./PropertyForm";
@@ -69,24 +88,16 @@ export default function PropertyPage() {
         (property) =>
           property.name
             .toLowerCase()
-            .includes(
-              search.toLowerCase()
-            ) ||
+            .includes(search.toLowerCase()) ||
           property.property_type
             .toLowerCase()
-            .includes(
-              search.toLowerCase()
-            ) ||
+            .includes(search.toLowerCase()) ||
           (property.county ?? "")
             .toLowerCase()
-            .includes(
-              search.toLowerCase()
-            ) ||
+            .includes(search.toLowerCase()) ||
           (property.town ?? "")
             .toLowerCase()
-            .includes(
-              search.toLowerCase()
-            )
+            .includes(search.toLowerCase())
       );
     }, [properties, search]);
 
@@ -130,169 +141,133 @@ export default function PropertyPage() {
         );
 
   return (
-    <>
-      <div className="space-y-8">
+    <PageContainer>
 
-        <Breadcrumb
-          items={[
-            {
-              label: "Dashboard",
-              href: "/",
-            },
-            {
-              label: "Properties",
-            },
-          ]}
-        />
+      <Breadcrumb
+        items={[
+          {
+            label: "Dashboard",
+            href: "/",
+          },
+          {
+            label: "Properties",
+          },
+        ]}
+      />
 
-        {/* Header */}
+      <PageHeader
+        title="Properties"
+        description="Manage all your rental properties."
+      >
 
-        <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+        <Button
+          variant="primary"
+          onClick={() =>
+            setShowForm(true)
+          }
+        >
+          <Plus
+            size={18}
+            className="mr-2"
+          />
 
-          <div>
+          New Property
 
-            <h1 className="text-4xl font-bold text-gray-900">
-              Properties
-            </h1>
+        </Button>
 
-            <p className="mt-2 text-gray-500">
-              Manage all your rental
-              properties.
-            </p>
+      </PageHeader>
 
-          </div>
-
-          <button
-            onClick={() =>
-              setShowForm(true)
-            }
-            className="rounded-xl bg-black px-6 py-3 font-semibold text-white transition hover:bg-gray-800"
-          >
-            + New Property
-          </button>
-
-        </div>
+      <Section>
 
         {/* Executive Summary */}
+                <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-4">
 
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <StatCard
+            title="Properties"
+            value={properties.length}
+            subtitle="Registered properties"
+            icon={
+              <Building2 className="h-6 w-6 text-[#D4AF37]" />
+            }
+          />
 
-          <div className="rounded-2xl border bg-white p-5 shadow-sm">
+          <StatCard
+            title="Occupancy"
+            value={`${overallOccupancy}%`}
+            subtitle="Portfolio occupancy"
+            icon={
+              <Percent className="h-6 w-6 text-green-600" />
+            }
+            valueClassName="text-green-600"
+          />
 
-            <p className="text-sm text-gray-500">
-              Properties
-            </p>
+          <StatCard
+            title="Vacant Units"
+            value={vacantUnits}
+            subtitle="Available units"
+            icon={
+              <Home className="h-6 w-6 text-amber-500" />
+            }
+            valueClassName="text-amber-500"
+          />
 
-            <h2 className="mt-2 text-3xl font-bold">
-              {properties.length}
-            </h2>
-
-          </div>
-
-          <div className="rounded-2xl border bg-white p-5 shadow-sm">
-
-            <p className="text-sm text-gray-500">
-              Occupancy
-            </p>
-
-            <h2 className="mt-2 text-3xl font-bold text-green-600">
-              {overallOccupancy}%
-            </h2>
-
-          </div>
-
-          <div className="rounded-2xl border bg-white p-5 shadow-sm">
-
-            <p className="text-sm text-gray-500">
-              Vacant Units
-            </p>
-
-            <h2 className="mt-2 text-3xl font-bold text-orange-500">
-              {vacantUnits}
-            </h2>
-
-          </div>
-
-          <div className="rounded-2xl border bg-white p-5 shadow-sm">
-
-            <p className="text-sm text-gray-500">
-              Monthly Income
-            </p>
-
-            <h2 className="mt-2 text-3xl font-bold">
-              KSh{" "}
-              {totalMonthlyIncome.toLocaleString()}
-            </h2>
-
-          </div>
+          <StatCard
+            title="Monthly Income"
+            value={`KSh ${totalMonthlyIncome.toLocaleString()}`}
+            subtitle="Expected monthly revenue"
+            icon={
+              <DollarSign className="h-6 w-6 text-[#D4AF37]" />
+            }
+            valueClassName="text-[#D4AF37]"
+          />
 
         </div>
 
-        {/* Search */}
+      </Section>
 
-        <input
-          type="text"
-          placeholder="Search properties..."
+      <Section
+        title="Property Portfolio"
+        description="Search and manage your rental properties."
+      >
+
+        <SearchInput
           value={search}
-          onChange={(e) =>
-            setSearch(e.target.value)
-          }
-          className="w-full rounded-xl border bg-white p-3 outline-none focus:border-black"
+          onChange={setSearch}
+          placeholder="Search by property name, type, county or town..."
         />
-                {/* Loading */}
 
         {loading ? (
 
-          <div className="rounded-2xl border bg-white p-10 text-center shadow-sm">
-
-            <p className="text-gray-500">
-              Loading properties...
-            </p>
-
-          </div>
+          <Loading
+            title="Loading Properties"
+            description="Fetching your property portfolio..."
+          />
 
         ) : filteredProperties.length === 0 ? (
 
-          <div className="rounded-2xl border border-dashed bg-white p-12 text-center shadow-sm">
-
-            <h2 className="text-2xl font-semibold">
-              No Properties Found
-            </h2>
-
-            <p className="mt-3 text-gray-500">
-              {search
+          <EmptyState
+            title="No Properties Found"
+            description={
+              search
                 ? "No properties match your search."
-                : "Create your first property to start managing your rental portfolio."}
-            </p>
-
-            {!search && (
-              <button
-                onClick={() =>
-                  setShowForm(true)
-                }
-                className="mt-8 rounded-xl bg-black px-6 py-3 font-semibold text-white hover:bg-gray-800"
-              >
-                + Create First Property
-              </button>
-            )}
-
-          </div>
+                : "Create your first property to start managing your rental portfolio."
+            }
+          />
 
         ) : (
-
-          <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+                  <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
 
             {filteredProperties.map(
               (property) => (
 
-                <div
+                <Card
                   key={property.id}
-                  className="overflow-hidden rounded-2xl border bg-white shadow-sm transition duration-200 hover:-translate-y-1 hover:shadow-lg"
+                  className="overflow-hidden transition-all duration-200 hover:-translate-y-1 hover:border-[#D4AF37] hover:shadow-xl"
                 >
 
                   <Link
                     href={`/properties/${property.id}`}
-                    className="block p-6"
+                    className="block"
                   >
 
                     <div className="flex items-start justify-between">
@@ -300,11 +275,15 @@ export default function PropertyPage() {
                       <div>
 
                         <h2 className="text-xl font-bold text-gray-900">
+
                           {property.name}
+
                         </h2>
 
                         <p className="mt-1 text-sm text-gray-500">
+
                           {property.property_type}
+
                         </p>
 
                       </div>
@@ -323,80 +302,99 @@ export default function PropertyPage() {
 
                     </div>
 
-                    <div className="mt-5 space-y-2 text-sm text-gray-600">
+                    <div className="mt-6 space-y-3 text-sm text-gray-600">
 
                       <p>
-                        📍{" "}
+
                         <strong>County:</strong>{" "}
+
                         {property.county || "-"}
+
                       </p>
 
                       <p>
-                        🏙{" "}
+
                         <strong>Town:</strong>{" "}
+
                         {property.town || "-"}
+
                       </p>
 
                       <p>
-                        🏠{" "}
+
                         <strong>Address:</strong>{" "}
+
                         {property.address || "-"}
+
                       </p>
 
                     </div>
 
-                    <div className="mt-6 border-t pt-5">
+                    <div className="mt-6 grid grid-cols-2 gap-5 border-t border-gray-100 pt-5 text-center">
 
-                      <div className="grid grid-cols-2 gap-5 text-center">
+                      <div>
 
-                        <div>
+                        <p className="text-xs uppercase tracking-wide text-gray-500">
 
-                          <p className="text-xs uppercase tracking-wide text-gray-500">
-                            Units
-                          </p>
+                          Units
 
-                          <p className="mt-2 text-2xl font-bold">
-                            {property.total_units}
-                          </p>
+                        </p>
 
-                        </div>
+                        <p className="mt-2 text-2xl font-bold">
 
-                        <div>
+                          {property.total_units}
 
-                          <p className="text-xs uppercase tracking-wide text-gray-500">
-                            Occupied
-                          </p>
+                        </p>
 
-                          <p className="mt-2 text-2xl font-bold text-green-600">
-                            {property.occupied_units}
-                          </p>
+                      </div>
 
-                        </div>
+                      <div>
 
-                        <div>
+                        <p className="text-xs uppercase tracking-wide text-gray-500">
 
-                          <p className="text-xs uppercase tracking-wide text-gray-500">
-                            Vacant
-                          </p>
+                          Occupied
 
-                          <p className="mt-2 text-2xl font-bold text-orange-500">
-                            {property.vacant_units}
-                          </p>
+                        </p>
 
-                        </div>
+                        <p className="mt-2 text-2xl font-bold text-green-600">
 
-                        <div>
+                          {property.occupied_units}
 
-                          <p className="text-xs uppercase tracking-wide text-gray-500">
-                            Monthly Income
-                          </p>
+                        </p>
 
-                          <p className="mt-2 text-lg font-bold">
-                            KSh{" "}
-                            {property.monthly_income.toLocaleString()}
-                          </p>
+                      </div>
 
-                        </div>
+                      <div>
+
+                        <p className="text-xs uppercase tracking-wide text-gray-500">
+
+                          Vacant
+
+                        </p>
+
+                        <p className="mt-2 text-2xl font-bold text-amber-500">
+
+                          {property.vacant_units}
+
+                        </p>
+
+                      </div>
+
+                      <div>
+
+                        <p className="text-xs uppercase tracking-wide text-gray-500">
+
+                          Monthly Income
+
+                        </p>
+
+                        <p className="mt-2 text-lg font-bold text-[#D4AF37]">
+
+                          KSh{" "}
+
+                          {property.monthly_income.toLocaleString()}
+
+                        </p>
 
                       </div>
 
@@ -407,11 +405,15 @@ export default function PropertyPage() {
                       <div className="mb-2 flex items-center justify-between">
 
                         <span className="text-sm text-gray-500">
+
                           Occupancy
+
                         </span>
 
                         <span className="font-semibold">
+
                           {property.occupancy_rate}%
+
                         </span>
 
                       </div>
@@ -431,22 +433,31 @@ export default function PropertyPage() {
 
                   </Link>
 
-                  <div className="flex gap-3 border-t bg-gray-50 p-4">
+                  <div className="mt-6 flex gap-3 border-t border-gray-100 pt-5">
 
                     <Link
                       href={`/properties/${property.id}`}
-                      className="flex-1 rounded-xl bg-black py-2.5 text-center font-medium text-white hover:bg-gray-800"
+                      className="flex-1"
                     >
-                      Open Property
+
+                      <Button
+                        variant="primary"
+                        className="w-full"
+                      >
+                        Open Property
+                      </Button>
+
                     </Link>
 
-                    <button className="rounded-xl border px-4 hover:bg-gray-100">
+                    <Button
+                      variant="secondary"
+                    >
                       ⋮
-                    </button>
+                    </Button>
 
                   </div>
 
-                </div>
+                </Card>
 
               )
             )}
@@ -454,29 +465,33 @@ export default function PropertyPage() {
           </div>
 
         )}
-              </div>
 
-      {/* Create Property Modal */}
+      </Section>
+            {/* Create Property Modal */}
 
       {showForm && (
 
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
 
-          <div className="max-h-[90vh] w-full max-w-xl overflow-y-auto rounded-2xl bg-white shadow-2xl">
+          <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-3xl border border-gray-200 bg-white shadow-2xl">
 
-            <div className="border-b p-6">
+            <div className="border-b border-gray-200 px-8 py-6">
 
-              <h2 className="text-2xl font-bold">
+              <h2 className="text-2xl font-bold text-gray-900">
+
                 New Property
+
               </h2>
 
               <p className="mt-2 text-gray-500">
+
                 Add a new property to your rental portfolio.
+
               </p>
 
             </div>
 
-            <div className="p-6">
+            <div className="p-8">
 
               <PropertyForm
                 onSuccess={handleSuccess}
@@ -493,7 +508,6 @@ export default function PropertyPage() {
 
       )}
 
-    </>
+    </PageContainer>
   );
 }
-        
