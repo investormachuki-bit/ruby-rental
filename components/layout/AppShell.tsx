@@ -18,13 +18,13 @@ export default function AppShell({
   ] = useState(false);
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-slate-50 text-gray-900">
 
       {/* Mobile Overlay */}
 
       {sidebarOpen && (
         <div
-          className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm md:hidden"
+          className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm md:hidden"
           onClick={() =>
             setSidebarOpen(false)
           }
@@ -38,7 +38,7 @@ export default function AppShell({
         setSidebarOpen={setSidebarOpen}
       />
 
-      {/* Content */}
+      {/* Main Content */}
 
       <div className="flex min-h-screen flex-col md:ml-64">
 
@@ -47,9 +47,9 @@ export default function AppShell({
           setSidebarOpen={setSidebarOpen}
         />
 
-        <main className="flex-1 bg-slate-50">
+        <main className="flex-1 overflow-x-hidden bg-slate-50">
 
-          <div className="mx-auto w-full max-w-7xl p-4 sm:p-6 lg:p-8">
+          <div className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
 
             {children}
 
