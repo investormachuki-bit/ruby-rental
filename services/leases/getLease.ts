@@ -12,8 +12,13 @@ export async function getLease(
     throw new Error("Not authenticated.");
   }
 
-  const profile =
-    await getProfile(session.user.id);
+  const profile = await getProfile(
+    session.user.id
+  );
+
+  if (!profile) {
+    throw new Error("Profile not found.");
+  }
 
   const { data, error } =
     await supabase
@@ -42,11 +47,25 @@ export async function getLease(
         invoices(
           id,
           invoice_number,
+          invoice_type,
+          billing_period,
+          invoice_date,
+          due_date,
           amount,
           amount_paid,
           balance,
           status,
-          due_date,
+          created_at
+        ),
+        payments(
+          id,
+          receipt_number,
+          payment_date,
+          payment_type,
+          payment_method,
+          amount,
+          status,
+          reference_number,
           created_at
         )
       `)
@@ -55,29 +74,19 @@ export async function getLease(
         profile.workspace_id
       )
       .eq("id", leaseId)
+      .order("created_at", {
+        foreignTable: "invoices",
+        ascending: false,
+      })
+      .order("payment_date", {
+        foreignTable: "payments",
+        ascending: false,
+      })
       .single();
 
-  if (error) throw error;
+  if (error) {
+    throw error;
+  }
 
-  const unpaidInvoices =
-    (data.invoices ?? [])
-      .filter(
-        (invoice: any) =>
-          invoice.balance > 0
-      )
-      .sort(
-        (a: any, b: any) =>
-          new Date(a.due_date).getTime() -
-          new Date(b.due_date).getTime()
-      );
-
-  return {
-    ...data,
-
-    invoice_id:
-      unpaidInvoices[0]?.id ?? null,
-
-    current_invoice:
-      unpaidInvoices[0] ?? null,
-  };
+  return data;
 }
