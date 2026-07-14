@@ -1,15 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import {
   Users,
   Home,
-  DoorOpen,
+  Building2,
   DollarSign,
   Plus,
 } from "lucide-react";
-
 import AppShell from "@/components/layout/AppShell";
 
 import Breadcrumb from "@/components/common/Breadcrumb";
@@ -25,22 +24,31 @@ import Loading from "@/components/ui/Loading";
 import EmptyState from "@/components/ui/EmptyState";
 
 import CreateOccupantModal from "@/components/occupants/CreateOccupantModal";
-import OccupantsTable from "@/components/occupants/OccupantsTable";
+import OccupantsList from "@/components/occupants/OccupantsList";
 
 import { getOccupants } from "@/services/occupants/getOccupants";
 
-export default function OccupantsPage() {
+type Occupant = {
+  id: string;
+  occupant_code: string;
+  full_name: string;
+  phone: string;
+  property_name?: string | null;
+  unit_number?: string | null;
+  move_in_date?: string | null;
+  status: string;
+  monthly_rent?: number;
+};
 
+export default function OccupantsPage() {
   const [occupants, setOccupants] =
-    useState<any[]>([]);
+    useState<Occupant[]>([]);
 
   const [loading, setLoading] =
     useState(true);
 
-  const [
-    showCreateModal,
-    setShowCreateModal,
-  ] = useState(false);
+  const [showCreateModal, setShowCreateModal] =
+    useState(false);
 
   const [search, setSearch] =
     useState("");
@@ -50,36 +58,24 @@ export default function OccupantsPage() {
   }, []);
 
   async function loadOccupants() {
-
     try {
-
       setLoading(true);
 
-      const data =
-        await getOccupants();
+      const data = await getOccupants();
 
-      setOccupants(data);
-
+      setOccupants(data ?? []);
     } catch (error) {
-
       console.error(error);
-
     } finally {
-
       setLoading(false);
-
     }
-
   }
 
-  const filteredOccupants =
-    occupants.filter((occupant) => {
+  const filteredOccupants = useMemo(() => {
+    const keyword = search.toLowerCase();
 
-      const keyword =
-        search.toLowerCase();
-
+    return occupants.filter((occupant) => {
       return (
-
         occupant.full_name
           ?.toLowerCase()
           .includes(keyword) ||
@@ -90,31 +86,39 @@ export default function OccupantsPage() {
 
         occupant.occupant_code
           ?.toLowerCase()
+          .includes(keyword) ||
+
+        (occupant.property_name ?? "")
+          .toLowerCase()
+          .includes(keyword) ||
+
+        (occupant.unit_number ?? "")
+          .toLowerCase()
           .includes(keyword)
-
       );
-
     });
+  }, [occupants, search]);
 
   const activeOccupants =
     occupants.filter(
       (o) => o.status === "Active"
     ).length;
 
-  const monthlyRent =
+  const unassignedOccupants =
+    occupants.filter(
+      (o) => !o.unit_number
+    ).length;
+
+  const expectedMonthlyRent =
     occupants.reduce(
-      (sum, o) =>
-        sum +
-        Number(
-          o.monthly_rent ?? 0
-        ),
+      (sum, occupant) =>
+        sum + (occupant.monthly_rent ?? 0),
       0
     );
+    return (
+  <AppShell>
 
-  return (
-
-    <AppShell>
-
+    <PageContainer>
       <PageContainer>
 
         <Breadcrumb
@@ -133,13 +137,12 @@ export default function OccupantsPage() {
           title="Occupants"
           description="Manage tenants and occupants."
         >
-
           <Button
+            variant="primary"
             onClick={() =>
               setShowCreateModal(true)
             }
           >
-
             <Plus
               size={18}
               className="mr-2"
@@ -148,12 +151,13 @@ export default function OccupantsPage() {
             New Occupant
 
           </Button>
-
         </PageHeader>
+
+        {/* Summary Cards */}
 
         <Section>
 
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-4">
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-4">
 
             <StatCard
               title="Occupants"
@@ -175,22 +179,20 @@ export default function OccupantsPage() {
             />
 
             <StatCard
-              title="Vacant"
-              value={
-                occupants.length -
-                activeOccupants
-              }
-              subtitle="Not assigned"
+              title="Not Assigned"
+              value={unassignedOccupants}
+              subtitle="Without a unit"
               valueClassName="text-amber-500"
               icon={
-                <DoorOpen className="h-6 w-6 text-amber-500" />
+                <Building2 className="h-6 w-6 text-amber-500" />
               }
             />
 
             <StatCard
               title="Monthly Rent"
-              value={`KSh ${monthlyRent.toLocaleString()}`}
+              value={`KSh ${expectedMonthlyRent.toLocaleString()}`}
               subtitle="Expected collections"
+              valueClassName="text-[#D4AF37]"
               icon={
                 <DollarSign className="h-6 w-6 text-[#D4AF37]" />
               }
@@ -199,64 +201,72 @@ export default function OccupantsPage() {
           </div>
 
         </Section>
+                {/* Occupants */}
 
         <Section>
 
           <Card>
 
-            <div className="mb-6">
+            <div className="mb-6 flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
 
-              <h2 className="text-2xl font-bold">
+              <div>
 
-                Occupants
+                <h2 className="text-2xl font-bold text-gray-900">
 
-              </h2>
+                  Occupants
 
-              <p className="mt-2 text-gray-500">
+                </h2>
 
-                Search and manage all occupants.
+                <p className="mt-2 text-gray-500">
 
-              </p>
+                  Search and manage every occupant across your rental portfolio.
+
+                </p>
+
+              </div>
+
+              <div className="w-full lg:w-96">
+
+                <SearchInput
+                  value={search}
+                  onChange={setSearch}
+                  placeholder="Search occupants..."
+                />
+
+              </div>
 
             </div>
 
-            <SearchInput
-              value={search}
-              onChange={setSearch}
-              placeholder="Search occupants..."
-            />
+            {loading ? (
 
-            <div className="mt-6">
+              <Loading
+                title="Loading Occupants"
+                description="Preparing occupant records..."
+              />
 
-              {loading ? (
+            ) : filteredOccupants.length === 0 ? (
 
-                <Loading
-                  title="Loading Occupants"
-                  description="Preparing occupant records..."
-                />
+              <EmptyState
+                title="No Occupants Found"
+                description={
+                  search
+                    ? "No occupants match your search."
+                    : "Create your first occupant to start managing tenants."
+                }
+              />
 
-              ) : filteredOccupants.length === 0 ? (
+            ) : (
 
-                <EmptyState
-                  title="No Occupants Found"
-                  description="Create your first occupant to start managing tenants."
-                />
+              <OccupantsList
+                occupants={filteredOccupants}
+              />
 
-              ) : (
-
-                <OccupantsTable
-                  occupants={filteredOccupants}
-                />
-
-              )}
-
-            </div>
+            )}
 
           </Card>
 
         </Section>
-
-      </PageContainer>
+                    </PageContainer>
 
       {showCreateModal && (
 
@@ -275,5 +285,4 @@ export default function OccupantsPage() {
     </AppShell>
 
   );
-
 }
