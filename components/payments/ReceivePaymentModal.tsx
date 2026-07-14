@@ -140,20 +140,21 @@ export default function ReceivePaymentModal({
 });
 
       onSuccess();
+} catch (error: any) {
 
-    } catch (error) {
+  console.error(error);
 
-      console.error(error);
+  alert(
+    error?.message ||
+    JSON.stringify(error) ||
+    "Failed to receive payment."
+  );
 
-      alert(
-        "Failed to receive payment."
-      );
+} finally {
 
-    } finally {
+  setLoading(false);
 
-      setLoading(false);
-
-    }
+}
 
   }
 
