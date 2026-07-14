@@ -6,6 +6,7 @@ import SectionCard from "@/components/common/SectionCard";
 import StickyActionBar from "@/components/common/StickyActionBar";
 
 import { createInvoice } from "@/services/invoices/createInvoice";
+import { createInvoiceItem } from "@/services/invoiceItems/createInvoiceItem";
 
 type Lease = {
   id: string;
@@ -112,39 +113,62 @@ export default function CreateInvoiceModal({
 
       setLoading(true);
 
-      await createInvoice({
+      const invoice =
+        await createInvoice({
 
-        lease_id:
-          lease.id,
+          lease_id:
+            lease.id,
 
-        property_id:
-          lease.property_id,
+          property_id:
+            lease.property_id,
 
-        unit_id:
-          lease.unit_id,
+          unit_id:
+            lease.unit_id,
 
-        occupant_id:
-          lease.occupant_id,
+          occupant_id:
+            lease.occupant_id,
 
-        invoice_type:
-          form.invoice_type as any,
+          invoice_type:
+            form.invoice_type as
+              | "Rent"
+              | "Deposit"
+              | "Water"
+              | "Electricity"
+              | "Service Charge"
+              | "Penalty"
+              | "Other",
 
-        billing_period:
-          form.billing_period,
+          billing_period:
+            form.billing_period,
 
-        invoice_date:
-          form.invoice_date,
+          invoice_date:
+            form.invoice_date,
 
-        due_date:
-          form.due_date,
+          due_date:
+            form.due_date,
 
-        amount:
+          notes:
+            form.notes,
+
+        });
+
+      await createInvoiceItem({
+
+        invoice_id:
+          invoice.id,
+
+        item_type:
+          "Rent",
+
+        description:
+          `${form.billing_period} Rent`,
+
+        quantity: 1,
+
+        unit_price:
           Number(
             form.amount
           ),
-
-        notes:
-          form.notes,
 
       });
 
@@ -167,8 +191,7 @@ export default function CreateInvoiceModal({
   }
 
   return (
-
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
 
       <div className="flex max-h-[95vh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl bg-gray-50 shadow-2xl">
 
@@ -185,7 +208,8 @@ export default function CreateInvoiceModal({
         </div>
 
         <div className="flex-1 space-y-6 overflow-y-auto p-6">
-                    <SectionCard
+
+          <SectionCard
             title="Invoice Information"
             description="Select the invoice type and billing period."
           >
@@ -239,7 +263,7 @@ export default function CreateInvoiceModal({
 
           <SectionCard
             title="Invoice Dates"
-            description="Choose the invoice and due dates."
+            description="Choose the invoice and due date."
           >
 
             <div className="grid gap-5 md:grid-cols-2">
@@ -282,13 +306,13 @@ export default function CreateInvoiceModal({
 
           <SectionCard
             title="Invoice Amount"
-            description="Specify the amount to be billed."
+            description="Specify the initial rent amount."
           >
 
             <div>
 
               <label className="mb-2 block font-medium">
-                Amount
+                Rent Amount
               </label>
 
               <input
@@ -319,7 +343,7 @@ export default function CreateInvoiceModal({
           </SectionCard>
 
           <SectionCard
-            title="Invoice Summary"
+            title="Invoice Preview"
             description="Review the invoice before creating it."
           >
 
@@ -389,7 +413,7 @@ export default function CreateInvoiceModal({
               <div className="flex items-center justify-between border-t pt-4">
 
                 <span className="font-semibold">
-                  Invoice Amount
+                  Initial Rent Line
                 </span>
 
                 <span className="text-2xl font-bold text-blue-600">
@@ -398,6 +422,16 @@ export default function CreateInvoiceModal({
                     form.amount
                   ).toLocaleString()}
                 </span>
+
+              </div>
+
+              <div className="rounded-xl bg-amber-50 p-4 text-sm text-amber-800">
+
+                <strong>Note:</strong> This invoice will initially contain
+                only the Rent line item. Water, Garbage, Service Charge,
+                Electricity, Parking and Previous Balance can be added
+                afterwards. The invoice totals will be calculated
+                automatically by the database.
 
               </div>
 
@@ -422,4 +456,3 @@ export default function CreateInvoiceModal({
   );
 
 }
-          
