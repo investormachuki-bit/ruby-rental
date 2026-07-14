@@ -14,6 +14,9 @@ import { getUnit } from "@/services/units/getUnit";
 import { getUtilityMeters } from "@/services/utilities/getUtilityMeters";
 
 import { Unit } from "@/types/unit";
+import { useRouter } from "next/navigation";
+
+import { getUnitActiveLease } from "@/services/leases/getUnitActiveLease";
 
 type Props = {
   unitId: string;
@@ -22,6 +25,7 @@ type Props = {
 export default function UnitDetailsPage({
   unitId,
 }: Props) {
+  const router = useRouter();
 
   const [loading, setLoading] =
     useState(true);
@@ -91,7 +95,40 @@ export default function UnitDetailsPage({
     }
 
   }
+async function handleViewLease() {
 
+  try {
+
+    const lease =
+      await getUnitActiveLease(
+        unit.id
+      );
+
+    if (!lease) {
+
+      alert(
+        "This unit has no active lease."
+      );
+
+      return;
+
+    }
+
+    router.push(
+      `/leases/${lease.id}`
+    );
+
+  } catch (error) {
+
+    console.error(error);
+
+    alert(
+      "Unable to open lease."
+    );
+
+  }
+
+}
   if (loading) {
 
     return (
@@ -433,10 +470,11 @@ export default function UnitDetailsPage({
             ) : (
 
               <button
-                className="rounded-xl bg-blue-600 py-3 font-semibold text-white transition hover:bg-blue-700"
-              >
-                📄 View Lease
-              </button>
+  onClick={handleViewLease}
+  className="rounded-xl bg-blue-600 py-3 font-semibold text-white transition hover:bg-blue-700"
+>
+  📄 View Lease
+</button>
 
             )}
 
