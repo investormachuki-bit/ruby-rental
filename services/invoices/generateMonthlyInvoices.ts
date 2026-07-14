@@ -1,6 +1,7 @@
 import { supabase } from "@/lib/supabase";
 import { getProfile } from "@/services/auth/getProfile";
-import { createInvoice } from "./createInvoice";
+import { createInvoice } from "@/services/invoices/createInvoice";
+import { createInvoiceItem } from "@/services/invoiceItems/createInvoiceItem";
 
 export async function generateMonthlyInvoices() {
 
@@ -30,7 +31,9 @@ export async function generateMonthlyInvoices() {
     `${monthName} ${today.getFullYear()}`;
 
   const invoiceDate =
-    today.toISOString().split("T")[0];
+    today
+      .toISOString()
+      .split("T")[0];
 
   const { data: leases, error } =
     await supabase
@@ -63,17 +66,20 @@ export async function generateMonthlyInvoices() {
   }
 
   let generated = 0;
-    for (const lease of leases) {
+
+  for (const lease of leases) {
 
     const dueDay =
       lease.rent_due_day ?? 1;
 
+    // Skip until the configured billing day
     if (
       today.getDate() < dueDay
     ) {
       continue;
     }
 
+    // Prevent duplicate monthly invoices
     const { data: existing } =
       await supabase
         .from("invoices")
@@ -96,39 +102,57 @@ export async function generateMonthlyInvoices() {
       continue;
     }
 
-    await createInvoice({
+    // Create invoice header
+    const invoice =
+      await createInvoice({
 
-      lease_id:
-        lease.id,
+        lease_id:
+          lease.id,
 
-      property_id:
-        lease.property_id,
+        property_id:
+          lease.property_id,
 
-      unit_id:
-        lease.unit_id,
+        unit_id:
+          lease.unit_id,
 
-      occupant_id:
-        lease.occupant_id,
+        occupant_id:
+          lease.occupant_id,
 
-      invoice_type:
+        invoice_type:
+          "Rent",
+
+        billing_period:
+          billingPeriod,
+
+        invoice_date:
+          invoiceDate,
+
+        due_date:
+          invoiceDate,
+
+        notes:
+          `Automatic monthly rent invoice for ${billingPeriod}`,
+
+      });
+
+    // Add Rent line item
+    await createInvoiceItem({
+
+      invoice_id:
+        invoice.id,
+
+      item_type:
         "Rent",
 
-      billing_period:
-        billingPeriod,
+      description:
+        `${billingPeriod} Rent`,
 
-      invoice_date:
-        invoiceDate,
+      quantity: 1,
 
-      due_date:
-        invoiceDate,
-
-      amount:
+      unit_price:
         Number(
           lease.rent_amount
         ),
-
-      notes:
-        `Automatic monthly rent invoice for ${billingPeriod}`,
 
     });
 
