@@ -8,8 +8,6 @@ import { updatePaymentAllocationTotals } from "@/services/payments/updatePayment
 
 type CreatePaymentInput = {
 
-  invoice_id: string;
-
   lease_id: string;
 
   property_id: string;
@@ -49,8 +47,7 @@ export async function createPayment(
 
   const {
     data: { session },
-  } =
-    await supabase.auth.getSession();
+  } = await supabase.auth.getSession();
 
   if (!session) {
 
@@ -72,6 +69,9 @@ export async function createPayment(
     );
 
   }
+
+  // Temporary receipt number.
+  // Later we'll replace this with a database sequence.
 
   const today = new Date();
 
@@ -111,7 +111,8 @@ export async function createPayment(
 
   const receiptNumber =
     `${prefix}-${sequence}`;
-    const {
+
+  const {
     data: payment,
     error,
   } =
@@ -121,9 +122,6 @@ export async function createPayment(
 
         workspace_id:
           profile.workspace_id,
-
-        invoice_id:
-          input.invoice_id,
 
         lease_id:
           input.lease_id,
@@ -165,7 +163,8 @@ export async function createPayment(
           null,
 
         notes:
-          input.notes ?? null,
+          input.notes ??
+          null,
 
         received_by:
           session.user.id,
@@ -180,22 +179,34 @@ export async function createPayment(
 
   }
 
-  const { error: allocationError } =
+  const {
+    error: allocationError,
+  } =
     await supabase.rpc(
-  "allocate_payment_to_invoices",
-  {
-    p_workspace_id: profile.workspace_id,
-    p_payment_id: payment.id,
-    p_lease_id: input.lease_id,
-    p_amount: input.amount,
-  }
-);
+      "allocate_payment_to_invoices",
+      {
+
+        p_workspace_id:
+          profile.workspace_id,
+
+        p_payment_id:
+          payment.id,
+
+        p_lease_id:
+          input.lease_id,
+
+        p_amount:
+          input.amount,
+
+      }
+    );
 
   if (allocationError) {
 
     throw allocationError;
 
   }
+
   await updatePaymentAllocationTotals(
     payment.id
   );
