@@ -13,8 +13,12 @@ import {
   BarChart3,
 } from "lucide-react";
 
+import AppShell from "@/components/layout/AppShell";
+
 import Breadcrumb from "@/components/common/Breadcrumb";
 
+import PageContainer from "@/components/ui/PageContainer";
+import Section from "@/components/ui/Section";
 import Card from "@/components/ui/Card";
 import Loading from "@/components/ui/Loading";
 import PageHeader from "@/components/ui/PageHeader";
@@ -70,332 +74,337 @@ export default function DashboardPage() {
 
   if (loading) {
     return (
-      <Loading
-        title="Loading Dashboard"
-        description="Preparing your workspace..."
-      />
+      <AppShell>
+
+        <PageContainer>
+
+          <Loading
+            title="Loading Dashboard"
+            description="Preparing your workspace..."
+          />
+
+        </PageContainer>
+
+      </AppShell>
     );
   }
 
   return (
-    <div className="space-y-8">
+    <AppShell>
 
-      <Breadcrumb
-        items={[
-          {
-            label: "Dashboard",
-          },
-        ]}
-      />
+      <PageContainer>
 
-      <PageHeader
-        title="Dashboard"
-        description="Welcome back to Ruby Rental."
-      >
+        <Breadcrumb
+          items={[
+            {
+              label: "Dashboard",
+            },
+          ]}
+        />
 
-        <Button
-          onClick={() =>
-            loadDashboard()
-          }
+        <PageHeader
+          title="Dashboard"
+          description="Welcome back to Ruby Rental."
         >
-          Refresh
-        </Button>
+          <Button
+            variant="primary"
+            onClick={loadDashboard}
+          >
+            Refresh
+          </Button>
+        </PageHeader>
 
-      </PageHeader>
+        <Section>
 
-            {/* KPI Cards */}
+          {/* KPI Cards */}
+                    <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-4">
 
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-4">
+            <StatCard
+              title="Properties"
+              value={stats.totalProperties}
+              subtitle="Registered properties"
+              icon={
+                <Building2 className="h-6 w-6 text-[#D4AF37]" />
+              }
+            />
 
-        <StatCard
-          title="Properties"
-          value={stats.totalProperties}
-          subtitle="Registered properties"
-          icon={
-            <Building2 className="h-6 w-6 text-black" />
-          }
-        />
+            <StatCard
+              title="Units"
+              value={stats.totalUnits}
+              subtitle="Rental units"
+              icon={
+                <Home className="h-6 w-6 text-sky-600" />
+              }
+            />
 
-        <StatCard
-          title="Units"
-          value={stats.totalUnits}
-          subtitle="Rental units"
-          icon={
-            <Home className="h-6 w-6 text-black" />
-          }
-        />
+            <StatCard
+              title="Occupants"
+              value={stats.totalOccupants}
+              subtitle="Current occupants"
+              icon={
+                <Users className="h-6 w-6 text-violet-600" />
+              }
+            />
 
-        <StatCard
-          title="Occupants"
-          value={stats.totalOccupants}
-          subtitle="Current occupants"
-          icon={
-            <Users className="h-6 w-6 text-black" />
-          }
-        />
+            <StatCard
+              title="Expected Rent"
+              value={`KSh ${stats.expectedMonthlyRent.toLocaleString()}`}
+              subtitle="Monthly income"
+              icon={
+                <DollarSign className="h-6 w-6 text-[#D4AF37]" />
+              }
+              valueClassName="text-[#D4AF37]"
+            />
 
-        <StatCard
-          title="Expected Rent"
-          value={`KSh ${stats.expectedMonthlyRent.toLocaleString()}`}
-          subtitle="Monthly income"
-          icon={
-            <DollarSign className="h-6 w-6 text-black" />
-          }
-        />
+            <StatCard
+              title="Occupied Units"
+              value={stats.occupiedUnits}
+              subtitle={`${stats.occupancyRate}% occupancy`}
+              icon={
+                <House className="h-6 w-6 text-green-600" />
+              }
+              valueClassName="text-green-600"
+            />
 
-        <StatCard
-          title="Occupied Units"
-          value={stats.occupiedUnits}
-          subtitle={`${stats.occupancyRate}% occupancy`}
-          icon={
-            <House className="h-6 w-6 text-green-600" />
-          }
-          valueClassName="text-green-600"
-        />
+            <StatCard
+              title="Vacant Units"
+              value={stats.vacantUnits}
+              subtitle="Available for leasing"
+              icon={
+                <Home className="h-6 w-6 text-amber-500" />
+              }
+              valueClassName="text-amber-500"
+            />
 
-        <StatCard
-          title="Vacant Units"
-          value={stats.vacantUnits}
-          subtitle="Available for leasing"
-          icon={
-            <Home className="h-6 w-6 text-amber-500" />
-          }
-          valueClassName="text-amber-500"
-        />
+            <StatCard
+              title="Occupancy Rate"
+              value={`${stats.occupancyRate}%`}
+              subtitle="Portfolio occupancy"
+              icon={
+                <Percent className="h-6 w-6 text-blue-600" />
+              }
+              valueClassName="text-blue-600"
+            />
 
-        <StatCard
-          title="Occupancy Rate"
-          value={`${stats.occupancyRate}%`}
-          subtitle="Portfolio occupancy"
-          icon={
-            <Percent className="h-6 w-6 text-blue-600" />
-          }
-          valueClassName="text-blue-600"
-        />
-
-        <StatCard
-          title="Portfolio Health"
-          value={
-            stats.occupancyRate >= 90
-              ? "Excellent"
-              : stats.occupancyRate >= 75
-              ? "Good"
-              : "Needs Attention"
-          }
-          subtitle="Based on occupancy"
-          icon={
-            <BarChart3 className="h-6 w-6 text-black" />
-          }
-        />
-
-      </div>
-
-            {/* Executive Summary */}
-
-      <div className="grid gap-6 lg:grid-cols-2">
-
-        <Card>
-
-          <h3 className="text-xl font-semibold">
-            Portfolio Summary
-          </h3>
-
-          <div className="mt-6 space-y-5">
-
-            <div className="flex items-center justify-between border-b border-gray-100 pb-3">
-
-              <span className="text-gray-500">
-                Properties
-              </span>
-
-              <strong className="text-lg">
-                {stats.totalProperties}
-              </strong>
-
-            </div>
-
-            <div className="flex items-center justify-between border-b border-gray-100 pb-3">
-
-              <span className="text-gray-500">
-                Units
-              </span>
-
-              <strong className="text-lg">
-                {stats.totalUnits}
-              </strong>
-
-            </div>
-
-            <div className="flex items-center justify-between border-b border-gray-100 pb-3">
-
-              <span className="text-gray-500">
-                Occupants
-              </span>
-
-              <strong className="text-lg">
-                {stats.totalOccupants}
-              </strong>
-
-            </div>
-
-            <div className="flex items-center justify-between border-b border-gray-100 pb-3">
-
-              <span className="text-gray-500">
-                Occupied Units
-              </span>
-
-              <strong className="text-lg text-green-600">
-                {stats.occupiedUnits}
-              </strong>
-
-            </div>
-
-            <div className="flex items-center justify-between border-b border-gray-100 pb-3">
-
-              <span className="text-gray-500">
-                Vacant Units
-              </span>
-
-              <strong className="text-lg text-amber-500">
-                {stats.vacantUnits}
-              </strong>
-
-            </div>
-
-            <div className="flex items-center justify-between">
-
-              <span className="text-gray-500">
-                Expected Monthly Rent
-              </span>
-
-              <strong className="text-lg">
-                KSh{" "}
-                {stats.expectedMonthlyRent.toLocaleString()}
-              </strong>
-
-            </div>
-
-          </div>
-
-        </Card>
-
-        <Card>
-
-          <h3 className="text-xl font-semibold">
-            Recent Activity
-          </h3>
-
-          <div className="mt-6">
-
-            <EmptyState
-              title="No Recent Activity"
-              description="Payments, leases, maintenance requests and utility readings will appear here as you continue using Ruby Rental."
+            <StatCard
+              title="Portfolio Health"
+              value={
+                stats.occupancyRate >= 90
+                  ? "Excellent"
+                  : stats.occupancyRate >= 75
+                  ? "Good"
+                  : "Needs Attention"
+              }
+              subtitle="Based on occupancy"
+              icon={
+                <BarChart3 className="h-6 w-6 text-[#D4AF37]" />
+              }
             />
 
           </div>
 
-        </Card>
+        </Section>
 
-      </div>
+        {/* Executive Summary */}
+                <Section
+          title="Executive Summary"
+          description="Overview of your rental portfolio."
+        >
 
-            {/* Quick Actions */}
+          <div className="grid gap-6 lg:grid-cols-2">
 
-      <Card>
+            <Card>
 
-        <div className="mb-6 flex items-center justify-between">
+              <h3 className="text-xl font-semibold text-gray-900">
+                Portfolio Summary
+              </h3>
 
-          <div>
+              <div className="mt-6 space-y-5">
 
-            <h3 className="text-xl font-semibold">
-              Quick Actions
-            </h3>
+                <div className="flex items-center justify-between border-b border-gray-100 pb-3">
 
-            <p className="mt-1 text-gray-500">
-              Jump to the most frequently used modules.
-            </p>
+                  <span className="text-gray-500">
+                    Properties
+                  </span>
+
+                  <strong className="text-lg">
+                    {stats.totalProperties}
+                  </strong>
+
+                </div>
+
+                <div className="flex items-center justify-between border-b border-gray-100 pb-3">
+
+                  <span className="text-gray-500">
+                    Units
+                  </span>
+
+                  <strong className="text-lg">
+                    {stats.totalUnits}
+                  </strong>
+
+                </div>
+
+                <div className="flex items-center justify-between border-b border-gray-100 pb-3">
+
+                  <span className="text-gray-500">
+                    Occupants
+                  </span>
+
+                  <strong className="text-lg">
+                    {stats.totalOccupants}
+                  </strong>
+
+                </div>
+
+                <div className="flex items-center justify-between border-b border-gray-100 pb-3">
+
+                  <span className="text-gray-500">
+                    Occupied Units
+                  </span>
+
+                  <strong className="text-lg text-green-600">
+                    {stats.occupiedUnits}
+                  </strong>
+
+                </div>
+
+                <div className="flex items-center justify-between border-b border-gray-100 pb-3">
+
+                  <span className="text-gray-500">
+                    Vacant Units
+                  </span>
+
+                  <strong className="text-lg text-amber-500">
+                    {stats.vacantUnits}
+                  </strong>
+
+                </div>
+
+                <div className="flex items-center justify-between">
+
+                  <span className="text-gray-500">
+                    Expected Monthly Rent
+                  </span>
+
+                  <strong className="text-lg text-[#D4AF37]">
+                    KSh{" "}
+                    {stats.expectedMonthlyRent.toLocaleString()}
+                  </strong>
+
+                </div>
+
+              </div>
+
+            </Card>
+
+            <Card>
+
+              <h3 className="text-xl font-semibold text-gray-900">
+                Recent Activity
+              </h3>
+
+              <div className="mt-6">
+
+                <EmptyState
+                  title="No Recent Activity"
+                  description="Payments, leases, maintenance requests and utility readings will appear here as you continue using Ruby Rental."
+                />
+
+              </div>
+
+            </Card>
 
           </div>
 
-        </div>
+        </Section>
 
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4">
+        {/* Quick Actions */}
+                <Section
+          title="Quick Actions"
+          description="Frequently used shortcuts."
+        >
 
-          <Link href="/properties">
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4">
 
-            <Card className="cursor-pointer p-5 hover:border-black hover:shadow-md">
+            <Link href="/properties">
 
-              <Building2 className="h-10 w-10 text-black" />
+              <Card className="cursor-pointer p-6 transition-all duration-200 hover:-translate-y-1 hover:border-[#D4AF37] hover:shadow-lg">
 
-              <h4 className="mt-5 text-lg font-semibold">
-                Properties
-              </h4>
+                <Building2 className="h-10 w-10 text-[#D4AF37]" />
 
-              <p className="mt-2 text-sm text-gray-500">
-                Manage all your rental properties.
-              </p>
+                <h4 className="mt-5 text-lg font-semibold">
+                  Properties
+                </h4>
 
-            </Card>
+                <p className="mt-2 text-sm text-gray-500">
+                  Manage all your rental properties.
+                </p>
 
-          </Link>
+              </Card>
 
-          <Link href="/units">
+            </Link>
 
-            <Card className="cursor-pointer p-5 hover:border-black hover:shadow-md">
+            <Link href="/units">
 
-              <Home className="h-10 w-10 text-black" />
+              <Card className="cursor-pointer p-6 transition-all duration-200 hover:-translate-y-1 hover:border-[#D4AF37] hover:shadow-lg">
 
-              <h4 className="mt-5 text-lg font-semibold">
-                Units
-              </h4>
+                <Home className="h-10 w-10 text-sky-600" />
 
-              <p className="mt-2 text-sm text-gray-500">
-                View and manage rental units.
-              </p>
+                <h4 className="mt-5 text-lg font-semibold">
+                  Units
+                </h4>
 
-            </Card>
+                <p className="mt-2 text-sm text-gray-500">
+                  View and manage rental units.
+                </p>
 
-          </Link>
+              </Card>
 
-          <Link href="/occupants">
+            </Link>
 
-            <Card className="cursor-pointer p-5 hover:border-black hover:shadow-md">
+            <Link href="/occupants">
 
-              <Users className="h-10 w-10 text-black" />
+              <Card className="cursor-pointer p-6 transition-all duration-200 hover:-translate-y-1 hover:border-[#D4AF37] hover:shadow-lg">
 
-              <h4 className="mt-5 text-lg font-semibold">
-                Occupants
-              </h4>
+                <Users className="h-10 w-10 text-violet-600" />
 
-              <p className="mt-2 text-sm text-gray-500">
-                Manage tenants and occupants.
-              </p>
+                <h4 className="mt-5 text-lg font-semibold">
+                  Occupants
+                </h4>
 
-            </Card>
+                <p className="mt-2 text-sm text-gray-500">
+                  Manage tenants and occupants.
+                </p>
 
-          </Link>
+              </Card>
 
-          <Link href="/reports">
+            </Link>
 
-            <Card className="cursor-pointer p-5 hover:border-black hover:shadow-md">
+            <Link href="/reports">
 
-              <BarChart3 className="h-10 w-10 text-black" />
+              <Card className="cursor-pointer p-6 transition-all duration-200 hover:-translate-y-1 hover:border-[#D4AF37] hover:shadow-lg">
 
-              <h4 className="mt-5 text-lg font-semibold">
-                Reports
-              </h4>
+                <BarChart3 className="h-10 w-10 text-[#D4AF37]" />
 
-              <p className="mt-2 text-sm text-gray-500">
-                View portfolio reports and insights.
-              </p>
+                <h4 className="mt-5 text-lg font-semibold">
+                  Reports
+                </h4>
 
-            </Card>
+                <p className="mt-2 text-sm text-gray-500">
+                  View portfolio reports and insights.
+                </p>
 
-          </Link>
+              </Card>
 
-        </div>
+            </Link>
 
-      </Card>
+          </div>
 
-    </div>
+        </Section>
+
+      </PageContainer>
+
+    </AppShell>
   );
 }
