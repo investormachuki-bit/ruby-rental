@@ -8,7 +8,10 @@ import StickyActionBar from "@/components/common/StickyActionBar";
 import { createPayment } from "@/services/payments/createPayment";
 
 type Lease = {
+
   id: string;
+
+  invoice_id: string;
 
   property_id: string;
 
@@ -31,6 +34,7 @@ type Lease = {
     last_name: string;
     phone_number?: string;
   };
+
 };
 
 type Props = {
@@ -108,8 +112,11 @@ export default function ReceivePaymentModal({
 
       await createPayment({
 
-        lease_id:
-          lease.id,
+  invoice_id:
+    lease.invoice_id,
+
+  lease_id:
+    lease.id,
 
         property_id:
           lease.property_id,
