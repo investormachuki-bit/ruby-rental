@@ -3,7 +3,27 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 
+import {
+  FileText,
+  CheckCircle,
+  Clock,
+  DollarSign,
+  Plus,
+} from "lucide-react";
+
+import AppShell from "@/components/layout/AppShell";
+
 import Breadcrumb from "@/components/common/Breadcrumb";
+
+import PageContainer from "@/components/ui/PageContainer";
+import PageHeader from "@/components/ui/PageHeader";
+import Section from "@/components/ui/Section";
+import StatCard from "@/components/ui/StatCard";
+import Card from "@/components/ui/Card";
+import Button from "@/components/ui/Button";
+import Loading from "@/components/ui/Loading";
+import EmptyState from "@/components/ui/EmptyState";
+
 import CreateLeaseModal from "./CreateLeaseModal";
 
 import { getLeases } from "@/services/leases/getLeases";
@@ -85,15 +105,19 @@ export default function LeasesPage() {
 
       setLoading(true);
 
-      const [leaseData, propertyData] =
-        await Promise.all([
-          getLeases(),
-          getProperties(),
-        ]);
+      const [
+        leaseData,
+        propertyData,
+      ] = await Promise.all([
+        getLeases(),
+        getProperties(),
+      ]);
 
       setLeases(leaseData);
 
-      setProperties(propertyData ?? []);
+      setProperties(
+        propertyData ?? []
+      );
 
     } catch (error) {
 
@@ -114,58 +138,63 @@ export default function LeasesPage() {
     loadData();
 
   }
-    const filteredLeases =
+
+  const filteredLeases =
     useMemo(() => {
 
-      return leases.filter((lease) => {
+      return leases.filter(
+        (lease) => {
 
-        const matchesSearch =
+          const matchesSearch =
 
-          lease.lease_number
-            .toLowerCase()
-            .includes(
-              search.toLowerCase()
-            ) ||
+            lease.lease_number
+              .toLowerCase()
+              .includes(
+                search.toLowerCase()
+              ) ||
 
-          lease.property.name
-            .toLowerCase()
-            .includes(
-              search.toLowerCase()
-            ) ||
+            lease.property.name
+              .toLowerCase()
+              .includes(
+                search.toLowerCase()
+              ) ||
 
-          lease.unit.unit_number
-            .toLowerCase()
-            .includes(
-              search.toLowerCase()
-            ) ||
+            lease.unit.unit_number
+              .toLowerCase()
+              .includes(
+                search.toLowerCase()
+              ) ||
 
-          `${lease.occupant.first_name} ${lease.occupant.last_name}`
-            .toLowerCase()
-            .includes(
-              search.toLowerCase()
-            );
+            `${lease.occupant.first_name} ${lease.occupant.last_name}`
+              .toLowerCase()
+              .includes(
+                search.toLowerCase()
+              );
 
-        const matchesStatus =
-          status === "All" ||
-          lease.status === status;
+          const matchesStatus =
+            status === "All" ||
+            lease.status ===
+              status;
 
-        const matchesProperty =
-          property === "All" ||
-          lease.property.id === property;
+          const matchesProperty =
+            property === "All" ||
+            lease.property.id ===
+              property;
 
-        const matchesLeaseType =
-          leaseType === "All" ||
-          lease.lease_type ===
-            leaseType;
+          const matchesLeaseType =
+            leaseType === "All" ||
+            lease.lease_type ===
+              leaseType;
 
-        return (
-          matchesSearch &&
-          matchesStatus &&
-          matchesProperty &&
-          matchesLeaseType
-        );
+          return (
+            matchesSearch &&
+            matchesStatus &&
+            matchesProperty &&
+            matchesLeaseType
+          );
 
-      });
+        }
+      );
 
     }, [
       leases,
@@ -185,22 +214,15 @@ export default function LeasesPage() {
   const activeLeases =
     filteredLeases.filter(
       (lease) =>
-        lease.status === "Active"
-    ).length;
-
-  const draftLeases =
-    filteredLeases.filter(
-      (lease) =>
-        lease.status === "Draft"
+        lease.status ===
+        "Active"
     ).length;
 
   const endingSoon =
     filteredLeases.filter(
       (lease) => {
 
-        if (
-          !lease.end_date
-        )
+        if (!lease.end_date)
           return false;
 
         const end =
@@ -234,333 +256,350 @@ export default function LeasesPage() {
     ).length;
 
   return (
-    <>
-      <div className="space-y-8">
+
+    <AppShell>
+
+      <PageContainer>
 
         <Breadcrumb
           items={[
             {
-              label:
-                "Dashboard",
+              label: "Dashboard",
               href: "/",
             },
             {
-              label:
-                "Leases",
+              label: "Leases",
             },
           ]}
         />
 
-        {/* Header */}
+        <PageHeader
+          title="Leases"
+          description="Manage all active, draft and expired leases."
+        >
 
-        <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
-
-          <div>
-
-            <h1 className="text-4xl font-bold">
-              Leases
-            </h1>
-
-            <p className="mt-2 text-gray-500">
-              Manage all active,
-              draft and expired
-              leases.
-            </p>
-
-          </div>
-
-          <button
+          <Button
             onClick={() =>
               setShowModal(true)
             }
-            className="rounded-xl bg-black px-6 py-3 font-semibold text-white hover:bg-gray-800"
           >
-            + New Lease
-          </button>
 
-        </div>
+            <Plus
+              size={18}
+              className="mr-2"
+            />
 
-        {/* Executive Cards */}
+            New Lease
 
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          </Button>
 
-          <div className="rounded-2xl border bg-white p-5 shadow-sm">
+        </PageHeader>
+                {/* Summary Cards */}
 
-            <p className="text-sm text-gray-500">
-              Total Leases
-            </p>
+        <Section>
 
-            <h2 className="mt-2 text-3xl font-bold">
-              {
-                filteredLeases.length
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-4">
+
+            <StatCard
+              title="Total Leases"
+              value={filteredLeases.length}
+              subtitle="Registered leases"
+              icon={
+                <FileText className="h-6 w-6 text-[#D4AF37]" />
               }
-            </h2>
+            />
 
-          </div>
-
-          <div className="rounded-2xl border bg-white p-5 shadow-sm">
-
-            <p className="text-sm text-gray-500">
-              Active
-            </p>
-
-            <h2 className="mt-2 text-3xl font-bold text-green-600">
-              {activeLeases}
-            </h2>
-
-          </div>
-
-          <div className="rounded-2xl border bg-white p-5 shadow-sm">
-
-            <p className="text-sm text-gray-500">
-              Ending Soon
-            </p>
-
-            <h2 className="mt-2 text-3xl font-bold text-orange-500">
-              {endingSoon}
-            </h2>
-
-          </div>
-
-          <div className="rounded-2xl border bg-white p-5 shadow-sm">
-
-            <p className="text-sm text-gray-500">
-              Monthly Rent
-            </p>
-
-            <h2 className="mt-2 text-3xl font-bold">
-              KSh{" "}
-              {totalRent.toLocaleString()}
-            </h2>
-
-          </div>
-
-        </div>
-                {/* Filters */}
-
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-
-          <input
-            type="text"
-            placeholder="Search lease..."
-            value={search}
-            onChange={(e) =>
-              setSearch(e.target.value)
-            }
-            className="rounded-xl border bg-white p-3 outline-none focus:border-black"
-          />
-
-          <select
-            value={property}
-            onChange={(e) =>
-              setProperty(e.target.value)
-            }
-            className="rounded-xl border bg-white p-3"
-          >
-            <option value="All">
-              All Properties
-            </option>
-
-            {properties.map((property) => (
-
-              <option
-                key={property.id}
-                value={property.id}
-              >
-                {property.name}
-              </option>
-
-            ))}
-
-          </select>
-
-          <select
-            value={status}
-            onChange={(e) =>
-              setStatus(e.target.value)
-            }
-            className="rounded-xl border bg-white p-3"
-          >
-            <option value="All">
-              All Statuses
-            </option>
-
-            <option value="Draft">
-              Draft
-            </option>
-
-            <option value="Active">
-              Active
-            </option>
-
-            <option value="Expired">
-              Expired
-            </option>
-
-            <option value="Terminated">
-              Terminated
-            </option>
-
-          </select>
-
-          <select
-            value={leaseType}
-            onChange={(e) =>
-              setLeaseType(e.target.value)
-            }
-            className="rounded-xl border bg-white p-3"
-          >
-            <option value="All">
-              All Lease Types
-            </option>
-
-            <option value="Open-ended">
-              Open-ended
-            </option>
-
-            <option value="Fixed Term">
-              Fixed Term
-            </option>
-
-          </select>
-
-        </div>
-
-        {loading ? (
-
-          <div className="rounded-2xl border bg-white p-12 text-center">
-
-            <p className="text-gray-500">
-              Loading leases...
-            </p>
-
-          </div>
-
-        ) : filteredLeases.length === 0 ? (
-
-          <div className="rounded-2xl border border-dashed bg-white p-12 text-center shadow-sm">
-
-            <h2 className="text-2xl font-semibold">
-              No Leases Found
-            </h2>
-
-            <p className="mt-3 text-gray-500">
-              Create your first lease to begin managing tenancy.
-            </p>
-
-            <button
-              onClick={() =>
-                setShowModal(true)
+            <StatCard
+              title="Active"
+              value={activeLeases}
+              subtitle="Currently active"
+              valueClassName="text-green-600"
+              icon={
+                <CheckCircle className="h-6 w-6 text-green-600" />
               }
-              className="mt-6 rounded-xl bg-black px-6 py-3 font-semibold text-white hover:bg-gray-800"
-            >
-              + Create Lease
-            </button>
+            />
+
+            <StatCard
+              title="Ending Soon"
+              value={endingSoon}
+              subtitle="Within 30 days"
+              valueClassName="text-amber-500"
+              icon={
+                <Clock className="h-6 w-6 text-amber-500" />
+              }
+            />
+
+            <StatCard
+              title="Monthly Rent"
+              value={`KSh ${totalRent.toLocaleString()}`}
+              subtitle="Expected collections"
+              valueClassName="text-[#D4AF37]"
+              icon={
+                <DollarSign className="h-6 w-6 text-[#D4AF37]" />
+              }
+            />
 
           </div>
 
-        ) : (
+        </Section>
 
-          <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+        {/* Lease Portfolio */}
 
-            {filteredLeases.map((lease) => (
+        <Section>
 
-              <div
-                key={lease.id}
-                className="overflow-hidden rounded-2xl border bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-lg"
+          <Card>
+
+            <div className="mb-6">
+
+              <h2 className="text-2xl font-bold text-gray-900">
+
+                Lease Portfolio
+
+              </h2>
+
+              <p className="mt-2 text-gray-500">
+
+                Search, filter and manage every lease across your rental portfolio.
+
+              </p>
+
+            </div>
+
+            {/* Filters */}
+
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+                            <input
+                type="text"
+                placeholder="Search lease..."
+                value={search}
+                onChange={(e) =>
+                  setSearch(e.target.value)
+                }
+                className="rounded-xl border border-gray-200 bg-white p-3 outline-none transition focus:border-black"
+              />
+
+              <select
+                value={property}
+                onChange={(e) =>
+                  setProperty(e.target.value)
+                }
+                className="rounded-xl border border-gray-200 bg-white p-3"
               >
+                <option value="All">
+                  All Properties
+                </option>
 
-                <div className="p-6">
+                {properties.map((property) => (
 
-                  <div className="flex items-start justify-between">
-
-                    <div>
-
-                      <h2 className="text-xl font-bold">
-                        {lease.occupant.first_name}{" "}
-                        {lease.occupant.last_name}
-                      </h2>
-
-                      <p className="mt-1 text-sm text-gray-500">
-                        {lease.property.name}
-                      </p>
-
-                    </div>
-
-                    <span
-                      className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                        lease.status === "Active"
-                          ? "bg-green-100 text-green-700"
-                          : lease.status === "Draft"
-                          ? "bg-yellow-100 text-yellow-700"
-                          : "bg-red-100 text-red-700"
-                      }`}
-                    >
-                      {lease.status}
-                    </span>
-
-                  </div>
-
-                  <div className="mt-5 space-y-2 text-sm text-gray-600">
-
-                    <p>
-                      🏠 <strong>Unit:</strong>{" "}
-                      {lease.unit.unit_number}
-                    </p>
-
-                    <p>
-                      📄 <strong>Lease:</strong>{" "}
-                      {lease.lease_number}
-                    </p>
-
-                    <p>
-                      💰 <strong>Rent:</strong>{" "}
-                      KSh {lease.rent_amount.toLocaleString()}
-                    </p>
-
-                    <p>
-                      📅 <strong>Due Day:</strong>{" "}
-                      {lease.rent_due_day}
-                    </p>
-
-                    <p>
-                      📆 <strong>Start:</strong>{" "}
-                      {lease.start_date}
-                    </p>
-
-                    <p>
-                      ⏳ <strong>End:</strong>{" "}
-                      {lease.end_date ?? "Open-ended"}
-                    </p>
-
-                  </div>
-
-                </div>
-
-                <div className="flex gap-3 border-t bg-gray-50 p-4">
-
-                  <Link
-                    href={`/leases/${lease.id}`}
-                    className="flex-1 rounded-xl bg-black py-2.5 text-center font-medium text-white hover:bg-gray-800"
+                  <option
+                    key={property.id}
+                    value={property.id}
                   >
-                    Open Lease
-                  </Link>
+                    {property.name}
+                  </option>
 
-                  <button className="rounded-xl border px-4 hover:bg-gray-100">
-                    ⋮
-                  </button>
+                ))}
+
+              </select>
+
+              <select
+                value={status}
+                onChange={(e) =>
+                  setStatus(e.target.value)
+                }
+                className="rounded-xl border border-gray-200 bg-white p-3"
+              >
+                <option value="All">
+                  All Statuses
+                </option>
+
+                <option value="Draft">
+                  Draft
+                </option>
+
+                <option value="Active">
+                  Active
+                </option>
+
+                <option value="Expired">
+                  Expired
+                </option>
+
+                <option value="Terminated">
+                  Terminated
+                </option>
+
+              </select>
+
+              <select
+                value={leaseType}
+                onChange={(e) =>
+                  setLeaseType(e.target.value)
+                }
+                className="rounded-xl border border-gray-200 bg-white p-3"
+              >
+                <option value="All">
+                  All Lease Types
+                </option>
+
+                <option value="Open-ended">
+                  Open-ended
+                </option>
+
+                <option value="Fixed Term">
+                  Fixed Term
+                </option>
+
+              </select>
+
+            </div>
+
+            <div className="mt-8">
+
+              {loading ? (
+
+                <Loading
+                  title="Loading Leases"
+                  description="Preparing lease portfolio..."
+                />
+
+              ) : filteredLeases.length === 0 ? (
+
+                <EmptyState
+                  title="No Leases Found"
+                  description="Create your first lease to begin managing tenancy."
+                />
+
+              ) : (
+
+                <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+
+                  {filteredLeases.map((lease) => (
+
+                    <Card
+                      key={lease.id}
+                      className="overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:border-[#D4AF37] hover:shadow-xl"
+                    >
+
+                      <div className="flex items-start justify-between">
+
+                        <div>
+
+                          <h2 className="text-xl font-bold text-gray-900">
+
+                            {lease.occupant.first_name}{" "}
+                            {lease.occupant.last_name}
+
+                          </h2>
+
+                          <p className="mt-1 text-sm text-gray-500">
+
+                            {lease.lease_number}
+
+                          </p>
+
+                        </div>
+
+                        <span
+                          className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                            lease.status === "Active"
+                              ? "bg-green-100 text-green-700"
+                              : lease.status === "Draft"
+                              ? "bg-yellow-100 text-yellow-700"
+                              : "bg-red-100 text-red-700"
+                          }`}
+                        >
+
+                          {lease.status}
+
+                        </span>
+
+                      </div>
+
+                      <div className="mt-6 space-y-3 text-sm text-gray-600">
+
+                        <p>
+
+                          🏢 <strong>Property:</strong>{" "}
+                          {lease.property.name}
+
+                        </p>
+
+                        <p>
+
+                          🏠 <strong>Unit:</strong>{" "}
+                          {lease.unit.unit_number}
+
+                        </p>
+
+                        <p>
+
+                          💰 <strong>Rent:</strong>{" "}
+                          KSh{" "}
+                          {lease.rent_amount.toLocaleString()}
+
+                        </p>
+
+                        <p>
+
+                          📅 <strong>Due Day:</strong>{" "}
+                          {lease.rent_due_day}
+
+                        </p>
+
+                        <p>
+
+                          📆 <strong>Period:</strong>{" "}
+                          {lease.start_date} →{" "}
+                          {lease.end_date ??
+                            "Open-ended"}
+
+                        </p>
+
+                      </div>
+
+                      <div className="mt-8 flex gap-3">
+
+                        <Link
+                          href={`/leases/${lease.id}`}
+                          className="flex-1"
+                        >
+
+                          <Button
+                            variant="primary"
+                            className="w-full"
+                          >
+
+                            Open Lease
+
+                          </Button>
+
+                        </Link>
+
+                        <Button
+                          variant="secondary"
+                        >
+
+                          ⋮
+
+                        </Button>
+
+                      </div>
+
+                    </Card>
+
+                  ))}
 
                 </div>
 
-              </div>
+              )}
 
-            ))}
+            </div>
 
-          </div>
+          </Card>
 
-        )}
-
-      </div>
+        </Section>
+              </PageContainer>
 
       {showModal && (
 
@@ -573,7 +612,8 @@ export default function LeasesPage() {
 
       )}
 
-    </>
-  );
+    </AppShell>
 
+  );
 }
+        
