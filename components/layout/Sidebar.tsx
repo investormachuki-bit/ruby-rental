@@ -8,6 +8,7 @@ import {
   Building2,
   Home,
   Users,
+  FileText,
   Receipt,
   Wallet,
   BarChart3,
@@ -19,14 +20,18 @@ import Logo from "./Logo";
 
 type SidebarProps = {
   sidebarOpen: boolean;
-  setSidebarOpen: (open: boolean) => void;
+  setSidebarOpen: (
+    open: boolean
+  ) => void;
 };
 
 export default function Sidebar({
   sidebarOpen,
   setSidebarOpen,
 }: SidebarProps) {
-  const pathname = usePathname();
+
+  const pathname =
+    usePathname();
 
   const menuItems = [
     {
@@ -50,8 +55,13 @@ export default function Sidebar({
       icon: Users,
     },
     {
-      name: "Rent",
-      href: "/rent",
+      name: "Leases",
+      href: "/leases",
+      icon: FileText,
+    },
+    {
+      name: "Payments",
+      href: "/payments",
       icon: Receipt,
     },
     {
@@ -76,24 +86,32 @@ export default function Sidebar({
     },
   ];
 
-  function isActive(href: string) {
+  function isActive(
+    href: string
+  ) {
+
     if (href === "/") {
       return pathname === "/";
     }
 
-    return pathname.startsWith(href);
+    return pathname.startsWith(
+      href
+    );
+
   }
 
-  const linkClass = (href: string) =>
+  const linkClass = (
+    href: string
+  ) =>
     `group flex items-center gap-3 rounded-2xl px-4 py-3 transition-all duration-200 ${
       isActive(href)
         ? "bg-[#D4AF37] text-[#0F0F10] shadow-lg"
-        : "text-gray-400 hover:bg-white/5 hover:text-white"
+        : "text-white hover:bg-white/5 hover:text-white"
     }`;
 
   return (
     <>
-      {/* Desktop Sidebar */}
+            {/* Desktop Sidebar */}
 
       <aside className="fixed left-0 top-0 hidden h-screen w-64 flex-col border-r border-[#232323] bg-[#0F0F10] md:flex">
 
@@ -112,9 +130,11 @@ export default function Sidebar({
           <ul className="space-y-2">
 
             {menuItems.map((item) => {
+
               const Icon = item.icon;
 
               return (
+
                 <li key={item.name}>
 
                   <Link
@@ -127,7 +147,7 @@ export default function Sidebar({
                       className={
                         isActive(item.href)
                           ? "text-[#0F0F10]"
-                          : "text-gray-500 transition group-hover:text-[#D4AF37]"
+                          : "text-white transition group-hover:text-[#D4AF37]"
                       }
                     />
 
@@ -140,7 +160,9 @@ export default function Sidebar({
                   </Link>
 
                 </li>
+
               );
+
             })}
 
           </ul>
@@ -186,9 +208,11 @@ export default function Sidebar({
           <ul className="space-y-2">
 
             {menuItems.map((item) => {
+
               const Icon = item.icon;
 
               return (
+
                 <li key={item.name}>
 
                   <Link
@@ -204,7 +228,7 @@ export default function Sidebar({
                       className={
                         isActive(item.href)
                           ? "text-[#0F0F10]"
-                          : "text-gray-500 transition group-hover:text-[#D4AF37]"
+                          : "text-white transition group-hover:text-[#D4AF37]"
                       }
                     />
 
@@ -217,7 +241,9 @@ export default function Sidebar({
                   </Link>
 
                 </li>
+
               );
+
             })}
 
           </ul>
@@ -237,6 +263,8 @@ export default function Sidebar({
         </div>
 
       </aside>
+
     </>
   );
+
 }
