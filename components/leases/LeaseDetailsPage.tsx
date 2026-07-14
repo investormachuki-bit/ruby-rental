@@ -36,6 +36,29 @@ const [showPaymentModal, setShowPaymentModal] =
 
 const [showInvoiceModal, setShowInvoiceModal] =
   useState(false);
+
+
+const totalInvoiced =
+  invoices.reduce(
+    (sum, invoice) => sum + Number(invoice.amount ?? 0),
+    0
+  );
+
+const totalPaid =
+  payments.reduce(
+    (sum, payment) => sum + Number(payment.amount ?? 0),
+    0
+  );
+
+const outstandingBalance =
+  invoices.reduce(
+    (sum, invoice) => sum + Number(invoice.balance ?? 0),
+    0
+  );
+
+const latestInvoice = invoices.length ? invoices[0] : null;
+const latestPayment = payments.length ? payments[0] : null;
+
   
 
   useEffect(() => {
