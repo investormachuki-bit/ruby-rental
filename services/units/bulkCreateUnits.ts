@@ -1,5 +1,6 @@
 import { supabase } from "@/lib/supabase";
 import { getProfile } from "@/services/auth/getProfile";
+import { createDefaultUtilityMeters } from "@/services/utilities/createDefaultUtilityMeters";
 
 export type BulkUnitInput = {
   propertyId: string;
@@ -24,28 +25,48 @@ export async function bulkCreateUnits(
   }
 
   // Get user's profile
-  const profile = await getProfile(session.user.id);
+  const profile = await getProfile(
+    session.user.id
+  );
 
   if (!profile) {
     throw new Error("Profile not found.");
   }
 
+  // Build units
   const units = [];
 
-  for (let i = input.start; i <= input.end; i++) {
+  for (
+    let i = input.start;
+    i <= input.end;
+    i++
+  ) {
     units.push({
-      workspace_id: profile.workspace_id,
-      property_id: input.propertyId,
+      workspace_id:
+        profile.workspace_id,
 
-      unit_number: `${input.prefix}${i}`,
+      property_id:
+        input.propertyId,
+
+      unit_number:
+        `${input.prefix}${i}`,
+
       unit_sequence: i,
-      floor_name: input.floorName ?? null,
 
-      monthly_rent: input.monthlyRent,
-      deposit: input.deposit,
+      floor_name:
+        input.floorName ?? null,
 
-      water_type: "Metered",
-      electricity_type: "Prepaid",
+      monthly_rent:
+        input.monthlyRent,
+
+      deposit:
+        input.deposit,
+
+      water_type:
+        "Metered",
+
+      electricity_type:
+        "Prepaid",
 
       garbage_fee: 0,
       parking_fee: 0,
@@ -56,12 +77,69 @@ export async function bulkCreateUnits(
     });
   }
 
-  const { error } = await supabase
+  // Create units
+  const {
+    data: createdUnits,
+    error,
+  } = await supabase
     .from("units")
-    .insert(units);
+    .insert(units)
+    .select();
 
   if (error) {
     throw error;
+  }
+
+  // Load property utility settings
+  const {
+    data: property,
+    error: propertyError,
+  } = await supabase
+    .from("properties")
+    .select(`
+      water_type,
+      water_rate,
+      electricity_type,
+      electricity_rate
+    `)
+    .eq(
+      "id",
+      input.propertyId
+    )
+    .single();
+
+  if (propertyError) {
+    throw propertyError;
+  }
+
+  // Automatically create utility meters
+  for (const unit of createdUnits) {
+    await createDefaultUtilityMeters({
+      workspace_id:
+        profile.workspace_id,
+
+      property_id:
+        input.propertyId,
+
+      unit_id:
+        unit.id,
+
+      water_type:
+        property.water_type,
+
+      water_rate:
+        Number(
+          property.water_rate
+        ),
+
+      electricity_type:
+        property.electricity_type,
+
+      electricity_rate:
+        Number(
+          property.electricity_rate
+        ),
+    });
   }
 
   return true;
