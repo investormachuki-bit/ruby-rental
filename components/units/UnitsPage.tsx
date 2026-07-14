@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 
 import AppShell from "@/components/layout/AppShell";
+
 import Breadcrumb from "@/components/common/Breadcrumb";
 
 import PageContainer from "@/components/ui/PageContainer";
@@ -22,6 +23,7 @@ import Loading from "@/components/ui/Loading";
 import UnitsList from "@/components/units/UnitsList";
 
 import { getUnits } from "@/services/units/getUnits";
+
 import { Unit } from "@/types/unit";
 
 export default function UnitsPage() {
@@ -39,8 +41,7 @@ export default function UnitsPage() {
     try {
       setLoading(true);
 
-      const data =
-        await getUnits();
+      const data = await getUnits();
 
       setUnits(data);
     } catch (error) {
