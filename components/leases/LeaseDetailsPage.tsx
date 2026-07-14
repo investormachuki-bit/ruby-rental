@@ -7,6 +7,8 @@ import Breadcrumb from "@/components/common/Breadcrumb";
 import { getLease } from "@/services/leases/getLease";
 import ReceivePaymentModal from "@/components/payments/ReceivePaymentModal";
 import { getPayments } from "@/services/payments/getPayments";
+import CreateInvoiceModal from "@/components/invoices/CreateInvoiceModal";
+import { getInvoices } from "@/services/invoices/getInvoices";
 
 type Props = {
   leaseId: string;
@@ -29,6 +31,12 @@ export default function LeaseDetailsPage({
 
 const [showPaymentModal, setShowPaymentModal] =
   useState(false);
+  const [invoices, setInvoices] =
+  useState<any[]>([]);
+
+const [showInvoiceModal, setShowInvoiceModal] =
+  useState(false);
+  
 
   useEffect(() => {
     loadLease();
@@ -49,6 +57,10 @@ const [showPaymentModal, setShowPaymentModal] =
       await getPayments(leaseId);
 
     setPayments(paymentData);
+    const invoiceData =
+  await getInvoices(leaseId);
+
+setInvoices(invoiceData);
 
   } catch (error) {
 
@@ -731,9 +743,157 @@ payment.amount
 </div>
 
 )}
+{activeTab === "Invoices" && (
+
+  <div className="rounded-2xl border bg-white shadow-sm">
+
+    <div className="flex items-center justify-between border-b p-6">
+
+      <div>
+
+        <h3 className="text-xl font-bold">
+          Invoices
+        </h3>
+
+        <p className="text-gray-500">
+          Billing history for this lease.
+        </p>
+
+      </div>
+
+      <button
+        onClick={() =>
+          setShowInvoiceModal(true)
+        }
+        className="rounded-xl bg-black px-5 py-3 font-semibold text-white"
+      >
+        + Create Invoice
+      </button>
+
+    </div>
+
+    {invoices.length === 0 ? (
+
+      <div className="p-12 text-center text-gray-500">
+
+        No invoices created.
+
+      </div>
+
+    ) : (
+
+      <div className="overflow-x-auto">
+
+        <table className="min-w-full">
+
+          <thead className="bg-gray-50">
+
+            <tr>
+
+              <th className="p-4 text-left">
+                Invoice
+              </th>
+
+              <th className="p-4 text-left">
+                Period
+              </th>
+
+              <th className="p-4 text-left">
+                Due Date
+              </th>
+
+              <th className="p-4 text-left">
+                Status
+              </th>
+
+              <th className="p-4 text-right">
+                Amount
+              </th>
+
+              <th className="p-4 text-right">
+                Balance
+              </th>
+
+            </tr>
+
+          </thead>
+
+          <tbody>
+
+            {invoices.map((invoice) => (
+
+              <tr
+                key={invoice.id}
+                className="border-t"
+              >
+
+                <td className="p-4">
+                  {invoice.invoice_number}
+                </td>
+
+                <td className="p-4">
+                  {invoice.billing_period}
+                </td>
+
+                <td className="p-4">
+                  {invoice.due_date}
+                </td>
+
+                <td className="p-4">
+
+                  <span
+                    className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                      invoice.status === "Paid"
+                        ? "bg-green-100 text-green-700"
+                        : invoice.status === "Partially Paid"
+                        ? "bg-yellow-100 text-yellow-700"
+                        : "bg-red-100 text-red-700"
+                    }`}
+                  >
+                    {invoice.status}
+                  </span>
+
+                </td>
+
+                <td className="p-4 text-right">
+
+                  KSh{" "}
+
+                  {Number(
+                    invoice.amount
+                  ).toLocaleString()}
+
+                </td>
+
+                <td className="p-4 text-right font-semibold">
+
+                  KSh{" "}
+
+                  {Number(
+                    invoice.balance
+                  ).toLocaleString()}
+
+                </td>
+
+              </tr>
+
+            ))}
+
+          </tbody>
+
+        </table>
+
+      </div>
+
+    )}
+
+  </div>
+
+)}
 
 {activeTab !== "Overview" &&
-  activeTab !== "Payments" && (
+activeTab !== "Payments" &&
+activeTab !== "Invoices" && (
 
   <div className="rounded-2xl border border-dashed bg-white p-16 text-center">
 
@@ -767,6 +927,25 @@ payment.amount
   />
 
 )}
+      {showInvoiceModal &&
+  lease && (
+
+  <CreateInvoiceModal
+    lease={lease}
+    onCancel={() =>
+      setShowInvoiceModal(false)
+    }
+    onSuccess={() => {
+
+      setShowInvoiceModal(false);
+
+      loadLease();
+
+    }}
+  />
+
+)}
+      
 
     </div>
 
