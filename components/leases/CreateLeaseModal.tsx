@@ -6,7 +6,6 @@ import SectionCard from "@/components/common/SectionCard";
 import StickyActionBar from "@/components/common/StickyActionBar";
 
 import { createLease } from "@/services/leases/createLease";
-import { activateLease } from "@/services/leases/activateLease";
 
 import { getProperties } from "@/services/properties/getAll";
 import { getOccupants } from "@/services/occupants/getOccupants";
@@ -38,19 +37,30 @@ type Unit = {
 };
 
 type Props = {
+
+  propertyId?: string;
+
+  unitId?: string;
+
   onSuccess: () => void;
+
   onCancel: () => void;
+
 };
 
 export default function CreateLeaseModal({
+
+  propertyId,
+
+  unitId,
+
   onSuccess,
+
   onCancel,
+
 }: Props) {
 
   const [loading, setLoading] =
-    useState(false);
-
-  const [activateNow, setActivateNow] =
     useState(false);
 
   const [leaseType, setLeaseType] =
@@ -75,13 +85,18 @@ export default function CreateLeaseModal({
 
   const [form, setForm] = useState({
 
-    property_id: "",
+    property_id:
+      propertyId ?? "",
 
-    unit_id: "",
+    unit_id:
+      unitId ?? "",
 
     occupant_id: "",
 
-    start_date: "",
+    start_date:
+      new Date()
+        .toISOString()
+        .split("T")[0],
 
     end_date: "",
 
@@ -91,7 +106,7 @@ export default function CreateLeaseModal({
 
     rent_due_day: "5",
 
-    grace_period_days: "0",
+    grace_period_days: "5",
 
     notes: "",
 
@@ -103,30 +118,45 @@ export default function CreateLeaseModal({
 
   async function loadData() {
 
-    const props =
-      await getProperties();
+    try {
 
-    const occs =
-      await getOccupants();
+      const [props, occs] =
+        await Promise.all([
+          getProperties(),
+          getOccupants(),
+        ]);
 
-    setProperties(props ?? []);
+      setProperties(props ?? []);
 
-    setOccupants(occs ?? []);
+      setOccupants(occs ?? []);
+
+    } catch (error) {
+
+      console.error(error);
+
+    }
 
   }
-    useEffect(() => {
+
+  useEffect(() => {
 
     if (!form.property_id) {
 
       setUnits([]);
+
       setSelectedUnit(null);
 
-      setForm((prev) => ({
-        ...prev,
-        unit_id: "",
-      }));
+      if (!propertyId) {
+
+        setForm((prev) => ({
+          ...prev,
+          unit_id: "",
+        }));
+
+      }
 
       return;
+
     }
 
     loadUnits(form.property_id);
@@ -134,20 +164,82 @@ export default function CreateLeaseModal({
   }, [form.property_id]);
 
   async function loadUnits(
-    propertyId: string
+    propertyIdValue: string
   ) {
 
-    const data =
-      await getPropertyUnits(propertyId);
+    try {
 
-    const vacantUnits = (data ?? []).filter(
-      (unit: Unit) =>
-        unit.status === "Vacant"
-    );
+      const data =
+        await getPropertyUnits(
+          propertyIdValue
+        );
 
-    setUnits(vacantUnits);
+      const vacantUnits =
+        (data ?? []).filter(
+          (unit: Unit) =>
+            unit.status === "Vacant" ||
+            unit.id === unitId
+        );
+
+      setUnits(vacantUnits);
+
+      if (unitId) {
+
+        const unit =
+          vacantUnits.find(
+            (u) =>
+              u.id === unitId
+          );
+
+        if (unit) {
+
+          setSelectedUnit(unit);
+
+          setForm((prev) => ({
+
+            ...prev,
+
+            unit_id:
+              unit.id,
+
+            rent_amount:
+              String(
+                unit.monthly_rent
+              ),
+
+            deposit_amount:
+              String(
+                unit.deposit
+              ),
+
+          }));
+
+        }
+
+      }
+
+    } catch (error) {
+
+      console.error(error);
+
+    }
 
   }
+
+  useEffect(() => {
+
+    if (!propertyId) return;
+
+    setForm((prev) => ({
+
+      ...prev,
+
+      property_id:
+        propertyId,
+
+    }));
+
+  }, [propertyId]);
 
   function handleChange(
     e: React.ChangeEvent<
@@ -157,7 +249,10 @@ export default function CreateLeaseModal({
     >
   ) {
 
-    const { name, value } = e.target;
+    const {
+      name,
+      value,
+    } = e.target;
 
     setForm((prev) => ({
       ...prev,
@@ -165,14 +260,13 @@ export default function CreateLeaseModal({
     }));
 
   }
-
-  function handleUnitChange(
-    unitId: string
+    function handleUnitChange(
+    unitIdValue: string
   ) {
 
     const unit =
       units.find(
-        (u) => u.id === unitId
+        (u) => u.id === unitIdValue
       );
 
     if (!unit) return;
@@ -180,15 +274,21 @@ export default function CreateLeaseModal({
     setSelectedUnit(unit);
 
     setForm((prev) => ({
+
       ...prev,
 
-      unit_id: unit.id,
+      unit_id:
+        unit.id,
 
       rent_amount:
-        String(unit.monthly_rent),
+        String(
+          unit.monthly_rent
+        ),
 
       deposit_amount:
-        String(unit.deposit),
+        String(
+          unit.deposit
+        ),
 
     }));
 
@@ -200,7 +300,8 @@ export default function CreateLeaseModal({
 
     const occupant =
       occupants.find(
-        (o) => o.id === occupantId
+        (o) =>
+          o.id === occupantId
       );
 
     if (!occupant) return;
@@ -210,8 +311,12 @@ export default function CreateLeaseModal({
     );
 
     setForm((prev) => ({
+
       ...prev,
-      occupant_id: occupant.id,
+
+      occupant_id:
+        occupant.id,
+
     }));
 
   }
@@ -221,6 +326,20 @@ export default function CreateLeaseModal({
     try {
 
       setLoading(true);
+
+      if (
+        !form.property_id ||
+        !form.unit_id ||
+        !form.occupant_id
+      ) {
+
+        alert(
+          "Please complete all required fields."
+        );
+
+        return;
+
+      }
 
       const lease =
         await createLease({
@@ -271,13 +390,17 @@ export default function CreateLeaseModal({
 
         });
 
-      if (activateNow) {
+      if (!lease) {
 
-        await activateLease(
-          lease.id
+        throw new Error(
+          "Lease creation failed."
         );
 
       }
+
+      alert(
+        "Lease created successfully."
+      );
 
       onSuccess();
 
@@ -298,46 +421,64 @@ export default function CreateLeaseModal({
   }
 
   return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+    return (
 
-      <div className="flex max-h-[95vh] w-full max-w-5xl flex-col overflow-hidden rounded-2xl bg-gray-50 shadow-2xl">
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
 
-        {/* Header */}
+    <div className="flex max-h-[95vh] w-full max-w-5xl flex-col overflow-hidden rounded-2xl bg-gray-50 shadow-2xl">
 
-        <div className="border-b bg-white p-6">
+      {/* Header */}
 
-          <h2 className="text-2xl font-bold">
-            Create New Lease
-          </h2>
+      <div className="border-b bg-white p-6">
 
-          <p className="mt-2 text-gray-500">
-            Create a lease agreement between a vacant unit and an occupant.
-          </p>
+        <h2 className="text-2xl font-bold">
+          Create New Lease
+        </h2>
 
-        </div>
+        <p className="mt-2 text-gray-500">
+          Create a lease agreement for this unit.
+        </p>
 
-        {/* Body */}
+      </div>
 
-        <div className="flex-1 space-y-6 overflow-y-auto p-6">
+      {/* Body */}
 
-          {/* Property & Unit */}
+      <div className="flex-1 space-y-6 overflow-y-auto p-6">
 
-          <SectionCard
-            title="🏢 Property & Unit"
-            description="Select the property and a vacant unit."
-            completed={
-              form.property_id !== "" &&
-              form.unit_id !== ""
-            }
-          >
+        {/* Property & Unit */}
 
-            <div className="grid gap-5 lg:grid-cols-2">
+        <SectionCard
+          title="🏢 Property & Unit"
+          description="Select the property and unit for this lease."
+          completed={
+            form.property_id !== "" &&
+            form.unit_id !== ""
+          }
+        >
 
-              <div>
+          <div className="grid gap-5 lg:grid-cols-2">
 
-                <label className="mb-2 block font-medium">
-                  Property
-                </label>
+            {/* Property */}
+
+            <div>
+
+              <label className="mb-2 block font-medium">
+                Property
+              </label>
+
+              {propertyId ? (
+
+                <div className="rounded-xl border bg-gray-100 p-3">
+
+                  {properties.find(
+                    (p) =>
+                      p.id ===
+                      form.property_id
+                  )?.name ?? "-"}
+
+                </div>
+
+              ) : (
 
                 <select
                   name="property_id"
@@ -350,26 +491,43 @@ export default function CreateLeaseModal({
                     Select Property
                   </option>
 
-                  {properties.map((property) => (
+                  {properties.map(
+                    (property) => (
 
-                    <option
-                      key={property.id}
-                      value={property.id}
-                    >
-                      {property.name}
-                    </option>
+                      <option
+                        key={property.id}
+                        value={property.id}
+                      >
+                        {property.name}
+                      </option>
 
-                  ))}
+                    )
+                  )}
 
                 </select>
 
-              </div>
+              )}
 
-              <div>
+            </div>
 
-                <label className="mb-2 block font-medium">
-                  Vacant Unit
-                </label>
+            {/* Unit */}
+
+            <div>
+
+              <label className="mb-2 block font-medium">
+                Unit
+              </label>
+
+              {unitId ? (
+
+                <div className="rounded-xl border bg-gray-100 p-3">
+
+                  {selectedUnit?.unit_number ??
+                    "-"}
+
+                </div>
+
+              ) : (
 
                 <select
                   value={form.unit_id}
@@ -398,395 +556,445 @@ export default function CreateLeaseModal({
 
                 </select>
 
-              </div>
+              )}
 
             </div>
 
-            {selectedUnit && (
+          </div>
 
-              <div className="mt-6 rounded-xl border bg-slate-50 p-5">
+          {selectedUnit && (
 
-                <h4 className="mb-4 font-semibold">
-                  Selected Unit
-                </h4>
+            <div className="mt-6 rounded-xl border bg-slate-50 p-5">
 
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+              <h4 className="mb-4 font-semibold">
+                Selected Unit
+              </h4>
 
-                  <div>
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
 
-                    <p className="text-xs uppercase text-gray-500">
-                      Unit
-                    </p>
+                <div>
 
-                    <p className="font-semibold">
-                      {selectedUnit.unit_number}
-                    </p>
+                  <p className="text-xs uppercase text-gray-500">
+                    Unit
+                  </p>
 
-                  </div>
+                  <p className="font-semibold">
+                    {selectedUnit.unit_number}
+                  </p>
 
-                  <div>
+                </div>
 
-                    <p className="text-xs uppercase text-gray-500">
-                      Monthly Rent
-                    </p>
+                <div>
 
-                    <p className="font-semibold">
-                      KSh {selectedUnit.monthly_rent.toLocaleString()}
-                    </p>
+                  <p className="text-xs uppercase text-gray-500">
+                    Monthly Rent
+                  </p>
 
-                  </div>
+                  <p className="font-semibold">
+                    KSh{" "}
+                    {selectedUnit.monthly_rent.toLocaleString()}
+                  </p>
 
-                  <div>
+                </div>
 
-                    <p className="text-xs uppercase text-gray-500">
-                      Deposit
-                    </p>
+                <div>
 
-                    <p className="font-semibold">
-                      KSh {selectedUnit.deposit.toLocaleString()}
-                    </p>
+                  <p className="text-xs uppercase text-gray-500">
+                    Deposit
+                  </p>
 
-                  </div>
+                  <p className="font-semibold">
+                    KSh{" "}
+                    {selectedUnit.deposit.toLocaleString()}
+                  </p>
 
-                  <div>
+                </div>
 
-                    <p className="text-xs uppercase text-gray-500">
-                      Floor
-                    </p>
+                <div>
 
-                    <p className="font-semibold">
-                      {selectedUnit.floor_name ?? "-"}
-                    </p>
+                  <p className="text-xs uppercase text-gray-500">
+                    Floor
+                  </p>
 
-                  </div>
+                  <p className="font-semibold">
+                    {selectedUnit.floor_name ??
+                      "-"}
+
+                  </p>
 
                 </div>
 
               </div>
 
-            )}
+            </div>
 
-          </SectionCard>
+          )}
 
-          {/* Occupant */}
+        </SectionCard>
+                {/* Occupant */}
 
-          <SectionCard
-            title="👤 Occupant"
-            description="Assign the occupant to the selected unit."
-            completed={
-              form.occupant_id !== ""
-            }
-          >
+        <SectionCard
+          title="👤 Occupant"
+          description="Assign the occupant to this lease."
+          completed={
+            form.occupant_id !== ""
+          }
+        >
 
-            <div>
+          <div>
 
-              <label className="mb-2 block font-medium">
-                Occupant
-              </label>
+            <label className="mb-2 block font-medium">
+              Occupant
+            </label>
 
-              <select
-                value={form.occupant_id}
-                onChange={(e) =>
-                  handleOccupantChange(
-                    e.target.value
-                  )
-                }
-                className="w-full rounded-xl border bg-white p-3"
-              >
+            <select
+              value={form.occupant_id}
+              onChange={(e) =>
+                handleOccupantChange(
+                  e.target.value
+                )
+              }
+              className="w-full rounded-xl border bg-white p-3"
+            >
 
-                <option value="">
-                  Select Occupant
+              <option value="">
+                Select Occupant
+              </option>
+
+              {occupants.map((occupant) => (
+
+                <option
+                  key={occupant.id}
+                  value={occupant.id}
+                >
+                  {occupant.first_name}{" "}
+                  {occupant.last_name}
                 </option>
 
-                {occupants.map((occupant) => (
+              ))}
 
-  <option
-    key={occupant.id}
-    value={occupant.id}
-  >
-    {occupant.first_name} {occupant.last_name}
-  </option>
+            </select>
 
-))}
-              </select>
+          </div>
 
-            </div>
+          {selectedOccupant && (
 
-            {selectedOccupant && (
+            <div className="mt-6 rounded-xl border bg-slate-50 p-5">
 
-              <div className="mt-6 rounded-xl border bg-slate-50 p-5">
+              <h4 className="mb-4 font-semibold">
+                Selected Occupant
+              </h4>
 
-                <h4 className="mb-4 font-semibold">
-                  Selected Occupant
-                </h4>
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
 
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                <div>
 
-                  <div>
-                    <p className="text-xs uppercase text-gray-500">
-                      Name
-                    </p>
+                  <p className="text-xs uppercase text-gray-500">
+                    Name
+                  </p>
 
-                    <p className="font-semibold">
-                      {selectedOccupant.first_name}{" "}
-                      {selectedOccupant.last_name}
-                    </p>
-                  </div>
+                  <p className="font-semibold">
+                    {selectedOccupant.first_name}{" "}
+                    {selectedOccupant.last_name}
+                  </p>
 
-                  <div>
-                    <p className="text-xs uppercase text-gray-500">
-                      Phone
-                    </p>
+                </div>
 
-                    <p className="font-semibold">
-                      {selectedOccupant.phone_number ?? "-"}
-                    </p>
-                  </div>
+                <div>
 
-                  <div>
-                    <p className="text-xs uppercase text-gray-500">
-                      ID Number
-                    </p>
+                  <p className="text-xs uppercase text-gray-500">
+                    Phone
+                  </p>
 
-                    <p className="font-semibold">
-                      {selectedOccupant.id_number ?? "-"}
-                    </p>
-                  </div>
+                  <p className="font-semibold">
+                    {selectedOccupant.phone_number ??
+                      "-"}
+                  </p>
 
-                  <div>
-                    <p className="text-xs uppercase text-gray-500">
-                      Email
-                    </p>
+                </div>
 
-                    <p className="font-semibold">
-                      {selectedOccupant.email ?? "-"}
-                    </p>
-                  </div>
+                <div>
+
+                  <p className="text-xs uppercase text-gray-500">
+                    ID Number
+                  </p>
+
+                  <p className="font-semibold">
+                    {selectedOccupant.id_number ??
+                      "-"}
+                  </p>
+
+                </div>
+
+                <div>
+
+                  <p className="text-xs uppercase text-gray-500">
+                    Email
+                  </p>
+
+                  <p className="font-semibold">
+                    {selectedOccupant.email ??
+                      "-"}
+                  </p>
 
                 </div>
 
               </div>
 
-            )}
+            </div>
 
-          </SectionCard>
+          )}
 
-          {/* Lease Terms */}
+        </SectionCard>
 
-          <SectionCard
-            title="📄 Lease Terms"
-            description="Configure the lease period."
-            completed={
-              form.start_date !== "" &&
-              (
-                leaseType === "Open-ended" ||
-                form.end_date !== ""
-              )
-            }
-          >
+        {/* Lease Terms */}
 
-            <div className="space-y-6">
+        <SectionCard
+          title="📄 Lease Terms"
+          description="Configure the lease period."
+          completed={
+            form.start_date !== "" &&
+            (
+              leaseType ===
+                "Open-ended" ||
+              form.end_date !== ""
+            )
+          }
+        >
 
-              <div className="flex flex-wrap gap-6">
+          <div className="space-y-6">
 
-                <label className="flex items-center gap-2">
-                  <input
-                    type="radio"
-                    checked={leaseType === "Open-ended"}
-                    onChange={() =>
-                      setLeaseType("Open-ended")
-                    }
-                  />
-                  Open-ended
+            <div className="flex flex-wrap gap-6">
+
+              <label className="flex items-center gap-2">
+
+                <input
+                  type="radio"
+                  checked={
+                    leaseType ===
+                    "Open-ended"
+                  }
+                  onChange={() =>
+                    setLeaseType(
+                      "Open-ended"
+                    )
+                  }
+                />
+
+                Open-ended
+
+              </label>
+
+              <label className="flex items-center gap-2">
+
+                <input
+                  type="radio"
+                  checked={
+                    leaseType ===
+                    "Fixed Term"
+                  }
+                  onChange={() =>
+                    setLeaseType(
+                      "Fixed Term"
+                    )
+                  }
+                />
+
+                Fixed Term
+
+              </label>
+
+            </div>
+
+            <div className="grid gap-5 md:grid-cols-2">
+
+              <div>
+
+                <label className="mb-2 block font-medium">
+                  Lease Start Date
                 </label>
 
-                <label className="flex items-center gap-2">
-                  <input
-                    type="radio"
-                    checked={leaseType === "Fixed Term"}
-                    onChange={() =>
-                      setLeaseType("Fixed Term")
-                    }
-                  />
-                  Fixed Term
-                </label>
+                <input
+                  type="date"
+                  name="start_date"
+                  value={form.start_date}
+                  onChange={handleChange}
+                  className="w-full rounded-xl border bg-white p-3"
+                />
 
               </div>
 
-              <div className="grid gap-5 md:grid-cols-2">
+              {leaseType ===
+                "Fixed Term" && (
 
                 <div>
 
                   <label className="mb-2 block font-medium">
-                    Lease Start Date
+                    Lease End Date
                   </label>
 
                   <input
                     type="date"
-                    name="start_date"
-                    value={form.start_date}
+                    name="end_date"
+                    value={form.end_date}
                     onChange={handleChange}
                     className="w-full rounded-xl border bg-white p-3"
                   />
 
                 </div>
 
-                {leaseType === "Fixed Term" && (
-
-                  <div>
-
-                    <label className="mb-2 block font-medium">
-                      Lease End Date
-                    </label>
-
-                    <input
-                      type="date"
-                      name="end_date"
-                      value={form.end_date}
-                      onChange={handleChange}
-                      className="w-full rounded-xl border bg-white p-3"
-                    />
-
-                  </div>
-
-                )}
-
-              </div>
+              )}
 
             </div>
 
-          </SectionCard>
+          </div>
 
-          {/* Financial Terms */}
+        </SectionCard>
+                {/* Financial Terms */}
 
-          <SectionCard
-            title="💰 Financial Terms"
-            description="Configure rent and payment schedule."
-            completed={
-              form.rent_amount !== "" &&
-              form.deposit_amount !== ""
-            }
-          >
-                        <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
+        <SectionCard
+          title="💰 Financial Terms"
+          description="Configure rent and payment schedule."
+          completed={
+            form.rent_amount !== "" &&
+            form.deposit_amount !== ""
+          }
+        >
 
-              <div>
+          <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
 
-                <label className="mb-2 block font-medium">
-                  Monthly Rent
-                </label>
+            <div>
 
-                <input
-                  type="number"
-                  name="rent_amount"
-                  value={form.rent_amount}
-                  onChange={handleChange}
-                  className="w-full rounded-xl border bg-white p-3"
-                />
+              <label className="mb-2 block font-medium">
+                Monthly Rent
+              </label>
 
-              </div>
+              <input
+                type="number"
+                name="rent_amount"
+                value={form.rent_amount}
+                onChange={handleChange}
+                className="w-full rounded-xl border bg-white p-3"
+              />
 
-              <div>
+            </div>
 
-                <label className="mb-2 block font-medium">
-                  Deposit
-                </label>
+            <div>
 
-                <input
-                  type="number"
-                  name="deposit_amount"
-                  value={form.deposit_amount}
-                  onChange={handleChange}
-                  className="w-full rounded-xl border bg-white p-3"
-                />
+              <label className="mb-2 block font-medium">
+                Deposit
+              </label>
 
-              </div>
+              <input
+                type="number"
+                name="deposit_amount"
+                value={form.deposit_amount}
+                onChange={handleChange}
+                className="w-full rounded-xl border bg-white p-3"
+              />
 
-              <div>
+            </div>
 
-                <label className="mb-2 block font-medium">
-                  Rent Due Day
-                </label>
+            <div>
 
-                <select
-                  name="rent_due_day"
-                  value={form.rent_due_day}
-                  onChange={handleChange}
-                  className="w-full rounded-xl border bg-white p-3"
-                >
-                  {Array.from({ length: 31 }, (_, i) => i + 1).map((day) => (
-                    <option key={day} value={day}>
-                      {day}
-                    </option>
-                  ))}
-                </select>
+              <label className="mb-2 block font-medium">
+                Rent Due Day
+              </label>
 
-              </div>
+              <select
+                name="rent_due_day"
+                value={form.rent_due_day}
+                onChange={handleChange}
+                className="w-full rounded-xl border bg-white p-3"
+              >
 
-              <div>
+                {Array.from(
+                  { length: 31 },
+                  (_, i) => i + 1
+                ).map((day) => (
 
-                <label className="mb-2 block font-medium">
-                  Grace Period
-                </label>
+                  <option
+                    key={day}
+                    value={day}
+                  >
+                    {day}
+                  </option>
 
-                <select
-                  name="grace_period_days"
-                  value={form.grace_period_days}
-                  onChange={handleChange}
-                  className="w-full rounded-xl border bg-white p-3"
-                >
-                  {[0, 1, 2, 3, 5, 7, 10, 14, 21, 30].map((days) => (
+                ))}
+
+              </select>
+
+            </div>
+
+            <div>
+
+              <label className="mb-2 block font-medium">
+                Grace Period
+              </label>
+
+              <select
+                name="grace_period_days"
+                value={form.grace_period_days}
+                onChange={handleChange}
+                className="w-full rounded-xl border bg-white p-3"
+              >
+
+                {[0, 1, 2, 3, 5, 7, 10, 14, 21, 30].map(
+                  (days) => (
+
                     <option
                       key={days}
                       value={days}
                     >
                       {days} Day{days === 1 ? "" : "s"}
                     </option>
-                  ))}
-                </select>
 
-              </div>
+                  )
+                )}
+
+              </select>
 
             </div>
 
-          </SectionCard>
+          </div>
 
-          <SectionCard
-            title="📝 Notes"
-            description="Optional notes for this lease."
-          >
+        </SectionCard>
 
-            <textarea
-              rows={5}
-              name="notes"
-              value={form.notes}
-              onChange={handleChange}
-              placeholder="Enter additional notes..."
-              className="w-full rounded-xl border bg-white p-4"
-            />
+        {/* Notes */}
 
-          </SectionCard>
+        <SectionCard
+          title="📝 Notes"
+          description="Optional notes for this lease."
+        >
 
-        </div>
+          <textarea
+            rows={5}
+            name="notes"
+            value={form.notes}
+            onChange={handleChange}
+            placeholder="Enter additional notes..."
+            className="w-full rounded-xl border bg-white p-4"
+          />
 
-        <StickyActionBar
-          loading={loading}
-          onCancel={onCancel}
-          onSaveDraft={() => {
-            setActivateNow(false);
-            handleSubmit();
-          }}
-          onPrimary={() => {
-            setActivateNow(true);
-            handleSubmit();
-          }}
-          primaryText="Activate Lease"
-        />
+        </SectionCard>
 
       </div>
 
+      {/* Footer */}
+
+      <StickyActionBar
+        loading={loading}
+        onCancel={onCancel}
+        onSaveDraft={onCancel}
+        onPrimary={handleSubmit}
+        primaryText="Create Lease"
+      />
+
     </div>
 
-  );
+  </div>
+
+);
 }
-                  
-          
+        
+  
