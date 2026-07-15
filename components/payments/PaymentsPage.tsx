@@ -118,9 +118,9 @@ export default function PaymentsPage() {
               .toLowerCase()
               .includes(keyword) ||
 
-            payment.receipt_number
-              .toLowerCase()
-              .includes(keyword);
+            payment.lease_number
+  .toLowerCase()
+  .includes(keyword);
 
           const matchesStatus =
 
