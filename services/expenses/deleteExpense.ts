@@ -3,8 +3,8 @@ import { supabase } from "@/lib/supabase";
 import { getProfile } from "@/services/auth/getProfile";
 
 export async function deleteExpense(
-  id: string
-): Promise<void> {
+  expenseId: string
+) {
 
   const {
     data: { session },
@@ -14,7 +14,8 @@ export async function deleteExpense(
     throw new Error("You are not logged in.");
   }
 
-  const profile = await getProfile(session.user.id);
+  const profile =
+    await getProfile(session.user.id);
 
   if (!profile) {
     throw new Error("Profile not found.");
@@ -23,12 +24,13 @@ export async function deleteExpense(
   const { error } = await supabase
     .from("expenses")
     .delete()
-    .eq("workspace_id", profile.workspace_id)
-    .eq("id", id);
+    .eq("id", expenseId)
+    .eq("workspace_id", profile.workspace_id);
 
   if (error) {
     throw error;
   }
 
-  return;
+  return true;
+
 }
