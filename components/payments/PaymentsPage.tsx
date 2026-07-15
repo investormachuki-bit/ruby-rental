@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 
 import PaymentsList from "@/components/payments/PaymentsList";
+
 import { getPaymentDashboard } from "@/services/payments/getPaymentDashboard";
 
 type Payment = {
@@ -79,7 +80,7 @@ export default function PaymentsPage() {
       setLoading(true);
 
       const data =
-  await getPaymentDashboard();
+        await getPaymentDashboard();
 
       setPayments(data ?? []);
 
@@ -98,11 +99,11 @@ export default function PaymentsPage() {
   const filteredPayments =
     useMemo(() => {
 
+      const keyword =
+        search.toLowerCase();
+
       return payments.filter(
         (payment) => {
-
-          const keyword =
-            search.toLowerCase();
 
           const matchesSearch =
 
@@ -119,14 +120,15 @@ export default function PaymentsPage() {
               .includes(keyword) ||
 
             payment.lease_number
-  .toLowerCase()
-  .includes(keyword);
+              .toLowerCase()
+              .includes(keyword);
 
           const matchesStatus =
 
             status === "All" ||
 
-            payment.payment_status === status;
+            payment.payment_status ===
+              status;
 
           return (
             matchesSearch &&
@@ -141,31 +143,32 @@ export default function PaymentsPage() {
       search,
       status,
     ]);
-const expectedCollections =
-  filteredPayments.reduce(
-    (sum, payment) =>
-      sum + payment.monthly_rent,
-    0
-  );
+
+  const expectedCollections =
+    filteredPayments.reduce(
+      (sum, payment) =>
+        sum + Number(payment.monthly_rent),
+      0
+    );
 
   const collected =
     filteredPayments.reduce(
       (sum, payment) =>
-        sum + payment.amount_paid,
+        sum + Number(payment.amount_paid),
       0
     );
 
   const outstanding =
     filteredPayments.reduce(
       (sum, payment) =>
-        sum + payment.balance,
+        sum + Number(payment.balance),
       0
     );
 
   const overdue =
     filteredPayments.filter(
       (payment) =>
-        payment.status ===
+        payment.payment_status ===
         "Overdue"
     ).length;
     return (
@@ -188,58 +191,45 @@ const expectedCollections =
 
         <PageHeader
           title="Payments"
-          description="Manage rent collections, balances and receipts."
+          description="Manage rent collections, balances and payment history."
         >
 
-          {payments.length > 0 ? (
+          <Link href="/leases">
 
-            <Button
-              variant="primary"
-              onClick={() => {
-                // Connected during business rules phase
-              }}
-            >
+            <Button variant="primary">
+
               Record Payment
+
             </Button>
 
-          ) : (
-
-            <Link href="/leases">
-
-              <Button variant="primary">
-
-                Create Lease
-
-              </Button>
-
-            </Link>
-
-          )}
+          </Link>
 
         </PageHeader>
 
-        {/* Workflow Banner */}
+        {/* Workflow Notice */}
 
         <div className="mb-6 rounded-2xl border border-amber-200 bg-amber-50 p-4">
 
           <p className="text-sm text-amber-800">
 
-            Payments are recorded against active leases.
-            Create a lease first before collecting rent.
+            Payments are always recorded against an active lease.
+            To collect rent, open the tenant's lease and click
+            <strong> Record Payment</strong>.
 
           </p>
 
         </div>
-                {/* Executive Summary */}
+
+        {/* Executive Summary */}
 
         <Section>
 
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-4">
 
             <StatCard
-              title="Expected"
+              title="Expected Rent"
               value={`KSh ${expectedCollections.toLocaleString()}`}
-              subtitle="Expected collections"
+              subtitle="Monthly expected collections"
               valueClassName="text-[#D4AF37]"
               icon={
                 <DollarSign className="h-6 w-6 text-[#D4AF37]" />
@@ -259,7 +249,7 @@ const expectedCollections =
             <StatCard
               title="Outstanding"
               value={`KSh ${outstanding.toLocaleString()}`}
-              subtitle="Outstanding balances"
+              subtitle="Balances remaining"
               valueClassName="text-amber-500"
               icon={
                 <Clock3 className="h-6 w-6 text-amber-500" />
@@ -269,7 +259,7 @@ const expectedCollections =
             <StatCard
               title="Overdue"
               value={overdue}
-              subtitle="Past due payments"
+              subtitle="Leases requiring attention"
               valueClassName="text-red-600"
               icon={
                 <AlertTriangle className="h-6 w-6 text-red-600" />
@@ -280,7 +270,7 @@ const expectedCollections =
 
         </Section>
 
-        {/* Payment Records */}
+        {/* Payment Dashboard */}
 
         <Section>
 
@@ -290,13 +280,13 @@ const expectedCollections =
 
               <h2 className="text-2xl font-bold text-gray-900">
 
-                Payment Records
+                Rent Collection Dashboard
 
               </h2>
 
               <p className="mt-2 text-gray-500">
 
-                Monitor rent collections and outstanding balances across your portfolio.
+                Monitor rent collection progress for every active lease.
 
               </p>
 
@@ -304,34 +294,34 @@ const expectedCollections =
                         {loading ? (
 
               <Loading
-                title="Loading Payments"
-                description="Preparing payment records..."
+                title="Loading Payment Dashboard"
+                description="Preparing rent collection summary..."
               />
 
             ) : filteredPayments.length === 0 ? (
 
               <div className="space-y-6">
 
-  <EmptyState
-    title="No Payment Records Yet"
-    description="Payments will appear automatically after creating a lease, generating rent invoices and recording tenant payments."
-  />
+                <EmptyState
+                  title="No Active Leases Found"
+                  description="Create an active lease before recording rent payments."
+                />
 
-  <div className="flex justify-center">
+                <div className="flex justify-center">
 
-    <Link href="/leases">
+                  <Link href="/leases">
 
-      <Button variant="secondary">
+                    <Button variant="secondary">
 
-        Go to Leases
+                      Go to Leases
 
-      </Button>
+                    </Button>
 
-    </Link>
+                  </Link>
 
-  </div>
+                </div>
 
-</div>
+              </div>
 
             ) : (
 
@@ -344,9 +334,11 @@ const expectedCollections =
           </Card>
 
         </Section>
-              </PageContainer>
+
+      </PageContainer>
 
     </AppShell>
 
   );
+
 }
