@@ -1,44 +1,73 @@
 "use client";
 
-type Option = {
-  label: string;
-  value: string;
-};
+import { ReactNode } from "react";
 
-type Filter = {
-  value: string;
-  options: Option[];
-  onChange: (value: string) => void;
-};
+import SearchInput from "./SearchInput";
 
 type FilterBarProps = {
-  filters: Filter[];
+
+  search: string;
+
+  onSearchChange: (value: string) => void;
+
+  searchPlaceholder?: string;
+
+  filters?: ReactNode;
+
+  actions?: ReactNode;
+
+  className?: string;
+
 };
 
 export default function FilterBar({
+
+  search,
+
+  onSearchChange,
+
+  searchPlaceholder = "Search...",
+
   filters,
+
+  actions,
+
+  className = "",
+
 }: FilterBarProps) {
+
   return (
-    <div className="grid gap-3 sm:grid-cols-2 lg:flex lg:flex-wrap">
-      {filters.map((filter, index) => (
-        <select
-          key={index}
-          value={filter.value}
+
+    <div
+      className={`flex flex-col gap-4 rounded-2xl border border-gray-200 bg-white p-5 shadow-sm lg:flex-row lg:items-center lg:justify-between ${className}`}
+    >
+
+      <div className="flex-1">
+
+        <SearchInput
+          value={search}
           onChange={(e) =>
-            filter.onChange(e.target.value)
+            onSearchChange(e.target.value)
           }
-          className="h-12 min-w-[180px] rounded-xl border border-gray-300 bg-white px-4 text-sm outline-none transition focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
-        >
-          {filter.options.map((option) => (
-            <option
-              key={option.value}
-              value={option.value}
-            >
-              {option.label}
-            </option>
-          ))}
-        </select>
-      ))}
+          placeholder={searchPlaceholder}
+        />
+
+      </div>
+
+      {(filters || actions) && (
+
+        <div className="flex flex-wrap items-center gap-3">
+
+          {filters}
+
+          {actions}
+
+        </div>
+
+      )}
+
     </div>
+
   );
+
 }
