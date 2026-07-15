@@ -1,8 +1,7 @@
 "use client";
 
 import { useState } from "react";
-
-import Sidebar from "./Sidebar";
+import Sidebar from "./sidebar/Sidebar";
 import Topbar from "./Topbar";
 
 type AppShellProps = {
