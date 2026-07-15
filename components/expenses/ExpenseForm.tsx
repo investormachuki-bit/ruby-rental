@@ -30,29 +30,38 @@ export default function ExpenseForm({
   onSaved,
 }: Props) {
 
+  const initialForm: CreateExpenseInput = {
+    property_id: null,
+    unit_id: null,
+    expense_date: new Date()
+      .toISOString()
+      .split("T")[0],
+    category: "Other",
+    amount: 0,
+    vendor: "",
+    description: "",
+    receipt_url: "",
+    payment_method: "Cash",
+    reference: "",
+    status: "Paid",
+  };
+
   const [loading, setLoading] =
     useState(false);
 
-  const [form, setForm] =
-    useState<CreateExpenseInput>({
-      property_id: null,
-      unit_id: null,
-      expense_date: new Date()
-        .toISOString()
-        .split("T")[0],
-      category: "Other",
-      amount: 0,
-      vendor: "",
-      description: "",
-      receipt_url: "",
-      payment_method: "Cash",
-      reference: "",
-      status: "Paid",
-    });
+  const [error, setError] =
+    useState("");
 
-  function update(
-    key: keyof CreateExpenseInput,
-    value: any
+  const [form, setForm] =
+    useState<CreateExpenseInput>(
+      initialForm
+    );
+
+  function update<
+    K extends keyof CreateExpenseInput
+  >(
+    key: K,
+    value: CreateExpenseInput[K]
   ) {
 
     setForm((prev) => ({
@@ -62,177 +71,287 @@ export default function ExpenseForm({
 
   }
 
+  function resetForm() {
+
+    setError("");
+
+    setForm({
+      ...initialForm,
+      expense_date: new Date()
+        .toISOString()
+        .split("T")[0],
+    });
+
+  }
   async function handleSubmit() {
 
-    try {
+  try {
 
-      setLoading(true);
+    setError("");
 
-      await createExpense(form);
+    if (!form.property_id) {
 
-      onSaved();
+      setError(
+        "Please select a property."
+      );
 
-      onClose();
-
-    } finally {
-
-      setLoading(false);
+      return;
 
     }
 
+    if (!form.expense_date) {
+
+      setError(
+        "Expense date is required."
+      );
+
+      return;
+
+    }
+
+    if (form.amount <= 0) {
+
+      setError(
+        "Amount must be greater than zero."
+      );
+
+      return;
+
+    }
+
+    if (!form.category) {
+
+      setError(
+        "Please select a category."
+      );
+
+      return;
+
+    }
+
+    if (!form.payment_method) {
+
+      setError(
+        "Please select a payment method."
+      );
+
+      return;
+
+    }
+
+    if (!form.status) {
+
+      setError(
+        "Please select a status."
+      );
+
+      return;
+
+    }
+
+    setLoading(true);
+
+    await createExpense(form);
+
+    resetForm();
+
+    onSaved();
+
+    onClose();
+
+  } catch (err) {
+
+    setError(
+
+      err instanceof Error
+
+        ? err.message
+
+        : "Failed to save expense."
+
+    );
+
+  } finally {
+
+    setLoading(false);
+
   }
 
+}
   return (
 
-    <Modal
-      open={open}
-      title="Add Expense"
-      onClose={onClose}
-      footer={
-        <>
-          <Button
-            variant="secondary"
-            onClick={onClose}
-            disabled={loading}
-          >
-            Cancel
-          </Button>
+  <Modal
+    open={open}
+    title="Add Expense"
+    onClose={() => {
 
-          <Button
-            loading={loading}
-            onClick={handleSubmit}
-          >
-            Save Expense
-          </Button>
-        </>
-      }
-    >
+      resetForm();
 
-      <div className="space-y-5">
+      onClose();
 
-        <PropertyUnitSelector
-          propertyId={form.property_id ?? null}
-          unitId={form.unit_id ?? null}
-          onPropertyChange={(value) =>
-            update("property_id", value)
-          }
-          onUnitChange={(value) =>
-            update("unit_id", value)
-          }
-        />
+    }}
+    footer={
+      <>
+        <Button
+          variant="secondary"
+          onClick={() => {
 
-        <Input
-          label="Expense Date"
-          type="date"
-          value={form.expense_date}
-          onChange={(value) =>
-            update(
-              "expense_date",
-              value
-            )
-          }
-        />
+            resetForm();
 
-        <Select
-          label="Category"
-          value={form.category}
-          options={EXPENSE_CATEGORIES.map(
-            (item) => ({
-              label: item,
-              value: item,
-            })
-          )}
-          onChange={(value) =>
-            update(
-              "category",
-              value
-            )
-          }
-        />
+            onClose();
 
-        <Input
-          label="Amount"
-          type="number"
-          value={form.amount}
-          onChange={(value) =>
-            update(
-              "amount",
-              Number(value)
-            )
-          }
-        />
+          }}
+          disabled={loading}
+        >
+          Cancel
+        </Button>
 
-        <Input
-          label="Vendor"
-          value={form.vendor ?? ""}
-          onChange={(value) =>
-            update(
-              "vendor",
-              value
-            )
-          }
-        />
+        <Button
+          loading={loading}
+          onClick={handleSubmit}
+        >
+          Save Expense
+        </Button>
+      </>
+    }
+  >
 
-        <Select
-          label="Payment Method"
-          value={form.payment_method}
-          options={PAYMENT_METHODS.map(
-            (item) => ({
-              label: item,
-              value: item,
-            })
-          )}
-          onChange={(value) =>
-            update(
-              "payment_method",
-              value
-            )
-          }
-        />
+    <div className="space-y-5">
 
-        <Input
-          label="Reference"
-          value={form.reference ?? ""}
-          onChange={(value) =>
-            update(
-              "reference",
-              value
-            )
-          }
-        />
+      {error && (
 
-        <Select
-          label="Status"
-          value={form.status}
-          options={EXPENSE_STATUS.map(
-            (item) => ({
-              label: item,
-              value: item,
-            })
-          )}
-          onChange={(value) =>
-            update(
-              "status",
-              value
-            )
-          }
-        />
+        <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
 
-        <Textarea
-          label="Description"
-          value={form.description ?? ""}
-          onChange={(value) =>
-            update(
-              "description",
-              value
-            )
-          }
-        />
+          {error}
 
-      </div>
+        </div>
 
-    </Modal>
+      )}
 
-  );
+      <PropertyUnitSelector
+        propertyId={form.property_id ?? null}
+        unitId={form.unit_id ?? null}
+        onPropertyChange={(value) =>
+          update("property_id", value)
+        }
+        onUnitChange={(value) =>
+          update("unit_id", value)
+        }
+      />
+
+      <Input
+        label="Expense Date"
+        type="date"
+        value={form.expense_date}
+        onChange={(e) =>
+          update(
+            "expense_date",
+            e.target.value
+          )
+        }
+      />
+
+      <Select
+        label="Category"
+        value={form.category}
+        options={EXPENSE_CATEGORIES.map(
+          (item) => ({
+            label: item,
+            value: item,
+          })
+        )}
+        onChange={(e) =>
+          update(
+            "category",
+            e.target.value as CreateExpenseInput["category"]
+          )
+        }
+      />
+
+      <Input
+        label="Amount"
+        type="number"
+        value={String(form.amount)}
+        onChange={(e) =>
+          update(
+            "amount",
+            Number(e.target.value)
+          )
+        }
+      />
+
+      <Input
+        label="Vendor"
+        value={form.vendor ?? ""}
+        onChange={(e) =>
+          update(
+            "vendor",
+            e.target.value
+          )
+        }
+      />
+
+      <Select
+        label="Payment Method"
+        value={form.payment_method}
+        options={PAYMENT_METHODS.map(
+          (item) => ({
+            label: item,
+            value: item,
+          })
+        )}
+        onChange={(e) =>
+          update(
+            "payment_method",
+            e.target.value as CreateExpenseInput["payment_method"]
+          )
+        }
+      />
+
+      <Input
+        label="Reference"
+        value={form.reference ?? ""}
+        onChange={(e) =>
+          update(
+            "reference",
+            e.target.value
+          )
+        }
+      />
+
+      <Select
+        label="Status"
+        value={form.status}
+        options={EXPENSE_STATUS.map(
+          (item) => ({
+            label: item,
+            value: item,
+          })
+        )}
+        onChange={(e) =>
+          update(
+            "status",
+            e.target.value as CreateExpenseInput["status"]
+          )
+        }
+      />
+
+      <Textarea
+        label="Description"
+        value={form.description ?? ""}
+        onChange={(e) =>
+          update(
+            "description",
+            e.target.value
+          )
+        }
+      />
+
+    </div>
+
+  </Modal>
+
+);
 
 }
+  
