@@ -1,126 +1,100 @@
 "use client";
 
-import Logo from "./Logo";
-import SidebarNavigation from "./SidebarNavigation";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 
-import { useEnabledFeatures } from "@/hooks/useEnabledFeatures";
+import { Feature } from "@/lib/featureRegistry";
 
-type SidebarProps = {
-  sidebarOpen: boolean;
-  setSidebarOpen: (
-    open: boolean
-  ) => void;
+type Props = {
+  items: Feature[];
+
+  mobile?: boolean;
+
+  onNavigate?: () => void;
 };
 
-export default function Sidebar({
-  sidebarOpen,
-  setSidebarOpen,
-}: SidebarProps) {
+export default function SidebarNavigation({
+  items,
+  mobile = false,
+  onNavigate,
+}: Props) {
 
-  const {
-    features,
-    loading,
-  } =
-    useEnabledFeatures();
+  const pathname = usePathname();
+
+  function isActive(route: string) {
+
+    if (route === "/") {
+
+      return pathname === "/";
+
+    }
+
+    return pathname.startsWith(route);
+
+  }
+
+  function getLinkClass(route: string) {
+
+    return `group flex items-center gap-3 rounded-2xl px-4 py-3 transition-all duration-200 ${
+      isActive(route)
+        ? "bg-[#D4AF37] text-[#0F0F10] shadow-lg"
+        : "text-white hover:bg-white/5 hover:text-white"
+    }`;
+
+  }
 
   return (
-    <>
 
-      {/* Desktop Sidebar */}
+    <ul className="space-y-2">
 
-      <aside className="fixed left-0 top-0 hidden h-screen w-64 flex-col border-r border-[#232323] bg-[#0F0F10] md:flex">
+      {items
+        .filter((item) => item.sidebar)
+        .map((item) => {
 
-        <div className="border-b border-[#232323] p-6">
+          const Icon = item.icon;
 
-          <Logo />
+          return (
 
-        </div>
+            <li key={item.moduleKey}>
 
-        <nav className="flex-1 overflow-y-auto px-4 py-5">
+              <Link
+                href={item.route}
+                onClick={() => {
 
-          {loading ? (
+                  if (mobile && onNavigate) {
 
-            <div className="px-4 py-3 text-sm text-gray-500">
+                    onNavigate();
 
-              Loading...
+                  }
 
-            </div>
+                }}
+                className={getLinkClass(item.route)}
+              >
 
-          ) : (
+                <Icon
+                  size={20}
+                  className={
+                    isActive(item.route)
+                      ? "text-[#0F0F10]"
+                      : "text-white transition group-hover:text-[#D4AF37]"
+                  }
+                />
 
-            <SidebarNavigation
-              items={features}
-            />
+                <span className="font-semibold tracking-wide">
 
-          )}
+                  {item.name}
 
-        </nav>
+                </span>
 
-        <div className="border-t border-[#232323] p-5">
+              </Link>
 
-          <p className="text-center text-xs text-gray-600">
+            </li>
 
-            Ruby Rental v1.0
+          );
 
-          </p>
+        })}
 
-        </div>
-
-      </aside>
-
-      {/* Mobile Sidebar */}
-
-      <aside
-        className={`fixed left-0 top-0 z-50 h-screen w-64 transform border-r border-[#232323] bg-[#0F0F10] shadow-2xl transition-transform duration-300 md:hidden ${
-          sidebarOpen
-            ? "translate-x-0"
-            : "-translate-x-full"
-        }`}
-      >
-
-        <div className="border-b border-[#232323] p-6">
-
-          <Logo />
-
-        </div>
-
-        <nav className="flex-1 overflow-y-auto px-4 py-5">
-
-          {loading ? (
-
-            <div className="px-4 py-3 text-sm text-gray-500">
-
-              Loading...
-
-            </div>
-
-          ) : (
-
-            <SidebarNavigation
-              items={features}
-              mobile
-              onNavigate={() =>
-                setSidebarOpen(false)
-              }
-            />
-
-          )}
-
-        </nav>
-
-        <div className="border-t border-[#232323] p-5">
-
-          <p className="text-center text-xs text-gray-600">
-
-            Ruby Rental v1.0
-
-          </p>
-
-        </div>
-
-      </aside>
-
-    </>
+    </ul>
 
   );
 
