@@ -1,22 +1,9 @@
 "use client";
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
-
-import {
-  LayoutDashboard,
-  Building2,
-  Home,
-  Users,
-  FileText,
-  Receipt,
-  Wallet,
-  BarChart3,
-  Settings,
-  Wrench,
-} from "lucide-react";
-
 import Logo from "./Logo";
+import SidebarNavigation from "./SidebarNavigation";
+
+import { useEnabledFeatures } from "@/hooks/useEnabledFeatures";
 
 type SidebarProps = {
   sidebarOpen: boolean;
@@ -30,92 +17,18 @@ export default function Sidebar({
   setSidebarOpen,
 }: SidebarProps) {
 
-  const pathname =
-    usePathname();
-
-  const menuItems = [
-    {
-      name: "Dashboard",
-      href: "/",
-      icon: LayoutDashboard,
-    },
-    {
-      name: "Properties",
-      href: "/properties",
-      icon: Building2,
-    },
-    {
-      name: "Units",
-      href: "/units",
-      icon: Home,
-    },
-    {
-      name: "Occupants",
-      href: "/occupants",
-      icon: Users,
-    },
-    {
-      name: "Leases",
-      href: "/leases",
-      icon: FileText,
-    },
-    {
-      name: "Payments",
-      href: "/payments",
-      icon: Receipt,
-    },
-    {
-      name: "Expenses",
-      href: "/expenses",
-      icon: Wallet,
-    },
-    {
-      name: "Maintenance",
-      href: "/maintenance",
-      icon: Wrench,
-    },
-    {
-      name: "Reports",
-      href: "/reports",
-      icon: BarChart3,
-    },
-    {
-      name: "Settings",
-      href: "/settings",
-      icon: Settings,
-    },
-  ];
-
-  function isActive(
-    href: string
-  ) {
-
-    if (href === "/") {
-      return pathname === "/";
-    }
-
-    return pathname.startsWith(
-      href
-    );
-
-  }
-
-  const linkClass = (
-    href: string
-  ) =>
-    `group flex items-center gap-3 rounded-2xl px-4 py-3 transition-all duration-200 ${
-      isActive(href)
-        ? "bg-[#D4AF37] text-[#0F0F10] shadow-lg"
-        : "text-white hover:bg-white/5 hover:text-white"
-    }`;
+  const {
+    features,
+    loading,
+  } =
+    useEnabledFeatures();
 
   return (
     <>
-            {/* Desktop Sidebar */}
+
+      {/* Desktop Sidebar */}
 
       <aside className="fixed left-0 top-0 hidden h-screen w-64 flex-col border-r border-[#232323] bg-[#0F0F10] md:flex">
-
-        {/* Logo */}
 
         <div className="border-b border-[#232323] p-6">
 
@@ -123,53 +36,25 @@ export default function Sidebar({
 
         </div>
 
-        {/* Navigation */}
-
         <nav className="flex-1 overflow-y-auto px-4 py-5">
 
-          <ul className="space-y-2">
+          {loading ? (
 
-            {menuItems.map((item) => {
+            <div className="px-4 py-3 text-sm text-gray-500">
 
-              const Icon = item.icon;
+              Loading...
 
-              return (
+            </div>
 
-                <li key={item.name}>
+          ) : (
 
-                  <Link
-                    href={item.href}
-                    className={linkClass(item.href)}
-                  >
+            <SidebarNavigation
+              items={features}
+            />
 
-                    <Icon
-                      size={20}
-                      className={
-                        isActive(item.href)
-                          ? "text-[#0F0F10]"
-                          : "text-white transition group-hover:text-[#D4AF37]"
-                      }
-                    />
-
-                    <span className="font-semibold tracking-wide">
-
-                      {item.name}
-
-                    </span>
-
-                  </Link>
-
-                </li>
-
-              );
-
-            })}
-
-          </ul>
+          )}
 
         </nav>
-
-        {/* Footer */}
 
         <div className="border-t border-[#232323] p-5">
 
@@ -193,64 +78,35 @@ export default function Sidebar({
         }`}
       >
 
-        {/* Logo */}
-
         <div className="border-b border-[#232323] p-6">
 
           <Logo />
 
         </div>
 
-        {/* Navigation */}
+        <nav className="flex-1 overflow-y-auto px-4 py-5">
 
-        <nav className="overflow-y-auto px-4 py-5">
+          {loading ? (
 
-          <ul className="space-y-2">
+            <div className="px-4 py-3 text-sm text-gray-500">
 
-            {menuItems.map((item) => {
+              Loading...
 
-              const Icon = item.icon;
+            </div>
 
-              return (
+          ) : (
 
-                <li key={item.name}>
+            <SidebarNavigation
+              items={features}
+              mobile
+              onNavigate={() =>
+                setSidebarOpen(false)
+              }
+            />
 
-                  <Link
-                    href={item.href}
-                    onClick={() =>
-                      setSidebarOpen(false)
-                    }
-                    className={linkClass(item.href)}
-                  >
-
-                    <Icon
-                      size={20}
-                      className={
-                        isActive(item.href)
-                          ? "text-[#0F0F10]"
-                          : "text-white transition group-hover:text-[#D4AF37]"
-                      }
-                    />
-
-                    <span className="font-semibold tracking-wide">
-
-                      {item.name}
-
-                    </span>
-
-                  </Link>
-
-                </li>
-
-              );
-
-            })}
-
-          </ul>
+          )}
 
         </nav>
-
-        {/* Footer */}
 
         <div className="border-t border-[#232323] p-5">
 
@@ -265,6 +121,7 @@ export default function Sidebar({
       </aside>
 
     </>
+
   );
 
 }
