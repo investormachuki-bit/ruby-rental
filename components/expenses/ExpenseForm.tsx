@@ -7,6 +7,7 @@ import Input from "@/components/ui/Input";
 import Select from "@/components/ui/Select";
 import Textarea from "@/components/ui/Textarea";
 import Button from "@/components/ui/Button";
+import PropertyUnitSelector from "@/components/ui/PropertyUnitSelector";
 
 import { PAYMENT_METHODS } from "@/lib/constants/paymentMethods";
 import { EXPENSE_CATEGORIES } from "@/lib/constants/expenseCategories";
@@ -19,9 +20,7 @@ import {
 
 type Props = {
   open: boolean;
-
   onClose: () => void;
-
   onSaved: () => void;
 };
 
@@ -110,17 +109,25 @@ export default function ExpenseForm({
       }
     >
 
-      <div className="grid gap-4">
+      <div className="space-y-5">
+
+        <PropertyUnitSelector
+          propertyId={form.property_id}
+          unitId={form.unit_id}
+          onPropertyChange={(value) =>
+            update("property_id", value)
+          }
+          onUnitChange={(value) =>
+            update("unit_id", value)
+          }
+        />
 
         <Input
           label="Expense Date"
           type="date"
           value={form.expense_date}
           onChange={(value) =>
-            update(
-              "expense_date",
-              value
-            )
+            update("expense_date", value)
           }
         />
 
@@ -134,10 +141,7 @@ export default function ExpenseForm({
             })
           )}
           onChange={(value) =>
-            update(
-              "category",
-              value
-            )
+            update("category", value)
           }
         />
 
@@ -157,10 +161,7 @@ export default function ExpenseForm({
           label="Vendor"
           value={form.vendor ?? ""}
           onChange={(value) =>
-            update(
-              "vendor",
-              value
-            )
+            update("vendor", value)
           }
         />
 
@@ -202,10 +203,7 @@ export default function ExpenseForm({
             })
           )}
           onChange={(value) =>
-            update(
-              "status",
-              value
-            )
+            update("status", value)
           }
         />
 
