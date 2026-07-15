@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import AppShell from "@/components/layout/AppShell";
 
 import PageHeader from "@/components/ui/PageHeader";
-import StatsCard from "@/components/ui/StatsCard";
+import StatCard from "@/components/ui/StatCard";
 import FilterBar from "@/components/ui/FilterBar";
 import Button from "@/components/ui/Button";
 import EmptyState from "@/components/ui/EmptyState";
@@ -113,7 +113,6 @@ export default function ExpensesPage() {
           title="Expenses"
           description="Track and manage business expenses."
           actions={
-
             <Button>
 
               <Plus size={18} />
@@ -121,7 +120,6 @@ export default function ExpensesPage() {
               Add Expense
 
             </Button>
-
           }
         />
 
@@ -135,32 +133,24 @@ export default function ExpensesPage() {
 
             <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
 
-              <StatsCard
+              <StatCard
                 title="Total Expenses"
-                value={
-                  dashboard?.totalExpenses ?? 0
-                }
+                value={dashboard?.totalExpenses ?? 0}
               />
 
-              <StatsCard
+              <StatCard
                 title="This Month"
-                value={
-                  dashboard?.thisMonth ?? 0
-                }
+                value={dashboard?.thisMonth ?? 0}
               />
 
-              <StatsCard
+              <StatCard
                 title="Paid"
-                value={
-                  dashboard?.totalPaid ?? 0
-                }
+                value={dashboard?.totalPaid ?? 0}
               />
 
-              <StatsCard
+              <StatCard
                 title="Pending"
-                value={
-                  dashboard?.totalPending ?? 0
-                }
+                value={dashboard?.totalPending ?? 0}
               />
 
             </div>
@@ -174,9 +164,7 @@ export default function ExpensesPage() {
             {filteredExpenses.length === 0 ? (
 
               <EmptyState
-                icon={
-                  <Receipt size={48} />
-                }
+                icon={<Receipt size={48} />}
                 title="No expenses found"
                 description="Start by recording your first expense."
               />
