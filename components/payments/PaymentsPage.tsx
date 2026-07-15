@@ -24,8 +24,7 @@ import {
 } from "lucide-react";
 
 import PaymentsList from "@/components/payments/PaymentsList";
-
-import { getPayments } from "@/services/payments/getPayments";
+import { getAllPayments } from "@/services/payments/getAll";
 
 type Payment = {
   id: string;
@@ -82,7 +81,7 @@ export default function PaymentsPage() {
       setLoading(true);
 
       const data =
-        await getPayments();
+  await getAllPayments();
 
       setPayments(data ?? []);
 
