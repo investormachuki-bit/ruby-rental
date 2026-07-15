@@ -37,10 +37,9 @@ export default function ExpenseForm({
     useState<CreateExpenseInput>({
       property_id: null,
       unit_id: null,
-      expense_date:
-        new Date()
-          .toISOString()
-          .split("T")[0],
+      expense_date: new Date()
+        .toISOString()
+        .split("T")[0],
       category: "Other",
       amount: 0,
       vendor: "",
@@ -112,8 +111,8 @@ export default function ExpenseForm({
       <div className="space-y-5">
 
         <PropertyUnitSelector
-          propertyId={form.property_id}
-          unitId={form.unit_id}
+          propertyId={form.property_id ?? null}
+          unitId={form.unit_id ?? null}
           onPropertyChange={(value) =>
             update("property_id", value)
           }
@@ -127,7 +126,10 @@ export default function ExpenseForm({
           type="date"
           value={form.expense_date}
           onChange={(value) =>
-            update("expense_date", value)
+            update(
+              "expense_date",
+              value
+            )
           }
         />
 
@@ -141,7 +143,10 @@ export default function ExpenseForm({
             })
           )}
           onChange={(value) =>
-            update("category", value)
+            update(
+              "category",
+              value
+            )
           }
         />
 
@@ -161,7 +166,10 @@ export default function ExpenseForm({
           label="Vendor"
           value={form.vendor ?? ""}
           onChange={(value) =>
-            update("vendor", value)
+            update(
+              "vendor",
+              value
+            )
           }
         />
 
@@ -203,7 +211,10 @@ export default function ExpenseForm({
             })
           )}
           onChange={(value) =>
-            update("status", value)
+            update(
+              "status",
+              value
+            )
           }
         />
 
