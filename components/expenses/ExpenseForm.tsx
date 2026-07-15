@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import Modal from "@/components/ui/Modal";
 import Input from "@/components/ui/Input";
@@ -18,16 +18,24 @@ import {
   createExpense,
 } from "@/services/expenses/createExpense";
 
+import { updateExpense } from "@/services/expenses/updateExpense";
+
+type ExpenseFormData = CreateExpenseInput & {
+  id: string;
+};
+
 type Props = {
   open: boolean;
   onClose: () => void;
   onSaved: () => void;
+  expense?: ExpenseFormData;
 };
 
 export default function ExpenseForm({
   open,
   onClose,
   onSaved,
+  expense,
 }: Props) {
 
   const initialForm: CreateExpenseInput = {
@@ -83,6 +91,36 @@ export default function ExpenseForm({
     });
 
   }
+
+  useEffect(() => {
+
+    if (!open) return;
+
+    if (!expense) {
+
+      resetForm();
+
+      return;
+
+    }
+
+    setError("");
+
+    setForm({
+      property_id: expense.property_id,
+      unit_id: expense.unit_id,
+      expense_date: expense.expense_date,
+      category: expense.category,
+      amount: expense.amount,
+      vendor: expense.vendor ?? "",
+      description: expense.description ?? "",
+      receipt_url: expense.receipt_url ?? "",
+      payment_method: expense.payment_method,
+      reference: expense.reference ?? "",
+      status: expense.status,
+    });
+
+  }, [open, expense]);
   async function handleSubmit() {
 
   try {
@@ -151,7 +189,18 @@ export default function ExpenseForm({
 
     setLoading(true);
 
-    await createExpense(form);
+    if (expense) {
+
+      await updateExpense(
+        expense.id,
+        form
+      );
+
+    } else {
+
+      await createExpense(form);
+
+    }
 
     resetForm();
 
@@ -167,7 +216,9 @@ export default function ExpenseForm({
 
         ? err.message
 
-        : "Failed to save expense."
+        : expense
+          ? "Failed to update expense."
+          : "Failed to save expense."
 
     );
 
@@ -182,7 +233,11 @@ export default function ExpenseForm({
 
   <Modal
     open={open}
-    title="Add Expense"
+    title={
+      expense
+        ? "Edit Expense"
+        : "Add Expense"
+    }
     onClose={() => {
 
       resetForm();
@@ -210,7 +265,9 @@ export default function ExpenseForm({
           loading={loading}
           onClick={handleSubmit}
         >
-          Save Expense
+          {expense
+            ? "Update Expense"
+            : "Save Expense"}
         </Button>
       </>
     }
@@ -229,8 +286,8 @@ export default function ExpenseForm({
       )}
 
       <PropertyUnitSelector
-        propertyId={form.property_id ?? null}
-        unitId={form.unit_id ?? null}
+        propertyId={form.property_id}
+        unitId={form.unit_id}
         onPropertyChange={(value) =>
           update("property_id", value)
         }
@@ -263,7 +320,8 @@ export default function ExpenseForm({
         onChange={(e) =>
           update(
             "category",
-            e.target.value as CreateExpenseInput["category"]
+            e.target
+              .value as CreateExpenseInput["category"]
           )
         }
       />
@@ -303,7 +361,8 @@ export default function ExpenseForm({
         onChange={(e) =>
           update(
             "payment_method",
-            e.target.value as CreateExpenseInput["payment_method"]
+            e.target
+              .value as CreateExpenseInput["payment_method"]
           )
         }
       />
@@ -331,7 +390,8 @@ export default function ExpenseForm({
         onChange={(e) =>
           update(
             "status",
-            e.target.value as CreateExpenseInput["status"]
+            e.target
+              .value as CreateExpenseInput["status"]
           )
         }
       />
@@ -354,4 +414,3 @@ export default function ExpenseForm({
 );
 
 }
-  
