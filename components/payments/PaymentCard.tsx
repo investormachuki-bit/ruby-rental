@@ -3,7 +3,6 @@
 import Link from "next/link";
 
 import {
-  User,
   Building2,
   Home,
   DollarSign,
@@ -12,33 +11,31 @@ import {
 } from "lucide-react";
 
 type Payment = {
-  id: string;
+  lease_id: string;
 
-  receipt_number: string;
+  property_id: string;
 
-  occupant_name: string;
+  unit_id: string;
+
+  occupant_id: string;
+
+  lease_number: string;
 
   property_name: string;
 
   unit_number: string;
 
-  amount_due: number;
+  occupant_name: string;
+
+  monthly_rent: number;
 
   amount_paid: number;
 
   balance: number;
 
-  due_date: string;
+  due_day: number;
 
-  payment_date?: string;
-
-  payment_method?: string;
-
-  status:
-    | "Paid"
-    | "Partial"
-    | "Pending"
-    | "Overdue";
+  payment_status: string;
 };
 
 type Props = {
@@ -92,7 +89,7 @@ export default function PaymentCard({
 
           <p className="mt-1 text-sm text-gray-500">
 
-            {payment.receipt_number}
+            {payment.lease_number}
 
           </p>
 
@@ -100,11 +97,11 @@ export default function PaymentCard({
 
         <span
           className={`rounded-full px-4 py-2 text-sm font-semibold ${getStatusColor(
-            payment.status
+            payment.payment_status
           )}`}
         >
 
-          {payment.status}
+          {payment.payment_status}
 
         </span>
 
@@ -153,10 +150,14 @@ export default function PaymentCard({
 
           <span>
 
-            Expected:
+            Monthly Rent:
+
             <strong className="ml-2">
 
-              KSh {payment.amount_due.toLocaleString()}
+              KSh{" "}
+              {Number(
+                payment.monthly_rent
+              ).toLocaleString()}
 
             </strong>
 
@@ -174,9 +175,13 @@ export default function PaymentCard({
           <span>
 
             Paid:
+
             <strong className="ml-2 text-green-600">
 
-              KSh {payment.amount_paid.toLocaleString()}
+              KSh{" "}
+              {Number(
+                payment.amount_paid
+              ).toLocaleString()}
 
             </strong>
 
@@ -194,9 +199,13 @@ export default function PaymentCard({
           <span>
 
             Balance:
+
             <strong className="ml-2 text-red-600">
 
-              KSh {payment.balance.toLocaleString()}
+              KSh{" "}
+              {Number(
+                payment.balance
+              ).toLocaleString()}
 
             </strong>
 
@@ -213,10 +222,12 @@ export default function PaymentCard({
 
           <span>
 
-            Due:
+            Due Day:
+
             <strong className="ml-2">
 
-              {payment.due_date}
+              {payment.due_day}
+              {" "}of every month
 
             </strong>
 
@@ -230,20 +241,21 @@ export default function PaymentCard({
 
       <div className="grid grid-cols-2 gap-3 p-6">
 
-        <button
-          className="rounded-xl bg-black py-3 font-semibold text-white transition hover:bg-gray-800"
+        <Link
+          href={`/leases/${payment.lease_id}`}
+          className="rounded-xl bg-black py-3 text-center font-semibold text-white transition hover:bg-gray-800"
         >
 
           Record Payment
 
-        </button>
+        </Link>
 
         <Link
-          href={`/payments/${payment.id}`}
+          href={`/leases/${payment.lease_id}`}
           className="rounded-xl border border-gray-300 py-3 text-center font-semibold transition hover:bg-gray-100"
         >
 
-          View Ledger
+          View Lease
 
         </Link>
 
