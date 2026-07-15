@@ -2,15 +2,23 @@
 
 import { useState } from "react";
 
+import {
+  CalendarDays,
+  Building2,
+  Home,
+  Store,
+} from "lucide-react";
+
 import Card from "@/components/ui/Card";
 import Badge from "@/components/ui/Badge";
 import ActionMenu from "@/components/ui/ActionMenu";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 
-import { CalendarDays, Building2, Home, Store } from "lucide-react";
-
 import { Expense } from "@/services/expenses/getExpenses";
 import { deleteExpense } from "@/services/expenses/deleteExpense";
+
+import { formatCurrency } from "@/lib/utils/formatCurrency";
+import { formatDate } from "@/lib/utils/formatDate";
 
 type Props = {
   expense: Expense;
@@ -55,7 +63,7 @@ export default function ExpenseCard({
 
         <div className="flex items-start justify-between gap-4">
 
-          <div className="space-y-3 flex-1">
+          <div className="flex-1 space-y-4">
 
             <div className="flex flex-wrap items-center gap-2">
 
@@ -87,20 +95,24 @@ export default function ExpenseCard({
 
             <div className="text-3xl font-bold">
 
-              KES{" "}
-
-              {expense.amount.toLocaleString()}
+              {formatCurrency(
+                expense.amount
+              )}
 
             </div>
 
-            <div className="grid gap-2 text-sm text-gray-600 md:grid-cols-2">
+            <div className="grid gap-3 text-sm text-gray-600 md:grid-cols-2">
 
               <div className="flex items-center gap-2">
 
                 <Building2 size={16} />
 
-                {expense.properties?.name ??
-                  "No Property"}
+                <span>
+
+                  {expense.properties?.name ??
+                    "No Property"}
+
+                </span>
 
               </div>
 
@@ -108,8 +120,12 @@ export default function ExpenseCard({
 
                 <Home size={16} />
 
-                {expense.units?.unit_number ??
-                  "No Unit"}
+                <span>
+
+                  {expense.units?.unit_number ??
+                    "No Unit"}
+
+                </span>
 
               </div>
 
@@ -117,8 +133,12 @@ export default function ExpenseCard({
 
                 <Store size={16} />
 
-                {expense.vendor ??
-                  "No Vendor"}
+                <span>
+
+                  {expense.vendor ??
+                    "No Vendor"}
+
+                </span>
 
               </div>
 
@@ -126,7 +146,13 @@ export default function ExpenseCard({
 
                 <CalendarDays size={16} />
 
-                {expense.expense_date}
+                <span>
+
+                  {formatDate(
+                    expense.expense_date
+                  )}
+
+                </span>
 
               </div>
 
@@ -161,7 +187,7 @@ export default function ExpenseCard({
           </div>
 
           <ActionMenu
-            items={[
+            actions={[
               {
                 label: "View",
                 onClick: () => {},
@@ -194,6 +220,7 @@ export default function ExpenseCard({
         }
         onConfirm={handleDelete}
       />
+
     </>
   );
 
