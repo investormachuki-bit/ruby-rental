@@ -44,4 +44,29 @@ export default function BrandingTab() {
           <SettingItem
             title="Receipt Footer"
             description="Printed on receipts and invoices."
-           
+            action={
+              <Button variant="secondary">
+                Edit
+              </Button>
+            }
+          />
+
+          <SettingItem
+            title="Email Signature"
+            description="Default outgoing email signature."
+            action={
+              <Button variant="secondary">
+                Edit
+              </Button>
+            }
+          />
+
+        </div>
+
+      </SettingsCard>
+
+    </SettingsSection>
+
+  );
+
+}
