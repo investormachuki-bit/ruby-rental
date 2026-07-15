@@ -27,33 +27,31 @@ import PaymentsList from "@/components/payments/PaymentsList";
 import { getPaymentDashboard } from "@/services/payments/getPaymentDashboard";
 
 type Payment = {
-  id: string;
+  lease_id: string;
 
-  receipt_number: string;
+  property_id: string;
 
-  occupant_name: string;
+  unit_id: string;
+
+  occupant_id: string;
+
+  lease_number: string;
 
   property_name: string;
 
   unit_number: string;
 
-  amount_due: number;
+  occupant_name: string;
+
+  monthly_rent: number;
 
   amount_paid: number;
 
   balance: number;
 
-  due_date: string;
+  due_day: number;
 
-  payment_date?: string;
-
-  payment_method?: string;
-
-  status:
-    | "Paid"
-    | "Partial"
-    | "Pending"
-    | "Overdue";
+  payment_status: string;
 };
 
 export default function PaymentsPage() {
@@ -128,7 +126,7 @@ export default function PaymentsPage() {
 
             status === "All" ||
 
-            payment.status === status;
+            payment.payment_status === status;
 
           return (
             matchesSearch &&
