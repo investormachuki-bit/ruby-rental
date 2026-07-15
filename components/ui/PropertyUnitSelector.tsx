@@ -112,14 +112,16 @@ export default function PropertyUnitSelector({
         label="Property"
         value={propertyId ?? ""}
         disabled={
-          disabled || loadingProperties
+          disabled ||
+          loadingProperties
         }
         options={properties}
-        onChange={(value) => {
+        onChange={(e) => {
 
-          onPropertyChange(
-            value || null
-          );
+          const value =
+            e.target.value || null;
+
+          onPropertyChange(value);
 
           onUnitChange(null);
 
@@ -135,11 +137,13 @@ export default function PropertyUnitSelector({
           loadingUnits
         }
         options={units}
-        onChange={(value) =>
+        onChange={(e) => {
+
           onUnitChange(
-            value || null
-          )
-        }
+            e.target.value || null
+          );
+
+        }}
       />
 
     </div>
