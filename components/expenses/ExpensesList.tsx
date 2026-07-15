@@ -8,11 +8,14 @@ type ExpensesListProps = {
   expenses: Expense[];
 
   onRefresh: () => void;
+
+  onEdit: (expense: Expense) => void;
 };
 
 export default function ExpensesList({
   expenses,
   onRefresh,
+  onEdit,
 }: ExpensesListProps) {
 
   return (
@@ -25,6 +28,7 @@ export default function ExpensesList({
           key={expense.id}
           expense={expense}
           onRefresh={onRefresh}
+          onEdit={onEdit}
         />
 
       ))}
