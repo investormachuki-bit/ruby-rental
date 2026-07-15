@@ -19,11 +19,9 @@ import {
 } from "@/services/expenses/createExpense";
 
 import { updateExpense } from "@/services/expenses/updateExpense";
+import { Expense } from "@/services/expenses/getExpenses";
 
-type ExpenseFormData = CreateExpenseInput & {
-  id: string;
-};
-
+type ExpenseFormData = Expense;
 type Props = {
   open: boolean;
   onClose: () => void;
