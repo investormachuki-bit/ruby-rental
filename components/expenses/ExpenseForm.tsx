@@ -108,14 +108,18 @@ export default function ExpenseForm({
       property_id: expense.property_id,
       unit_id: expense.unit_id,
       expense_date: expense.expense_date,
-      category: expense.category,
+      category:
+  expense.category as CreateExpenseInput["category"],
       amount: expense.amount,
       vendor: expense.vendor ?? "",
       description: expense.description ?? "",
       receipt_url: expense.receipt_url ?? "",
-      payment_method: expense.payment_method,
+   payment_method:
+  expense.payment_method as CreateExpenseInput["payment_method"],
+
       reference: expense.reference ?? "",
-      status: expense.status,
+      status:
+  expense.status as CreateExpenseInput["status"],
     });
 
   }, [open, expense]);
