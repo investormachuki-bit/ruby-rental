@@ -3,7 +3,6 @@ import { supabase } from "@/lib/supabase";
 import { getProfile } from "@/services/auth/getProfile";
 
 export type WorkspaceModule = {
-
   id: string;
 
   enabled: boolean;
@@ -11,7 +10,6 @@ export type WorkspaceModule = {
   module_id: string;
 
   available_modules: {
-
     id: string;
 
     module_key: string;
@@ -29,102 +27,55 @@ export type WorkspaceModule = {
     sort_order: number;
 
     is_core: boolean;
-
   };
-
 };
 
 export async function getWorkspaceModules() {
-
   const {
-
     data: { session },
-
   } = await supabase.auth.getSession();
 
   if (!session) {
-
-    throw new Error(
-      "You are not logged in."
-    );
-
+    throw new Error("You are not logged in.");
   }
 
-  const profile =
-    await getProfile(
-      session.user.id
-    );
+  const profile = await getProfile(session.user.id);
 
   if (!profile) {
-
-    throw new Error(
-      "Profile not found."
-    );
-
+    throw new Error("Profile not found.");
   }
 
-  const {
-
-    data,
-
-    error,
-
-  } = await supabase
-
+  const { data, error } = await supabase
     .from("workspace_modules")
-
     .select(`
-
       id,
-
       enabled,
-
       module_id,
-
       available_modules (
-
         id,
-
         module_key,
-
         name,
-
         description,
-
         icon,
-
         category,
-
         route,
-
         sort_order,
-
         is_core
-
       )
-
     `)
-
-    .eq(
-
-      "workspace_id",
-
-      profile.workspace_id
-
-    )
-
-    .order(
-
-      "module_id"
-
-    );
+    .eq("workspace_id", profile.workspace_id)
+    .order("module_id");
 
   if (error) {
-
     throw error;
-
   }
 
-  return data as WorkspaceModule[];
-
+  return (data ?? []).map((item: any) => ({
+    id: item.id,
+    enabled: item.enabled,
+    module_id: item.module_id,
+    available_modules: Array.isArray(item.available_modules)
+      ? item.available_modules[0]
+      : item.available_modules,
+  })) as WorkspaceModule[];
 }
