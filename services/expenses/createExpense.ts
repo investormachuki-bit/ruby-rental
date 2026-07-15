@@ -4,6 +4,12 @@ import { getProfile } from "@/services/auth/getProfile";
 
 import { generateExpenseNumber } from "./generateExpenseNumber";
 
+import { PaymentMethod } from "@/lib/constants/paymentMethods";
+
+import { ExpenseCategory } from "@/lib/constants/expenseCategories";
+
+import { ExpenseStatus } from "@/lib/constants/expenseStatus";
+
 export type CreateExpenseInput = {
   property_id?: string | null;
 
@@ -11,7 +17,7 @@ export type CreateExpenseInput = {
 
   expense_date: string;
 
-  category: string;
+  category: ExpenseCategory;
 
   amount: number;
 
@@ -21,11 +27,11 @@ export type CreateExpenseInput = {
 
   receipt_url?: string;
 
-  payment_method: string;
+  payment_method: PaymentMethod;
 
   reference?: string;
 
-  status: "Paid" | "Pending";
+  status: ExpenseStatus;
 };
 
 export async function createExpense(
@@ -39,9 +45,7 @@ export async function createExpense(
     throw new Error("You are not logged in.");
   }
 
-  const profile = await getProfile(
-    session.user.id
-  );
+  const profile = await getProfile(session.user.id);
 
   if (!profile) {
     throw new Error("Profile not found.");
