@@ -24,6 +24,7 @@ import {
 } from "@/services/expenses/getExpenseDashboard";
 
 import ExpensesList from "./ExpensesList";
+import ExpenseForm from "./ExpenseForm";
 
 export default function ExpensesPage() {
 
@@ -38,6 +39,9 @@ export default function ExpensesPage() {
 
   const [search, setSearch] =
     useState("");
+
+  const [showExpenseForm, setShowExpenseForm] =
+    useState(false);
 
   async function loadData() {
 
@@ -114,7 +118,11 @@ export default function ExpensesPage() {
           description="Track and manage business expenses."
         >
 
-          <Button>
+          <Button
+            onClick={() =>
+              setShowExpenseForm(true)
+            }
+          >
 
             <Plus size={18} />
 
@@ -192,6 +200,20 @@ export default function ExpensesPage() {
         )}
 
       </div>
+
+      <ExpenseForm
+        open={showExpenseForm}
+        onClose={() =>
+          setShowExpenseForm(false)
+        }
+        onSaved={() => {
+
+          setShowExpenseForm(false);
+
+          loadData();
+
+        }}
+      />
 
     </AppShell>
 
