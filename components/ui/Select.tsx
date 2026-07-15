@@ -1,75 +1,153 @@
 "use client";
 
-import {
-  SelectHTMLAttributes,
-} from "react";
+import { useEffect, useState } from "react";
 
-type SelectOption = {
-  label: string;
-  value: string;
+import Select from "./Select";
+
+import {
+  getPropertiesForSelect,
+  SelectOption as PropertyOption,
+} from "@/services/properties/getPropertiesForSelect";
+
+import {
+  getUnitsForSelect,
+  SelectOption as UnitOption,
+} from "@/services/units/getUnitsForSelect";
+
+type Props = {
+  propertyId: string | null;
+
+  unitId: string | null;
+
+  onPropertyChange: (value: string | null) => void;
+
+  onUnitChange: (value: string | null) => void;
+
+  disabled?: boolean;
 };
 
-type SelectProps =
-  SelectHTMLAttributes<HTMLSelectElement> & {
-    label?: string;
-    error?: string;
-    options: SelectOption[];
-  };
+export default function PropertyUnitSelector({
+  propertyId,
+  unitId,
+  onPropertyChange,
+  onUnitChange,
+  disabled = false,
+}: Props) {
 
-export default function Select({
-  label,
-  error,
-  options,
-  className = "",
-  ...props
-}: SelectProps) {
+  const [properties, setProperties] =
+    useState<PropertyOption[]>([]);
+
+  const [units, setUnits] =
+    useState<UnitOption[]>([]);
+
+  const [loadingProperties, setLoadingProperties] =
+    useState(true);
+
+  const [loadingUnits, setLoadingUnits] =
+    useState(false);
+
+  useEffect(() => {
+
+    async function loadProperties() {
+
+      try {
+
+        setLoadingProperties(true);
+
+        const data =
+          await getPropertiesForSelect();
+
+        setProperties(data);
+
+      } finally {
+
+        setLoadingProperties(false);
+
+      }
+
+    }
+
+    loadProperties();
+
+  }, []);
+
+  useEffect(() => {
+
+    async function loadUnits() {
+
+      if (!propertyId) {
+
+        setUnits([]);
+
+        return;
+
+      }
+
+      try {
+
+        setLoadingUnits(true);
+
+        const data =
+          await getUnitsForSelect(propertyId);
+
+        setUnits(data);
+
+      } finally {
+
+        setLoadingUnits(false);
+
+      }
+
+    }
+
+    loadUnits();
+
+  }, [propertyId]);
+
   return (
-    <div className="space-y-2">
 
-      {label && (
-        <label className="block text-sm font-medium text-gray-700">
-          {label}
-        </label>
-      )}
+    <div className="grid gap-4 md:grid-cols-2">
 
-      <select
-        {...props}
-        className={`
-          h-12
-          w-full
-          rounded-xl
-          border
-          border-gray-300
-          bg-white
-          px-4
-          text-sm
-          text-gray-900
-          transition
-          focus:border-[#D4AF37]
-          focus:ring-2
-          focus:ring-[#D4AF37]/20
-          focus:outline-none
-          disabled:bg-gray-100
-          disabled:cursor-not-allowed
-          ${className}
-        `}
-      >
-        {options.map((option) => (
-          <option
-            key={option.value}
-            value={option.value}
-          >
-            {option.label}
-          </option>
-        ))}
-      </select>
+      <Select
+        label="Property"
+        value={propertyId ?? ""}
+        disabled={
+          disabled ||
+          loadingProperties
+        }
+        options={properties}
+        onChange={(e) => {
 
-      {error && (
-        <p className="text-sm text-red-600">
-          {error}
-        </p>
-      )}
+          const value =
+            e.target.value || null;
+
+          onPropertyChange(value);
+
+          onUnitChange(null);
+
+        }}
+      />
+
+      <Select
+        label="Unit"
+        value={unitId ?? ""}
+        disabled={
+          disabled ||
+          !propertyId ||
+          loadingUnits
+        }
+        options={units}
+        onChange={(e) => {
+
+          onUnitChange(
+            e.target.value || null
+          );
+
+        }}
+      />
 
     </div>
+
   );
+
 }
