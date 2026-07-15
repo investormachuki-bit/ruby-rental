@@ -1,153 +1,76 @@
 "use client";
 
-import { useEffect, useState } from "react";
-
-import Select from "./Select";
-
 import {
-  getPropertiesForSelect,
-  SelectOption as PropertyOption,
-} from "@/services/properties/getPropertiesForSelect";
+SelectHTMLAttributes,
+} from "react";
 
-import {
-  getUnitsForSelect,
-  SelectOption as UnitOption,
-} from "@/services/units/getUnitsForSelect";
-
-type Props = {
-  propertyId: string | null;
-
-  unitId: string | null;
-
-  onPropertyChange: (value: string | null) => void;
-
-  onUnitChange: (value: string | null) => void;
-
-  disabled?: boolean;
+type SelectOption = {
+label: string;
+value: string;
 };
 
-export default function PropertyUnitSelector({
-  propertyId,
-  unitId,
-  onPropertyChange,
-  onUnitChange,
-  disabled = false,
-}: Props) {
+type SelectProps =
+SelectHTMLAttributes<HTMLSelectElement> & {
+label?: string;
+error?: string;
+options: SelectOption[];
+};
 
-  const [properties, setProperties] =
-    useState<PropertyOption[]>([]);
+export default function Select({
+label,
+error,
+options,
+className = "",
+...props
+}: SelectProps) {
+return (
+<div className="space-y-2">
 
-  const [units, setUnits] =
-    useState<UnitOption[]>([]);
+{label && (  
+    <label className="block text-sm font-medium text-gray-700">  
+      {label}  
+    </label>  
+  )}  
 
-  const [loadingProperties, setLoadingProperties] =
-    useState(true);
+  <select  
+    {...props}  
+    className={`  
+      h-12  
+      w-full  
+      rounded-xl  
+      border  
+      border-gray-300  
+      bg-white  
+      px-4  
+      text-sm  
+      text-gray-900  
+      transition  
+      focus:border-[#D4AF37]  
+      focus:ring-2  
+      focus:ring-[#D4AF37]/20  
+      focus:outline-none  
+      disabled:bg-gray-100  
+      disabled:cursor-not-allowed  
+      ${className}  
+    `}  
+  >  
+    {options.map((option) => (  
+      <option  
+        key={option.value}  
+        value={option.value}  
+      >  
+        {option.label}  
+      </option>  
+    ))}  
+  </select>  
 
-  const [loadingUnits, setLoadingUnits] =
-    useState(false);
+  {error && (  
+    <p className="text-sm text-red-600">  
+      {error}  
+    </p>  
+  )}  
 
-  useEffect(() => {
+</div>
 
-    async function loadProperties() {
-
-      try {
-
-        setLoadingProperties(true);
-
-        const data =
-          await getPropertiesForSelect();
-
-        setProperties(data);
-
-      } finally {
-
-        setLoadingProperties(false);
-
-      }
-
-    }
-
-    loadProperties();
-
-  }, []);
-
-  useEffect(() => {
-
-    async function loadUnits() {
-
-      if (!propertyId) {
-
-        setUnits([]);
-
-        return;
-
-      }
-
-      try {
-
-        setLoadingUnits(true);
-
-        const data =
-          await getUnitsForSelect(propertyId);
-
-        setUnits(data);
-
-      } finally {
-
-        setLoadingUnits(false);
-
-      }
-
-    }
-
-    loadUnits();
-
-  }, [propertyId]);
-
-  return (
-
-    <div className="grid gap-4 md:grid-cols-2">
-
-      <Select
-        label="Property"
-        value={propertyId ?? ""}
-        disabled={
-          disabled ||
-          loadingProperties
-        }
-        options={properties}
-        onChange={(e) => {
-
-          const value =
-            e.target.value || null;
-
-          onPropertyChange(value);
-
-          onUnitChange(null);
-
-        }}
-      />
-
-      <Select
-        label="Unit"
-        value={unitId ?? ""}
-        disabled={
-          disabled ||
-          !propertyId ||
-          loadingUnits
-        }
-        options={units}
-        onChange={(e) => {
-
-          onUnitChange(
-            e.target.value || null
-          );
-
-        }}
-      />
-
-    </div>
-
-  );
-
+);
 }
