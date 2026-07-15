@@ -43,6 +43,9 @@ export default function ExpensesPage() {
   const [showExpenseForm, setShowExpenseForm] =
     useState(false);
 
+  const [selectedExpense, setSelectedExpense] =
+    useState<Expense | undefined>();
+
   async function loadData() {
 
     try {
@@ -119,9 +122,13 @@ export default function ExpensesPage() {
         >
 
           <Button
-            onClick={() =>
-              setShowExpenseForm(true)
-            }
+            onClick={() => {
+
+              setSelectedExpense(undefined);
+
+              setShowExpenseForm(true);
+
+            }}
           >
 
             <Plus size={18} />
@@ -191,6 +198,13 @@ export default function ExpensesPage() {
               <ExpensesList
                 expenses={filteredExpenses}
                 onRefresh={loadData}
+                onEdit={(expense) => {
+
+                  setSelectedExpense(expense);
+
+                  setShowExpenseForm(true);
+
+                }}
               />
 
             )}
@@ -203,12 +217,19 @@ export default function ExpensesPage() {
 
       <ExpenseForm
         open={showExpenseForm}
-        onClose={() =>
-          setShowExpenseForm(false)
-        }
+        expense={selectedExpense}
+        onClose={() => {
+
+          setShowExpenseForm(false);
+
+          setSelectedExpense(undefined);
+
+        }}
         onSaved={() => {
 
           setShowExpenseForm(false);
+
+          setSelectedExpense(undefined);
 
           loadData();
 
