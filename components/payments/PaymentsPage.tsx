@@ -141,13 +141,12 @@ export default function PaymentsPage() {
       search,
       status,
     ]);
-
-  const expectedCollections =
-    filteredPayments.reduce(
-      (sum, payment) =>
-        sum + payment.amount_due,
-      0
-    );
+const expectedCollections =
+  filteredPayments.reduce(
+    (sum, payment) =>
+      sum + payment.monthly_rent,
+    0
+  );
 
   const collected =
     filteredPayments.reduce(
