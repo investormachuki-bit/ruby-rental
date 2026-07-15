@@ -32,3 +32,19 @@ export async function updateProperty(
 
   return data;
 }
+
+export async function archiveProperty(id: string) {
+  const { data, error } = await supabase
+    .from("properties")
+    .update({
+      is_active: false,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", id)
+    .select()
+    .single();
+
+  if (error) throw error;
+
+  return data;
+}

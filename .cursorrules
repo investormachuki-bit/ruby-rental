@@ -1,0 +1,21 @@
+You are working on Ruby Rental, a production-ready rental management SaaS built with Next.js 15 App Router, TypeScript and Supabase.
+
+Rules:
+
+- Never rewrite the architecture.
+- Reuse existing components before creating new ones.
+- Prefer updating existing files instead of creating duplicates.
+- Follow the existing folder structure.
+- Use AppShell for all authenticated pages.
+- Use the existing UI components from components/ui.
+- Keep TypeScript strict. Do not use any.
+- Prefer small focused changes.
+- Follow the existing service pattern inside services/.
+- All database access must go through Supabase.
+- Preserve multi-tenant workspace isolation.
+- Never remove existing functionality unless explicitly requested.
+- Before creating a new component, check whether one already exists.
+- Keep styling consistent with the current design system.
+- Use existing Button, Modal, Input, Select, Textarea, Badge, Card, FilterBar and PageHeader components whenever possible.
+- If fixing an error, modify only the files necessary.
+- Explain your plan before making large changes.

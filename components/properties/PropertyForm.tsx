@@ -1,28 +1,70 @@
 "use client";
 
 import { useState } from "react";
+
+import Button from "@/components/ui/Button";
+import Input from "@/components/ui/Input";
+import Select from "@/components/ui/Select";
+import Textarea from "@/components/ui/Textarea";
+
 import {
   createProperty,
   CreatePropertyInput,
 } from "@/services/properties/create";
 
+import {
+  updateProperty,
+} from "@/services/properties/update";
+
+import { Property } from "@/types/property";
+
+const PROPERTY_TYPES = [
+  { label: "Apartment", value: "Apartment" },
+  { label: "Residential", value: "Residential" },
+  { label: "Commercial", value: "Commercial" },
+  { label: "Mixed Use", value: "Mixed Use" },
+];
+
 type Props = {
+  property?: Property;
   onSuccess: () => void;
   onCancel: () => void;
 };
 
+function toFormValues(
+  property?: Property
+): CreatePropertyInput {
+  if (!property) {
+    return {
+      name: "",
+      propertyType: "Apartment",
+      county: "",
+      town: "",
+      address: "",
+      description: "",
+    };
+  }
+
+  return {
+    name: property.name,
+    propertyType: property.property_type,
+    county: property.county ?? "",
+    town: property.town ?? "",
+    address: property.address ?? "",
+    description: property.description ?? "",
+  };
+}
+
 export default function PropertyForm({
+  property,
   onSuccess,
   onCancel,
 }: Props) {
-  const [form, setForm] = useState<CreatePropertyInput>({
-    name: "",
-    propertyType: "Apartment",
-    county: "",
-    town: "",
-    address: "",
-    description: "",
-  });
+  const isEditing = Boolean(property);
+
+  const [form, setForm] = useState<CreatePropertyInput>(
+    () => toFormValues(property)
+  );
 
   const [loading, setLoading] = useState(false);
 
@@ -44,11 +86,28 @@ export default function PropertyForm({
     try {
       setLoading(true);
 
-      await createProperty(form);
+      if (isEditing && property) {
+        await updateProperty({
+          id: property.id,
+          name: form.name,
+          propertyType: form.propertyType,
+          county: form.county,
+          town: form.town,
+          address: form.address,
+          description: form.description,
+        });
+      } else {
+        await createProperty(form);
+      }
 
       onSuccess();
-    } catch (error: any) {
-      alert(error.message);
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Something went wrong.";
+
+      alert(message);
     } finally {
       setLoading(false);
     }
@@ -57,123 +116,86 @@ export default function PropertyForm({
   return (
     <form
       onSubmit={handleSubmit}
-      className="space-y-4"
+      className="space-y-5"
     >
-      <div>
-        <label className="mb-2 block text-sm font-medium">
-          Property Name
-        </label>
+      <Input
+        label="Property Name"
+        value={form.name}
+        onChange={(e) =>
+          updateField("name", e.target.value)
+        }
+        required
+      />
 
-        <input
-          value={form.name}
-          onChange={(e) =>
-            updateField("name", e.target.value)
-          }
-          className="w-full rounded-xl border p-3"
-          required
-        />
-      </div>
+      <Select
+        label="Property Type"
+        value={form.propertyType}
+        onChange={(e) =>
+          updateField(
+            "propertyType",
+            e.target.value
+          )
+        }
+        options={PROPERTY_TYPES}
+      />
 
-      <div>
-        <label className="mb-2 block text-sm font-medium">
-          Property Type
-        </label>
+      <Input
+        label="County"
+        value={form.county}
+        onChange={(e) =>
+          updateField("county", e.target.value)
+        }
+      />
 
-        <select
-          value={form.propertyType}
-          onChange={(e) =>
-            updateField(
-              "propertyType",
-              e.target.value
-            )
-          }
-          className="w-full rounded-xl border p-3"
-        >
-          <option>Apartment</option>
-          <option>Residential</option>
-          <option>Commercial</option>
-          <option>Mixed Use</option>
-        </select>
-      </div>
+      <Input
+        label="Town"
+        value={form.town}
+        onChange={(e) =>
+          updateField("town", e.target.value)
+        }
+      />
 
-      <div>
-        <label className="mb-2 block text-sm font-medium">
-          County
-        </label>
+      <Input
+        label="Address"
+        value={form.address}
+        onChange={(e) =>
+          updateField("address", e.target.value)
+        }
+      />
 
-        <input
-          value={form.county}
-          onChange={(e) =>
-            updateField("county", e.target.value)
-          }
-          className="w-full rounded-xl border p-3"
-        />
-      </div>
-
-      <div>
-        <label className="mb-2 block text-sm font-medium">
-          Town
-        </label>
-
-        <input
-          value={form.town}
-          onChange={(e) =>
-            updateField("town", e.target.value)
-          }
-          className="w-full rounded-xl border p-3"
-        />
-      </div>
-
-      <div>
-        <label className="mb-2 block text-sm font-medium">
-          Address
-        </label>
-
-        <input
-          value={form.address}
-          onChange={(e) =>
-            updateField("address", e.target.value)
-          }
-          className="w-full rounded-xl border p-3"
-        />
-      </div>
-
-      <div>
-        <label className="mb-2 block text-sm font-medium">
-          Description
-        </label>
-
-        <textarea
-          value={form.description}
-          onChange={(e) =>
-            updateField(
-              "description",
-              e.target.value
-            )
-          }
-          rows={4}
-          className="w-full rounded-xl border p-3"
-        />
-      </div>
+      <Textarea
+        label="Description"
+        value={form.description}
+        onChange={(e) =>
+          updateField(
+            "description",
+            e.target.value
+          )
+        }
+        rows={4}
+      />
 
       <div className="flex justify-end gap-3 pt-2">
-        <button
+        <Button
           type="button"
+          variant="secondary"
           onClick={onCancel}
-          className="rounded-xl border px-5 py-3"
+          disabled={loading}
         >
           Cancel
-        </button>
+        </Button>
 
-        <button
+        <Button
           type="submit"
-          disabled={loading}
-          className="rounded-xl bg-black px-5 py-3 font-semibold text-white"
+          variant="primary"
+          loading={loading}
         >
           {loading
             ? "Saving..."
+            : isEditing
+            ? "Update Property"
             : "Save Property"}
-        </button>
+        </Button>
       </div>
     </form>
   );

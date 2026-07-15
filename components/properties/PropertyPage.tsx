@@ -8,6 +8,9 @@ import {
   Home,
   DollarSign,
   Plus,
+  Pencil,
+  Archive,
+  Trash2,
 } from "lucide-react";
 
 import AppShell from "@/components/layout/AppShell";
@@ -20,15 +23,24 @@ import Section from "@/components/ui/Section";
 import StatCard from "@/components/ui/StatCard";
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
-import SearchInput from "@/components/ui/SearchInput";
+import FilterBar from "@/components/ui/FilterBar";
+import Select from "@/components/ui/Select";
+import Badge from "@/components/ui/Badge";
 import Loading from "@/components/ui/Loading";
 import EmptyState from "@/components/ui/EmptyState";
+import Modal from "@/components/ui/Modal";
+import ActionMenu from "@/components/ui/ActionMenu";
+import ConfirmDialog from "@/components/ui/ConfirmDialog";
 
 import { getProperties } from "@/services/properties/getAll";
+import { archiveProperty } from "@/services/properties/update";
+import { deleteProperty } from "@/services/properties/delete";
+
+import { Property } from "@/types/property";
 
 import PropertyForm from "./PropertyForm";
 
-type Property = {
+type PropertyListItem = {
   id: string;
   name: string;
   property_type: string;
@@ -46,18 +58,50 @@ type Property = {
   occupancy_rate: number;
 };
 
+const PROPERTY_TYPE_OPTIONS = [
+  { label: "All Types", value: "All" },
+  { label: "Apartment", value: "Apartment" },
+  { label: "Residential", value: "Residential" },
+  { label: "Commercial", value: "Commercial" },
+  { label: "Mixed Use", value: "Mixed Use" },
+];
+
+const STATUS_OPTIONS = [
+  { label: "All Statuses", value: "All" },
+  { label: "Active", value: "Active" },
+  { label: "Archived", value: "Archived" },
+];
+
 export default function PropertyPage() {
   const [properties, setProperties] =
-    useState<Property[]>([]);
+    useState<PropertyListItem[]>([]);
 
   const [loading, setLoading] =
     useState(true);
 
-  const [showForm, setShowForm] =
+  const [showCreateForm, setShowCreateForm] =
+    useState(false);
+
+  const [editingProperty, setEditingProperty] =
+    useState<Property | null>(null);
+
+  const [archivingProperty, setArchivingProperty] =
+    useState<PropertyListItem | null>(null);
+
+  const [deletingProperty, setDeletingProperty] =
+    useState<PropertyListItem | null>(null);
+
+  const [actionLoading, setActionLoading] =
     useState(false);
 
   const [search, setSearch] =
     useState("");
+
+  const [typeFilter, setTypeFilter] =
+    useState("All");
+
+  const [statusFilter, setStatusFilter] =
+    useState("All");
 
   useEffect(() => {
     loadProperties();
@@ -78,29 +122,133 @@ export default function PropertyPage() {
     }
   }
 
-  function handleSuccess() {
-    setShowForm(false);
+  function handleFormSuccess() {
+    setShowCreateForm(false);
+    setEditingProperty(null);
     loadProperties();
+  }
+
+  function closeFormModal() {
+    setShowCreateForm(false);
+    setEditingProperty(null);
+  }
+
+  function toProperty(
+    item: PropertyListItem
+  ): Property {
+    return {
+      id: item.id,
+      workspace_id: "",
+      name: item.name,
+      property_type: item.property_type,
+      county: item.county,
+      town: item.town,
+      address: item.address,
+      description: item.description,
+      is_active: item.is_active,
+      created_at: "",
+      updated_at: "",
+    };
+  }
+
+  async function handleArchive() {
+    if (!archivingProperty) return;
+
+    try {
+      setActionLoading(true);
+
+      await archiveProperty(
+        archivingProperty.id
+      );
+
+      setArchivingProperty(null);
+      loadProperties();
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Unable to archive property.";
+
+      alert(message);
+    } finally {
+      setActionLoading(false);
+    }
+  }
+
+  async function handleDelete() {
+    if (!deletingProperty) return;
+
+    try {
+      setActionLoading(true);
+
+      await deleteProperty(
+        deletingProperty.id
+      );
+
+      setDeletingProperty(null);
+      loadProperties();
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Unable to delete property.";
+
+      alert(message);
+    } finally {
+      setActionLoading(false);
+    }
   }
 
   const filteredProperties =
     useMemo(() => {
+      const keyword =
+        search.toLowerCase();
+
       return properties.filter(
-        (property) =>
-          property.name
-            .toLowerCase()
-            .includes(search.toLowerCase()) ||
-          property.property_type
-            .toLowerCase()
-            .includes(search.toLowerCase()) ||
-          (property.county ?? "")
-            .toLowerCase()
-            .includes(search.toLowerCase()) ||
-          (property.town ?? "")
-            .toLowerCase()
-            .includes(search.toLowerCase())
+        (property) => {
+          const matchesSearch =
+            !keyword ||
+            property.name
+              .toLowerCase()
+              .includes(keyword) ||
+            property.property_type
+              .toLowerCase()
+              .includes(keyword) ||
+            (property.county ?? "")
+              .toLowerCase()
+              .includes(keyword) ||
+            (property.town ?? "")
+              .toLowerCase()
+              .includes(keyword) ||
+            (property.address ?? "")
+              .toLowerCase()
+              .includes(keyword);
+
+          const matchesType =
+            typeFilter === "All" ||
+            property.property_type ===
+              typeFilter;
+
+          const matchesStatus =
+            statusFilter === "All" ||
+            (statusFilter === "Active" &&
+              property.is_active) ||
+            (statusFilter === "Archived" &&
+              !property.is_active);
+
+          return (
+            matchesSearch &&
+            matchesType &&
+            matchesStatus
+          );
+        }
       );
-    }, [properties, search]);
+    }, [
+      properties,
+      search,
+      typeFilter,
+      statusFilter,
+    ]);
 
   const totalMonthlyIncome =
     properties.reduce(
@@ -137,6 +285,10 @@ export default function PropertyPage() {
           (occupiedUnits / totalUnits) * 100
         );
 
+  const formOpen =
+    showCreateForm ||
+    editingProperty !== null;
+
   return (
     <AppShell>
 
@@ -161,7 +313,7 @@ export default function PropertyPage() {
           <Button
             variant="primary"
             onClick={() =>
-              setShowForm(true)
+              setShowCreateForm(true)
             }
           >
             <Plus
@@ -174,7 +326,6 @@ export default function PropertyPage() {
           </Button>
 
         </PageHeader>
-                {/* Summary */}
 
         <Section>
 
@@ -223,310 +374,384 @@ export default function PropertyPage() {
 
         </Section>
 
-        {/* Property Portfolio */}
-
         <Section>
 
           <Card>
 
-            <div className="mb-6 flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+            <div className="mb-6">
 
-              <div>
+              <h2 className="text-2xl font-bold text-gray-900">
 
-                <h2 className="text-2xl font-bold text-gray-900">
+                Property Portfolio
 
-                  Property Portfolio
+              </h2>
 
-                </h2>
+              <p className="mt-2 text-gray-500">
 
-                <p className="mt-2 text-gray-500">
+                Search and manage all your rental properties.
 
-                  Search and manage all your rental properties.
-
-                </p>
-
-              </div>
-
-              <div className="w-full lg:w-96">
-
-                <SearchInput
-                  value={search}
-                  onChange={setSearch}
-                  placeholder="Search properties..."
-                />
-
-              </div>
+              </p>
 
             </div>
 
-            {loading ? (
+            <FilterBar
+              search={search}
+              onSearchChange={setSearch}
+              searchPlaceholder="Search properties..."
+              filters={
+                <>
+                  <Select
+                    value={typeFilter}
+                    onChange={(e) =>
+                      setTypeFilter(
+                        e.target.value
+                      )
+                    }
+                    options={
+                      PROPERTY_TYPE_OPTIONS
+                    }
+                    className="min-w-[160px]"
+                  />
 
-              <Loading
-                title="Loading Properties"
-                description="Preparing your property portfolio..."
-              />
+                  <Select
+                    value={statusFilter}
+                    onChange={(e) =>
+                      setStatusFilter(
+                        e.target.value
+                      )
+                    }
+                    options={STATUS_OPTIONS}
+                    className="min-w-[160px]"
+                  />
+                </>
+              }
+            />
 
-            ) : filteredProperties.length === 0 ? (
+            <div className="mt-6">
 
-              <EmptyState
-                title="No Properties Found"
-                description={
-                  search
-                    ? "No properties match your search."
-                    : "Create your first property to start managing your rental portfolio."
-                }
-              />
+              {loading ? (
 
-            ) : (
+                <Loading
+                  title="Loading Properties"
+                  description="Preparing your property portfolio..."
+                />
 
-              <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+              ) : filteredProperties.length === 0 ? (
 
-                {filteredProperties.map((property) => (
+                <EmptyState
+                  title="No Properties Found"
+                  description={
+                    search ||
+                    typeFilter !== "All" ||
+                    statusFilter !== "All"
+                      ? "No properties match your search or filters."
+                      : "Create your first property to start managing your rental portfolio."
+                  }
+                />
 
-                  <Card
-                    key={property.id}
-                    className="transition-all duration-200 hover:-translate-y-1 hover:border-[#D4AF37] hover:shadow-xl"
-                  >
+              ) : (
 
-                    <div className="flex items-start justify-between">
+                <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
 
-                      <div>
+                  {filteredProperties.map((property) => (
 
-                        <h2 className="text-2xl font-bold text-gray-900">
+                    <Card
+                      key={property.id}
+                      className="transition-all duration-200 hover:-translate-y-1 hover:border-[#D4AF37] hover:shadow-xl"
+                    >
 
-                          {property.name}
+                      <div className="flex items-start justify-between gap-3">
 
-                        </h2>
+                        <div>
 
-                        <p className="mt-1 text-sm text-gray-500">
+                          <h2 className="text-2xl font-bold text-gray-900">
 
-                          {property.property_type}
+                            {property.name}
+
+                          </h2>
+
+                          <p className="mt-1 text-sm text-gray-500">
+
+                            {property.property_type}
+
+                          </p>
+
+                        </div>
+
+                        <div className="flex items-center gap-2">
+
+                          <Badge
+                            variant={
+                              property.is_active
+                                ? "success"
+                                : "danger"
+                            }
+                          >
+
+                            {property.is_active
+                              ? "Active"
+                              : "Archived"}
+
+                          </Badge>
+
+                          <ActionMenu
+                            actions={[
+                              {
+                                label: "Edit",
+                                icon: (
+                                  <Pencil size={16} />
+                                ),
+                                onClick: () =>
+                                  setEditingProperty(
+                                    toProperty(
+                                      property
+                                    )
+                                  ),
+                              },
+                              ...(property.is_active
+                                ? [
+                                    {
+                                      label:
+                                        "Archive",
+                                      icon: (
+                                        <Archive
+                                          size={16}
+                                        />
+                                      ),
+                                      onClick: () =>
+                                        setArchivingProperty(
+                                          property
+                                        ),
+                                    },
+                                  ]
+                                : []),
+                              {
+                                label: "Delete",
+                                icon: (
+                                  <Trash2
+                                    size={16}
+                                  />
+                                ),
+                                danger: true,
+                                onClick: () =>
+                                  setDeletingProperty(
+                                    property
+                                  ),
+                              },
+                            ]}
+                          />
+
+                        </div>
+
+                      </div>
+
+                      <div className="mt-6 space-y-3 text-sm text-gray-600">
+
+                        <p>
+
+                          <strong>County:</strong>{" "}
+                          {property.county || "-"}
+
+                        </p>
+
+                        <p>
+
+                          <strong>Town:</strong>{" "}
+                          {property.town || "-"}
+
+                        </p>
+
+                        <p>
+
+                          <strong>Address:</strong>{" "}
+                          {property.address || "-"}
 
                         </p>
 
                       </div>
 
-                      <span
-                        className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                          property.is_active
-                            ? "bg-green-100 text-green-700"
-                            : "bg-red-100 text-red-700"
-                        }`}
-                      >
+                      <div className="mt-6 grid grid-cols-2 gap-6 border-t border-gray-100 pt-6">
 
-                        {property.is_active
-                          ? "Active"
-                          : "Inactive"}
+                        <div>
 
-                      </span>
+                          <p className="text-xs uppercase tracking-wide text-gray-500">
 
-                    </div>
+                            Units
 
-                    <div className="mt-6 space-y-3 text-sm text-gray-600">
+                          </p>
 
-                      <p>
+                          <p className="mt-2 text-3xl font-bold">
 
-                        <strong>County:</strong>{" "}
-                        {property.county || "-"}
+                            {property.total_units}
 
-                      </p>
+                          </p>
 
-                      <p>
+                        </div>
 
-                        <strong>Town:</strong>{" "}
-                        {property.town || "-"}
+                        <div>
 
-                      </p>
+                          <p className="text-xs uppercase tracking-wide text-gray-500">
 
-                      <p>
+                            Occupied
 
-                        <strong>Address:</strong>{" "}
-                        {property.address || "-"}
+                          </p>
 
-                      </p>
+                          <p className="mt-2 text-3xl font-bold text-green-600">
 
-                    </div>
-                                        <div className="mt-6 grid grid-cols-2 gap-6 border-t border-gray-100 pt-6">
+                            {property.occupied_units}
 
-                      <div>
+                          </p>
 
-                        <p className="text-xs uppercase tracking-wide text-gray-500">
+                        </div>
 
-                          Units
+                        <div>
 
-                        </p>
+                          <p className="text-xs uppercase tracking-wide text-gray-500">
 
-                        <p className="mt-2 text-3xl font-bold">
+                            Vacant
 
-                          {property.total_units}
+                          </p>
 
-                        </p>
+                          <p className="mt-2 text-3xl font-bold text-amber-500">
 
-                      </div>
+                            {property.vacant_units}
 
-                      <div>
+                          </p>
 
-                        <p className="text-xs uppercase tracking-wide text-gray-500">
+                        </div>
 
-                          Occupied
+                        <div>
 
-                        </p>
+                          <p className="text-xs uppercase tracking-wide text-gray-500">
 
-                        <p className="mt-2 text-3xl font-bold text-green-600">
+                            Monthly Income
 
-                          {property.occupied_units}
+                          </p>
 
-                        </p>
+                          <p className="mt-2 text-lg font-bold text-[#D4AF37]">
+
+                            KSh{" "}
+
+                            {property.monthly_income.toLocaleString()}
+
+                          </p>
+
+                        </div>
 
                       </div>
 
-                      <div>
+                      <div className="mt-6">
 
-                        <p className="text-xs uppercase tracking-wide text-gray-500">
+                        <div className="mb-2 flex items-center justify-between">
 
-                          Vacant
+                          <span className="text-sm text-gray-500">
 
-                        </p>
+                            Occupancy
 
-                        <p className="mt-2 text-3xl font-bold text-amber-500">
+                          </span>
 
-                          {property.vacant_units}
+                          <span className="font-semibold">
 
-                        </p>
+                            {property.occupancy_rate}%
 
-                      </div>
+                          </span>
 
-                      <div>
+                        </div>
 
-                        <p className="text-xs uppercase tracking-wide text-gray-500">
+                        <div className="h-3 overflow-hidden rounded-full bg-gray-200">
 
-                          Monthly Income
+                          <div
+                            className="h-full rounded-full bg-green-600 transition-all"
+                            style={{
+                              width: `${property.occupancy_rate}%`,
+                            }}
+                          />
 
-                        </p>
-
-                        <p className="mt-2 text-lg font-bold text-[#D4AF37]">
-
-                          KSh{" "}
-
-                          {property.monthly_income.toLocaleString()}
-
-                        </p>
+                        </div>
 
                       </div>
 
-                    </div>
+                      <div className="mt-8">
 
-                    <div className="mt-6">
-
-                      <div className="mb-2 flex items-center justify-between">
-
-                        <span className="text-sm text-gray-500">
-
-                          Occupancy
-
-                        </span>
-
-                        <span className="font-semibold">
-
-                          {property.occupancy_rate}%
-
-                        </span>
-
-                      </div>
-
-                      <div className="h-3 overflow-hidden rounded-full bg-gray-200">
-
-                        <div
-                          className="h-full rounded-full bg-green-600 transition-all"
-                          style={{
-                            width: `${property.occupancy_rate}%`,
-                          }}
-                        />
-
-                      </div>
-
-                    </div>
-
-                    <div className="mt-8 flex gap-3">
-
-                      <Link
-                        href={`/properties/${property.id}`}
-                        className="flex-1"
-                      >
-
-                        <Button
-                          variant="primary"
-                          className="w-full rounded-2xl"
+                        <Link
+                          href={`/properties/${property.id}`}
+                          className="block"
                         >
 
-                          Open Property
+                          <Button
+                            variant="primary"
+                            className="w-full rounded-2xl"
+                          >
 
-                        </Button>
+                            Open Property
 
-                      </Link>
+                          </Button>
 
-                      <Button
-                        variant="secondary"
-                        className="rounded-2xl"
-                      >
+                        </Link>
 
-                        ⋮
+                      </div>
 
-                      </Button>
+                    </Card>
 
-                    </div>
+                  ))}
 
-                  </Card>
+                </div>
 
-                ))}
+              )}
 
-              </div>
-
-            )}
+            </div>
 
           </Card>
 
         </Section>
-                {/* Create Property Modal */}
 
-        {showForm && (
+        <Modal
+          open={formOpen}
+          title={
+            editingProperty
+              ? "Edit Property"
+              : "New Property"
+          }
+          description={
+            editingProperty
+              ? "Update property details."
+              : "Add a new property to your rental portfolio."
+          }
+          onClose={closeFormModal}
+          size="lg"
+        >
+          <PropertyForm
+            property={
+              editingProperty ?? undefined
+            }
+            onSuccess={handleFormSuccess}
+            onCancel={closeFormModal}
+          />
+        </Modal>
 
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+        <ConfirmDialog
+          open={archivingProperty !== null}
+          title="Archive Property"
+          message={`Archive "${archivingProperty?.name}"? It will be marked inactive but remain in your records.`}
+          confirmText="Archive"
+          loading={actionLoading}
+          onConfirm={handleArchive}
+          onCancel={() =>
+            setArchivingProperty(null)
+          }
+        />
 
-            <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-3xl border border-gray-200 bg-white shadow-2xl">
-
-              <div className="border-b border-gray-200 px-8 py-6">
-
-                <h2 className="text-2xl font-bold text-gray-900">
-
-                  New Property
-
-                </h2>
-
-                <p className="mt-2 text-gray-500">
-
-                  Add a new property to your rental portfolio.
-
-                </p>
-
-              </div>
-
-              <div className="p-8">
-
-                <PropertyForm
-                  onSuccess={handleSuccess}
-                  onCancel={() =>
-                    setShowForm(false)
-                  }
-                />
-
-              </div>
-
-            </div>
-
-          </div>
-
-        )}
+        <ConfirmDialog
+          open={deletingProperty !== null}
+          title="Delete Property"
+          message={`Permanently delete "${deletingProperty?.name}"? This action cannot be undone.`}
+          confirmText="Delete"
+          loading={actionLoading}
+          onConfirm={handleDelete}
+          onCancel={() =>
+            setDeletingProperty(null)
+          }
+        />
 
       </PageContainer>
 
