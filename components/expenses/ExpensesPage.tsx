@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 
+import { Plus, Receipt } from "lucide-react";
+
 import AppShell from "@/components/layout/AppShell";
 
 import PageHeader from "@/components/ui/PageHeader";
@@ -10,8 +12,6 @@ import FilterBar from "@/components/ui/FilterBar";
 import Button from "@/components/ui/Button";
 import EmptyState from "@/components/ui/EmptyState";
 import Loading from "@/components/ui/Loading";
-
-import { Plus, Receipt } from "lucide-react";
 
 import {
   Expense,
@@ -112,16 +112,17 @@ export default function ExpensesPage() {
         <PageHeader
           title="Expenses"
           description="Track and manage business expenses."
-          actions={
-            <Button>
+        >
 
-              <Plus size={18} />
+          <Button>
 
-              Add Expense
+            <Plus size={18} />
 
-            </Button>
-          }
-        />
+            Add Expense
+
+          </Button>
+
+        </PageHeader>
 
         {loading ? (
 
@@ -135,22 +136,30 @@ export default function ExpensesPage() {
 
               <StatCard
                 title="Total Expenses"
-                value={dashboard?.totalExpenses ?? 0}
+                value={
+                  dashboard?.totalExpenses ?? 0
+                }
               />
 
               <StatCard
                 title="This Month"
-                value={dashboard?.thisMonth ?? 0}
+                value={
+                  dashboard?.thisMonth ?? 0
+                }
               />
 
               <StatCard
                 title="Paid"
-                value={dashboard?.totalPaid ?? 0}
+                value={
+                  dashboard?.totalPaid ?? 0
+                }
               />
 
               <StatCard
                 title="Pending"
-                value={dashboard?.totalPending ?? 0}
+                value={
+                  dashboard?.totalPending ?? 0
+                }
               />
 
             </div>
