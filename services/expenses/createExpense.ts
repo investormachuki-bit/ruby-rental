@@ -5,15 +5,13 @@ import { getProfile } from "@/services/auth/getProfile";
 import { generateExpenseNumber } from "./generateExpenseNumber";
 
 import { PaymentMethod } from "@/lib/constants/paymentMethods";
-
 import { ExpenseCategory } from "@/lib/constants/expenseCategories";
-
 import { ExpenseStatus } from "@/lib/constants/expenseStatus";
 
 export type CreateExpenseInput = {
-  property_id?: string | null;
+  property_id: string | null;
 
-  unit_id?: string | null;
+  unit_id: string | null;
 
   expense_date: string;
 
@@ -37,73 +35,96 @@ export type CreateExpenseInput = {
 export async function createExpense(
   input: CreateExpenseInput
 ) {
+
+  if (!input.expense_date) {
+    throw new Error("Expense date is required.");
+  }
+
+  if (input.amount <= 0) {
+    throw new Error(
+      "Amount must be greater than zero."
+    );
+  }
+
   const {
     data: { session },
   } = await supabase.auth.getSession();
 
   if (!session) {
-    throw new Error("You are not logged in.");
+    throw new Error(
+      "You are not logged in."
+    );
   }
 
-  const profile = await getProfile(session.user.id);
+  const profile =
+    await getProfile(session.user.id);
 
   if (!profile) {
-    throw new Error("Profile not found.");
+    throw new Error(
+      "Profile not found."
+    );
   }
 
   const expenseNumber =
     await generateExpenseNumber();
 
-  const { data, error } = await supabase
-    .from("expenses")
-    .insert({
-      workspace_id: profile.workspace_id,
+  const { data, error } =
+    await supabase
+      .from("expenses")
+      .insert({
+        workspace_id:
+          profile.workspace_id,
 
-      property_id:
-        input.property_id ?? null,
+        property_id:
+          input.property_id,
 
-      unit_id:
-        input.unit_id ?? null,
+        unit_id:
+          input.unit_id,
 
-      expense_number:
-        expenseNumber,
+        expense_number:
+          expenseNumber,
 
-      expense_date:
-        input.expense_date,
+        expense_date:
+          input.expense_date,
 
-      category:
-        input.category,
+        category:
+          input.category,
 
-      amount:
-        input.amount,
+        amount:
+          input.amount,
 
-      vendor:
-        input.vendor ?? null,
+        vendor:
+          input.vendor?.trim() ||
+          null,
 
-      description:
-        input.description ?? null,
+        description:
+          input.description?.trim() ||
+          null,
 
-      receipt_url:
-        input.receipt_url ?? null,
+        receipt_url:
+          input.receipt_url?.trim() ||
+          null,
 
-      payment_method:
-        input.payment_method,
+        payment_method:
+          input.payment_method,
 
-      reference:
-        input.reference ?? null,
+        reference:
+          input.reference?.trim() ||
+          null,
 
-      status:
-        input.status,
+        status:
+          input.status,
 
-      created_by:
-        session.user.id,
-    })
-    .select()
-    .single();
+        created_by:
+          session.user.id,
+      })
+      .select()
+      .single();
 
   if (error) {
     throw error;
   }
 
   return data;
+
 }
