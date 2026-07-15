@@ -24,11 +24,14 @@ type Props = {
   expense: Expense;
 
   onRefresh: () => void;
+
+  onEdit: (expense: Expense) => void;
 };
 
 export default function ExpenseCard({
   expense,
   onRefresh,
+  onEdit,
 }: Props) {
 
   const [loading, setLoading] =
@@ -58,7 +61,9 @@ export default function ExpenseCard({
   }
 
   return (
+
     <>
+
       <Card>
 
         <div className="flex items-start justify-between gap-4">
@@ -194,7 +199,8 @@ export default function ExpenseCard({
               },
               {
                 label: "Edit",
-                onClick: () => {},
+                onClick: () =>
+                  onEdit(expense),
               },
               {
                 label: "Delete",
@@ -222,6 +228,7 @@ export default function ExpenseCard({
       />
 
     </>
+
   );
 
 }
