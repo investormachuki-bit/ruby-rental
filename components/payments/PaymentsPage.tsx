@@ -313,25 +313,28 @@ export default function PaymentsPage() {
 
             ) : filteredPayments.length === 0 ? (
 
-              <EmptyState
-                title="No Payment Records Yet"
-                description="Payments will appear automatically after creating a lease, generating rent invoices and recording tenant payments."
-              >
+              <div className="space-y-6">
 
-                <Link href="/leases">
+  <EmptyState
+    title="No Payment Records Yet"
+    description="Payments will appear automatically after creating a lease, generating rent invoices and recording tenant payments."
+  />
 
-                  <Button
-                    variant="secondary"
-                    className="mt-6"
-                  >
+  <div className="flex justify-center">
 
-                    Go to Leases
+    <Link href="/leases">
 
-                  </Button>
+      <Button variant="secondary">
 
-                </Link>
+        Go to Leases
 
-              </EmptyState>
+      </Button>
+
+    </Link>
+
+  </div>
+
+</div>
 
             ) : (
 
