@@ -19,31 +19,24 @@ export default function SidebarNavigation({
   onNavigate,
 }: Props) {
 
-  const pathname =
-    usePathname();
+  const pathname = usePathname();
 
-  function isActive(
-    href: string
-  ) {
+  function isActive(route: string) {
 
-    if (href === "/") {
+    if (route === "/") {
 
       return pathname === "/";
 
     }
 
-    return pathname.startsWith(
-      href
-    );
+    return pathname.startsWith(route);
 
   }
 
-  function getLinkClass(
-    href: string
-  ) {
+  function getLinkClass(route: string) {
 
     return `group flex items-center gap-3 rounded-2xl px-4 py-3 transition-all duration-200 ${
-      isActive(href)
+      isActive(route)
         ? "bg-[#D4AF37] text-[#0F0F10] shadow-lg"
         : "text-white hover:bg-white/5 hover:text-white"
     }`;
@@ -54,58 +47,52 @@ export default function SidebarNavigation({
 
     <ul className="space-y-2">
 
-      {items.map((item) => {
+      {items
+        .filter((item) => item.sidebar)
+        .map((item) => {
 
-        const Icon =
-          item.icon;
+          const Icon = item.icon;
 
-        return (
+          return (
 
-          <li
-            key={item.moduleKey}
-          >
+            <li key={item.moduleKey}>
 
-            <Link
-              href={item.href}
-              onClick={() => {
+              <Link
+                href={item.route}
+                onClick={() => {
 
-                if (
-                  mobile &&
-                  onNavigate
-                ) {
+                  if (mobile && onNavigate) {
 
-                  onNavigate();
+                    onNavigate();
 
-                }
+                  }
 
-              }}
-              className={getLinkClass(
-                item.href
-              )}
-            >
+                }}
+                className={getLinkClass(item.route)}
+              >
 
-              <Icon
-                size={20}
-                className={
-                  isActive(item.href)
-                    ? "text-[#0F0F10]"
-                    : "text-white transition group-hover:text-[#D4AF37]"
-                }
-              />
+                <Icon
+                  size={20}
+                  className={
+                    isActive(item.route)
+                      ? "text-[#0F0F10]"
+                      : "text-white transition group-hover:text-[#D4AF37]"
+                  }
+                />
 
-              <span className="font-semibold tracking-wide">
+                <span className="font-semibold tracking-wide">
 
-                {item.label}
+                  {item.name}
 
-              </span>
+                </span>
 
-            </Link>
+              </Link>
 
-          </li>
+            </li>
 
-        );
+          );
 
-      })}
+        })}
 
     </ul>
 
