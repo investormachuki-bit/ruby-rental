@@ -1,67 +1,70 @@
 import { supabase } from "@/lib/supabase";
 
+type UtilitySetting = {
+  utility_type: string;
+  billing_type: string;
+  unit_rate: number;
+};
+
 type CreateDefaultUtilityMetersData = {
   workspace_id: string;
   property_id: string;
   unit_id: string;
 
-  water_type: string;
-  water_rate: number;
-
-  electricity_type: string;
-  electricity_rate: number;
+  utilitySettings: UtilitySetting[];
 };
 
 export async function createDefaultUtilityMeters({
   workspace_id,
   property_id,
   unit_id,
-  water_type,
-  water_rate,
-  electricity_type,
-  electricity_rate,
+  utilitySettings,
 }: CreateDefaultUtilityMetersData) {
-  const { error } = await supabase
-    .from("utility_meters")
-    .insert([
-      {
+
+  if (
+    !utilitySettings ||
+    utilitySettings.length === 0
+  ) {
+    return;
+  }
+
+  const meters =
+    utilitySettings.map(
+      (setting) => ({
+
         workspace_id,
+
         property_id,
+
         unit_id,
 
-        utility_type: "Water",
+        utility_type:
+          setting.utility_type,
 
         meter_number: "",
 
         opening_reading: 0,
 
-        unit_rate: water_rate,
+        unit_rate: Number(
+          setting.unit_rate ?? 0
+        ),
 
         status: "Pending Setup",
 
-        notes: `${water_type} water meter`,
-      },
+        notes: `${setting.billing_type} ${setting.utility_type} meter`,
 
-      {
-        workspace_id,
-        property_id,
-        unit_id,
+      })
+    );
 
-        utility_type: "Electricity",
-
-        meter_number: "",
-
-        opening_reading: 0,
-
-        unit_rate: electricity_rate,
-
-        status: "Pending Setup",
-
-        notes: `${electricity_type} electricity meter`,
-      },
-    ]);
+  const { error } =
+    await supabase
+      .from("utility_meters")
+      .insert(meters);
 
   if (error) {
+
     throw error;
+
   }
+
 }
