@@ -1,10 +1,24 @@
 import { supabase } from "@/lib/supabase";
+
 import { getProfile } from "@/services/auth/getProfile";
 
+import { createDefaultUtilityMeters } from "@/services/utilities/createDefaultUtilityMeters";
+
 export type BulkUnitInput = {
+
   propertyId: string;
 
   prefix: string;
+
+  floorNumber?: number;
+
+  unitType?: string | null;
+
+  bedrooms: number;
+
+  bathrooms: number;
+
+  sizeSqm: number;
 
   start: number;
 
@@ -14,95 +28,166 @@ export type BulkUnitInput = {
 
   deposit: number;
 
-  floorNumber?: number;
-
-  unitType?: string;
-
-  bedrooms?: number;
-
-  bathrooms?: number;
-
-  sizeSqm?: number;
 };
 
 export async function bulkCreateUnits(
   input: BulkUnitInput
 ) {
+
+  // Get logged-in user
+
   const {
     data: { session },
   } = await supabase.auth.getSession();
 
   if (!session) {
-    throw new Error("You are not logged in.");
+
+    throw new Error(
+      "You are not logged in."
+    );
+
   }
 
-  const profile = await getProfile(
-    session.user.id
-  );
+  // Get workspace
+
+  const profile =
+    await getProfile(
+      session.user.id
+    );
 
   if (!profile) {
-    throw new Error("Profile not found.");
+
+    throw new Error(
+      "Profile not found."
+    );
+
   }
 
-  const units = [];
+  const units: any[] = [];
+    // Build units
 
-  for (let i = input.start; i <= input.end; i++) {
+  for (
+    let i = input.start;
+    i <= input.end;
+    i++
+  ) {
+
     units.push({
-      workspace_id: profile.workspace_id,
 
-      property_id: input.propertyId,
+      workspace_id:
+        profile.workspace_id,
 
-      unit_number: `${input.prefix}${i}`,
+      property_id:
+        input.propertyId,
+
+      unit_number:
+        `${input.prefix}${i}`,
 
       unit_sequence: i,
 
-      unit_type: input.unitType ?? null,
+      floor_number:
+        input.floorNumber ?? null,
 
-      floor_number: input.floorNumber ?? null,
+      unit_type:
+        input.unitType,
 
-      bedrooms: input.bedrooms ?? 0,
+      bedrooms:
+        input.bedrooms,
 
-      bathrooms: input.bathrooms ?? 0,
+      bathrooms:
+        input.bathrooms,
 
-      size_sqm: input.sizeSqm ?? 0,
+      size_sqm:
+        input.sizeSqm,
 
-      monthly_rent: input.monthlyRent,
+      monthly_rent:
+        input.monthlyRent,
 
-      deposit: input.deposit,
-
-      water_meter_number: null,
-
-      electricity_meter_number: null,
-
-      gas_meter_number: null,
-
-      internet_account_number: null,
+      deposit:
+        input.deposit,
 
       garbage_fee: 0,
-
-      security_fee: 0,
-
-      sewer_fee: 0,
 
       parking_fee: 0,
 
       internet_fee: 0,
+
+      security_fee: 0,
+
+      sewer_fee: 0,
 
       service_charge: 0,
 
       status: "Vacant",
 
       notes: null,
+
     });
+
   }
 
-  const { error } = await supabase
+  // Create units
+
+  const {
+    data: createdUnits,
+    error,
+  } = await supabase
     .from("units")
-    .insert(units);
+    .insert(units)
+    .select();
 
   if (error) {
+
     throw error;
+
+  }
+    // Load property utility settings
+
+  const {
+    data: utilitySettings,
+    error: utilityError,
+  } = await supabase
+    .from("property_utility_settings")
+    .select("*")
+    .eq(
+      "property_id",
+      input.propertyId
+    );
+
+  if (utilityError) {
+
+    throw utilityError;
+
   }
 
-  return true;
+  // Automatically create utility meters
+
+  if (
+    utilitySettings &&
+    utilitySettings.length > 0
+  ) {
+
+    for (const unit of createdUnits) {
+
+      await createDefaultUtilityMeters({
+
+        workspace_id:
+          profile.workspace_id,
+
+        property_id:
+          input.propertyId,
+
+        unit_id:
+          unit.id,
+
+        utilitySettings,
+
+      });
+
+    }
+
+  }
+
+  return createdUnits;
+
 }
