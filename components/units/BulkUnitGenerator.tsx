@@ -10,21 +10,35 @@ type Property = {
 };
 
 type Props = {
-  properties: Property[];
+
+  properties: {
+    id: string;
+    name: string;
+  }[];
+
+  defaultPropertyId?: string;
 
   onSuccess: () => void;
 
   onCancel: () => void;
-};
 
+};
 export default function BulkUnitGenerator({
+
   properties,
+
+  defaultPropertyId,
+
   onSuccess,
+
   onCancel,
+
 }: Props) {
 
   const [propertyId, setPropertyId] =
-    useState("");
+  useState(
+    defaultPropertyId ?? ""
+  );
 
   const [prefix, setPrefix] =
     useState("");
