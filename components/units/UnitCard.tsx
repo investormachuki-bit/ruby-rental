@@ -7,6 +7,7 @@ import {
   FileText,
   Coins,
   Lock,
+  Building2,
 } from "lucide-react";
 
 import { Unit } from "@/types/unit";
@@ -23,6 +24,7 @@ export default function UnitCard({
     status: string
   ) {
     switch (status) {
+
       case "Occupied":
         return "bg-green-100 text-green-700";
 
@@ -37,6 +39,7 @@ export default function UnitCard({
 
       default:
         return "bg-gray-100 text-gray-700";
+
     }
   }
 
@@ -51,13 +54,33 @@ export default function UnitCard({
         <div>
 
           <h3 className="text-3xl font-bold text-gray-900">
+
             {unit.unit_number}
+
           </h3>
 
-          <p className="mt-1 text-gray-500">
-            {unit.floor_name ??
-              "No Floor"}
+          <p className="mt-2 flex items-center gap-2 text-gray-500">
+
+            <Building2
+              size={16}
+            />
+
+            {unit.floor_number !== null &&
+            unit.floor_number !== undefined
+              ? `Floor ${unit.floor_number}`
+              : "No Floor"}
+
           </p>
+
+          {unit.unit_type && (
+
+            <p className="mt-1 text-sm text-gray-400">
+
+              {unit.unit_type}
+
+            </p>
+
+          )}
 
         </div>
 
@@ -66,14 +89,16 @@ export default function UnitCard({
             unit.status
           )}`}
         >
+
           {unit.status}
+
         </span>
 
       </div>
 
       {/* Details */}
 
-      <div className="border-y border-gray-100 px-6 py-5 space-y-4">
+      <div className="space-y-4 border-y border-gray-100 px-6 py-5">
 
         <div className="flex items-center justify-between">
 
@@ -85,16 +110,20 @@ export default function UnitCard({
             />
 
             <span>
+
               Monthly Rent
+
             </span>
 
           </div>
 
           <strong className="text-lg">
+
             KSh{" "}
             {Number(
               unit.monthly_rent
             ).toLocaleString()}
+
           </strong>
 
         </div>
@@ -109,16 +138,20 @@ export default function UnitCard({
             />
 
             <span>
+
               Deposit
+
             </span>
 
           </div>
 
           <strong className="text-lg">
+
             KSh{" "}
             {Number(
               unit.deposit
             ).toLocaleString()}
+
           </strong>
 
         </div>
@@ -131,10 +164,14 @@ export default function UnitCard({
 
         <button className="flex h-12 items-center justify-center gap-2 rounded-xl bg-black px-4 font-semibold text-white transition hover:bg-gray-800">
 
-          <User size={18} />
+          <User
+            size={18}
+          />
 
           <span>
+
             Assign
+
           </span>
 
         </button>
@@ -144,10 +181,14 @@ export default function UnitCard({
           className="flex h-12 items-center justify-center gap-2 rounded-xl border border-gray-300 bg-white px-4 font-semibold text-gray-700 transition hover:bg-gray-100"
         >
 
-          <FileText size={18} />
+          <FileText
+            size={18}
+          />
 
           <span>
+
             Details
+
           </span>
 
         </Link>
@@ -157,4 +198,5 @@ export default function UnitCard({
     </div>
 
   );
+
 }
