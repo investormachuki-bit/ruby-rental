@@ -357,48 +357,47 @@ export default function PropertyPage() {
       </PageHeader>
 
       <Section>
+<div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
 
-        <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
+  <StatCard
+    title="Properties"
+    value={properties.length}
+    subtitle="Registered Properties"
+    icon={
+      <Building2 className="h-6 w-6 text-[#D4AF37]" />
+    }
+  />
 
-          <StatCard
-            title="Properties"
-            value={properties.length}
-            subtitle="Registered properties"
-            icon={
-              <Building2 className="h-6 w-6 text-[#D4AF37]" />
-            }
-          />
+  <StatCard
+    title="Total Units"
+    value={totalUnits}
+    subtitle="Units Across Portfolio"
+    icon={
+      <Home className="h-6 w-6 text-blue-600" />
+    }
+  />
 
-          <StatCard
-            title="Total Units"
-            value={totalUnits}
-            subtitle="Across all properties"
-            icon={
-              <Home className="h-6 w-6 text-blue-600" />
-            }
-          />
+  <StatCard
+    title="Occupied Units"
+    value={occupiedUnits}
+    subtitle="Currently Occupied"
+    icon={
+      <Home className="h-6 w-6 text-green-600" />
+    }
+    valueClassName="text-green-600"
+  />
 
-          <StatCard
-            title="Occupied Units"
-            value={occupiedUnits}
-            subtitle="Currently occupied"
-            icon={
-              <Home className="h-6 w-6 text-green-600" />
-            }
-            valueClassName="text-green-600"
-          />
+  <StatCard
+    title="Vacant Units"
+    value={vacantUnits}
+    subtitle="Available Units"
+    icon={
+      <Home className="h-6 w-6 text-amber-500" />
+    }
+    valueClassName="text-amber-500"
+  />
 
-          <StatCard
-            title="Vacant Units"
-            value={vacantUnits}
-            subtitle="Available units"
-            icon={
-              <Home className="h-6 w-6 text-amber-500" />
-            }
-            valueClassName="text-amber-500"
-          />
-
-        </div>
+</div>
 
       </Section>
 
@@ -556,70 +555,78 @@ export default function PropertyPage() {
 
     </div>
 
-    <div className="mt-5 space-y-2 text-sm text-gray-600">
+    <div className="mt-5 space-y-3">
 
-      <p>
+  <div>
 
-        <strong>County:</strong>{" "}
-        {property.county ?? "-"}
+    <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">
+      Property Code
+    </p>
 
-      </p>
+    <p className="mt-1 font-medium text-gray-900">
+      {property.code ?? "PROP-0001"}
+    </p>
 
-      <p>
+  </div>
 
-        <strong>Town:</strong>{" "}
-        {property.town ?? "-"}
+  <div>
 
-      </p>
+    <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">
+      Location
+    </p>
 
-      <p>
+    <p className="mt-1 text-gray-700">
+      {property.address || "-"}
+    </p>
 
-        <strong>Address:</strong>{" "}
-        {property.address ?? "-"}
+    <p className="text-sm text-gray-500">
+      {[property.town, property.county]
+        .filter(Boolean)
+        .join(", ")}
+    </p>
 
-      </p>
+  </div>
 
-    </div>
+</div>
+<div className="mt-6 grid grid-cols-3 gap-4 rounded-2xl border border-gray-200 bg-gray-50 p-5">
 
-    <div className="mt-6 grid grid-cols-3 gap-4 rounded-2xl bg-gray-50 p-4">
+  <div className="text-center">
 
-      <div>
+    <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+      Units
+    </p>
 
-        <p className="text-xs text-gray-500">
-          Units
-        </p>
+    <p className="mt-2 text-3xl font-bold text-gray-900">
+      {property.total_units}
+    </p>
 
-        <p className="mt-1 text-2xl font-bold">
-          {property.total_units}
-        </p>
+  </div>
 
-      </div>
+  <div className="text-center border-x border-gray-200">
 
-      <div>
+    <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+      Occupied
+    </p>
 
-        <p className="text-xs text-gray-500">
-          Occupied
-        </p>
+    <p className="mt-2 text-3xl font-bold text-green-600">
+      {property.occupied_units}
+    </p>
 
-        <p className="mt-1 text-2xl font-bold text-green-600">
-          {property.occupied_units}
-        </p>
+  </div>
 
-      </div>
+  <div className="text-center">
 
-      <div>
+    <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+      Vacant
+    </p>
 
-        <p className="text-xs text-gray-500">
-          Vacant
-        </p>
+    <p className="mt-2 text-3xl font-bold text-amber-500">
+      {property.vacant_units}
+    </p>
 
-        <p className="mt-1 text-2xl font-bold text-amber-500">
-          {property.vacant_units}
-        </p>
+  </div>
 
-      </div>
-
-    </div>
+</div>
 
     <div className="mt-6">
 
