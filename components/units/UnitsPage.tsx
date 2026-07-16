@@ -25,7 +25,7 @@ import Button from "@/components/ui/Button";
 import FilterBar from "@/components/ui/FilterBar";
 
 import UnitsList from "@/components/units/UnitsList";
-import UnitForm from "@/components/units/UnitForm";
+
 import BulkUnitGenerator from "@/components/units/BulkUnitGenerator";
 
 import { getUnits } from "@/services/units/getUnits";
@@ -42,9 +42,6 @@ export default function UnitsPage() {
 
   const [search, setSearch] =
     useState("");
-
-  const [showUnitForm, setShowUnitForm] =
-    useState(false);
 
   const [showBulkGenerator, setShowBulkGenerator] =
     useState(false);
@@ -162,8 +159,8 @@ export default function UnitsPage() {
 
           <Button
             onClick={() =>
-              setShowUnitForm(true)
-            }
+  window.location.href = "/units/new"
+}
           >
 
             <Plus
@@ -274,19 +271,7 @@ export default function UnitsPage() {
         </Card>
 
       </Section>
-            {showUnitForm && (
-
-        <UnitForm
-          onSuccess={() => {
-            setShowUnitForm(false);
-            loadUnits();
-          }}
-          onCancel={() =>
-            setShowUnitForm(false)
-          }
-        />
-
-      )}
+    
 
       {showBulkGenerator && (
 
