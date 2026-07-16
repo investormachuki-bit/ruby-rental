@@ -30,6 +30,8 @@ import { Property } from "@/types/property";
 
 import { getPropertyDetails } from "@/services/properties/getPropertyDetails";
 import { getPropertyUnitStats } from "@/services/units/getPropertyUnitStats";
+import AddUnitModal from "@/components/units/AddUnitModal";
+import BulkUnitGenerator from "@/components/units/BulkUnitGenerator";
 
 type Props = {
   propertyId: string;
@@ -52,6 +54,16 @@ export default function PropertyDetailsPage({
       vacant: 0,
       monthlyIncome: 0,
     });
+
+  const [
+  showAddUnit,
+  setShowAddUnit,
+] = useState(false);
+
+const [
+  showBulkGenerator,
+  setShowBulkGenerator,
+] = useState(false);
 
   useEffect(() => {
     loadPage();
@@ -610,6 +622,73 @@ export default function PropertyDetailsPage({
   </Card>
 
 </Section>
+      {showAddUnit && (
+
+  <AddUnitModal
+
+    open={showAddUnit}
+
+    onClose={() =>
+      setShowAddUnit(false)
+    }
+
+    onSuccess={() => {
+
+      setShowAddUnit(false);
+
+      loadProperty();
+
+    }}
+
+  />
+
+)}
+
+{showBulkGenerator && (
+
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+
+    <div className="max-h-[90vh] w-full max-w-5xl overflow-y-auto rounded-3xl bg-white">
+
+      <div className="border-b p-6">
+
+        <h2 className="text-3xl font-bold">
+
+          Bulk Unit Generator
+
+        </h2>
+
+      </div>
+
+      <div className="p-6">
+
+        <BulkUnitGenerator
+
+          properties={[property]}
+
+          defaultPropertyId={property.id}
+
+          onCancel={() =>
+            setShowBulkGenerator(false)
+          }
+
+          onSuccess={() => {
+
+            setShowBulkGenerator(false);
+
+            loadProperty();
+
+          }}
+
+        />
+
+      </div>
+
+    </div>
+
+  </div>
+
+)}
 
     </PageContainer>
 
