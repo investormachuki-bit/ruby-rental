@@ -526,33 +526,31 @@ export default function PropertyPage() {
             : "Archived"}
         </Badge>
 
-        <ActionMenu
-          actions={[{
-  label: "View",
-  icon: <Eye size={16} />,
-  onClick: () => {
-    window.location.href = `/properties/${property.id}`;
-  },
-            {
-              label: "Edit",
-              icon: <Pencil size={16} />,
-              onClick: () =>
-                setEditingProperty(
-                  toProperty(property)
-                ),
-            },
-            {
-              label: "Archive",
-              icon: (
-                <Archive size={16} />
-              ),
-              onClick: () =>
-                setArchivingProperty(
-                  property
-                ),
-            },
-          ]}
-        />
+<ActionMenu
+  actions={[
+    {
+      label: "View",
+      icon: <Eye size={16} />,
+      onClick: () => {
+        window.location.href = `/properties/${property.id}`;
+      },
+    },
+    {
+      label: "Edit",
+      icon: <Pencil size={16} />,
+      onClick: () =>
+        setEditingProperty(
+          toProperty(property)
+        ),
+    },
+    {
+      label: "Archive",
+      icon: <Archive size={16} />,
+      onClick: () =>
+        setArchivingProperty(property),
+    },
+  ]}
+/>
 
       </div>
 
