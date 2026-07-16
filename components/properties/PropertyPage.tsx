@@ -527,13 +527,12 @@ export default function PropertyPage() {
         </Badge>
 
         <ActionMenu
-          actions={[
-            {
-              label: "View",
-              icon: <Eye size={16} />,
-              onClick: () => {},
-              href: `/properties/${property.id}`,
-            },
+          actions={[{
+  label: "View",
+  icon: <Eye size={16} />,
+  onClick: () => {
+    window.location.href = `/properties/${property.id}`;
+  },
             {
               label: "Edit",
               icon: <Pencil size={16} />,
