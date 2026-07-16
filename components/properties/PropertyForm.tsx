@@ -101,11 +101,13 @@ export default function PropertyForm({
       }
 
       onSuccess();
-    } catch (error) {
-      const message =
-        error instanceof Error
-          ? error.message
-          : "Something went wrong.";
+    } catch (error: any) {
+
+  console.error(error);
+
+  alert(JSON.stringify(error));
+
+}
 
       alert(message);
     } finally {
