@@ -14,7 +14,7 @@ export async function getUnit(
       )
     `)
     .eq("id", unitId)
-    .single();
+    .maybeSingle();
 
   if (error) {
     throw error;
