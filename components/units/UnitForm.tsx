@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-import { getProperties } from "@/services/properties/getAll";
+import { getProperties } from "@/services/properties/getProperties";
 
 import { createUnit } from "@/services/units/createUnit";
 import { updateUnit } from "@/services/units/updateUnit";
@@ -59,26 +59,6 @@ export default function UnitForm({
   const [deposit, setDeposit] =
     useState(0);
 
-  const [
-    waterMeterNumber,
-    setWaterMeterNumber,
-  ] = useState("");
-
-  const [
-    electricityMeterNumber,
-    setElectricityMeterNumber,
-  ] = useState("");
-
-  const [
-    gasMeterNumber,
-    setGasMeterNumber,
-  ] = useState("");
-
-  const [
-    internetAccountNumber,
-    setInternetAccountNumber,
-  ] = useState("");
-
   const [garbageFee, setGarbageFee] =
     useState(0);
 
@@ -94,10 +74,8 @@ export default function UnitForm({
   const [internetFee, setInternetFee] =
     useState(0);
 
-  const [
-    serviceCharge,
-    setServiceCharge,
-  ] = useState(0);
+  const [serviceCharge, setServiceCharge] =
+    useState(0);
 
   const [status, setStatus] =
     useState("Vacant");
@@ -115,73 +93,91 @@ export default function UnitForm({
 
     if (!unit) return;
 
-    setPropertyId(unit.property_id);
+    setPropertyId(
+      unit.property_id
+    );
 
-    setUnitNumber(unit.unit_number);
+    setUnitNumber(
+      unit.unit_number
+    );
 
-    setUnitType(unit.unit_type ?? "");
+    setUnitType(
+      unit.unit_type ?? ""
+    );
 
     setFloorNumber(
       unit.floor_number?.toString() ?? ""
     );
 
-    setBedrooms(unit.bedrooms);
+    setBedrooms(
+      unit.bedrooms
+    );
 
-    setBathrooms(unit.bathrooms);
+    setBathrooms(
+      unit.bathrooms
+    );
 
-    setSizeSqm(Number(unit.size_sqm));
+    setSizeSqm(
+      Number(
+        unit.size_sqm
+      )
+    );
 
     setMonthlyRent(
-      Number(unit.monthly_rent)
+      Number(
+        unit.monthly_rent
+      )
     );
 
     setDeposit(
-      Number(unit.deposit)
-    );
-
-    setWaterMeterNumber(
-      unit.water_meter_number ?? ""
-    );
-
-    setElectricityMeterNumber(
-      unit.electricity_meter_number ?? ""
-    );
-
-    setGasMeterNumber(
-      unit.gas_meter_number ?? ""
-    );
-
-    setInternetAccountNumber(
-      unit.internet_account_number ?? ""
+      Number(
+        unit.deposit
+      )
     );
 
     setGarbageFee(
-      Number(unit.garbage_fee)
+      Number(
+        unit.garbage_fee
+      )
     );
 
     setSecurityFee(
-      Number(unit.security_fee)
+      Number(
+        unit.security_fee
+      )
     );
 
     setSewerFee(
-      Number(unit.sewer_fee)
+      Number(
+        unit.sewer_fee
+      )
     );
 
     setParkingFee(
-      Number(unit.parking_fee)
+      Number(
+        unit.parking_fee
+      )
     );
 
     setInternetFee(
-      Number(unit.internet_fee)
+      Number(
+        unit.internet_fee
+      )
     );
 
     setServiceCharge(
-      Number(unit.service_charge)
+      Number(
+        unit.service_charge
+      )
     );
 
-    setStatus(unit.status);
+    setStatus(
+      unit.status
+    );
 
-    setNotes(unit.notes ?? "");
+    setNotes(
+      unit.notes ?? ""
+    );
 
   }, [unit]);
 
@@ -201,11 +197,14 @@ export default function UnitForm({
     }
 
   }
-    function validate() {
+
+  function validate() {
 
     if (!propertyId) {
 
-      alert("Please select a property.");
+      alert(
+        "Please select a property."
+      );
 
       return false;
 
@@ -213,7 +212,9 @@ export default function UnitForm({
 
     if (!unitNumber.trim()) {
 
-      alert("Unit number is required.");
+      alert(
+        "Unit number is required."
+      );
 
       return false;
 
@@ -221,7 +222,9 @@ export default function UnitForm({
 
     if (monthlyRent < 0) {
 
-      alert("Monthly rent cannot be negative.");
+      alert(
+        "Monthly rent cannot be negative."
+      );
 
       return false;
 
@@ -229,7 +232,9 @@ export default function UnitForm({
 
     if (deposit < 0) {
 
-      alert("Deposit cannot be negative.");
+      alert(
+        "Deposit cannot be negative."
+      );
 
       return false;
 
@@ -242,8 +247,7 @@ export default function UnitForm({
   return (
 
     <div className="space-y-8">
-
-      {/* Basic Information */}
+            {/* Basic Information */}
 
       <section className="rounded-2xl border bg-white p-6">
 
@@ -321,6 +325,7 @@ export default function UnitForm({
                 )
               }
               className="w-full rounded-xl border p-3"
+              placeholder="A101"
             />
 
           </div>
@@ -349,23 +354,59 @@ export default function UnitForm({
 
               </option>
 
-              <option>Bedsitter</option>
+              <option>
 
-              <option>Studio</option>
+                Bedsitter
 
-              <option>1 Bedroom</option>
+              </option>
 
-              <option>2 Bedroom</option>
+              <option>
 
-              <option>3 Bedroom</option>
+                Studio
 
-              <option>4 Bedroom</option>
+              </option>
 
-              <option>Maisonette</option>
+              <option>
 
-              <option>Shop</option>
+                1 Bedroom
 
-              <option>Office</option>
+              </option>
+
+              <option>
+
+                2 Bedroom
+
+              </option>
+
+              <option>
+
+                3 Bedroom
+
+              </option>
+
+              <option>
+
+                4 Bedroom
+
+              </option>
+
+              <option>
+
+                Maisonette
+
+              </option>
+
+              <option>
+
+                Shop
+
+              </option>
+
+              <option>
+
+                Office
+
+              </option>
 
             </select>
 
@@ -465,7 +506,7 @@ export default function UnitForm({
 
       </section>
 
-      {/* Financial */}
+      {/* Financial Information */}
 
       <section className="rounded-2xl border bg-white p-6">
 
@@ -477,7 +518,7 @@ export default function UnitForm({
 
         <p className="mt-1 text-gray-500">
 
-          Configure rent and deposit.
+          Configure rent and recurring charges.
 
         </p>
 
@@ -532,109 +573,7 @@ export default function UnitForm({
         </div>
 
       </section>
-            {/* Utilities */}
-
-      <section className="rounded-2xl border bg-white p-6">
-
-        <h2 className="text-xl font-bold">
-
-          Utility Information
-
-        </h2>
-
-        <p className="mt-1 text-gray-500">
-
-          Enter utility meter and account details.
-
-        </p>
-
-        <div className="mt-6 grid gap-5 md:grid-cols-2">
-
-          <div>
-
-            <label className="mb-2 block font-medium">
-
-              Water Meter Number
-
-            </label>
-
-            <input
-              value={waterMeterNumber}
-              onChange={(e) =>
-                setWaterMeterNumber(
-                  e.target.value
-                )
-              }
-              className="w-full rounded-xl border p-3"
-            />
-
-          </div>
-
-          <div>
-
-            <label className="mb-2 block font-medium">
-
-              Electricity Meter Number
-
-            </label>
-
-            <input
-              value={electricityMeterNumber}
-              onChange={(e) =>
-                setElectricityMeterNumber(
-                  e.target.value
-                )
-              }
-              className="w-full rounded-xl border p-3"
-            />
-
-          </div>
-
-          <div>
-
-            <label className="mb-2 block font-medium">
-
-              Gas Meter Number
-
-            </label>
-
-            <input
-              value={gasMeterNumber}
-              onChange={(e) =>
-                setGasMeterNumber(
-                  e.target.value
-                )
-              }
-              className="w-full rounded-xl border p-3"
-            />
-
-          </div>
-
-          <div>
-
-            <label className="mb-2 block font-medium">
-
-              Internet Account Number
-
-            </label>
-
-            <input
-              value={internetAccountNumber}
-              onChange={(e) =>
-                setInternetAccountNumber(
-                  e.target.value
-                )
-              }
-              className="w-full rounded-xl border p-3"
-            />
-
-          </div>
-
-        </div>
-
-      </section>
-
-      {/* Recurring Charges */}
+            {/* Recurring Charges */}
 
       <section className="rounded-2xl border bg-white p-6">
 
@@ -646,7 +585,7 @@ export default function UnitForm({
 
         <p className="mt-1 text-gray-500">
 
-          Configure the monthly recurring charges for this unit.
+          Configure the recurring monthly charges for this unit.
 
         </p>
 
@@ -793,7 +732,8 @@ export default function UnitForm({
         </div>
 
       </section>
-            {/* Status */}
+
+      {/* Status */}
 
       <section className="rounded-2xl border bg-white p-6">
 
@@ -805,7 +745,7 @@ export default function UnitForm({
 
         <p className="mt-1 text-gray-500">
 
-          Set the current status of this unit.
+          Set the current occupancy status.
 
         </p>
 
@@ -828,19 +768,27 @@ export default function UnitForm({
           >
 
             <option value="Vacant">
+
               Vacant
+
             </option>
 
             <option value="Occupied">
+
               Occupied
+
             </option>
 
             <option value="Reserved">
+
               Reserved
+
             </option>
 
             <option value="Maintenance">
+
               Maintenance
+
             </option>
 
           </select>
@@ -861,29 +809,24 @@ export default function UnitForm({
 
         <p className="mt-1 text-gray-500">
 
-          Optional notes about this unit.
+          Optional internal notes.
 
         </p>
 
-        <div className="mt-6">
-
-          <textarea
-            rows={5}
-            value={notes}
-            onChange={(e) =>
-              setNotes(
-                e.target.value
-              )
-            }
-            className="w-full rounded-xl border p-3"
-            placeholder="Enter any notes..."
-          />
-
-        </div>
+        <textarea
+          rows={5}
+          value={notes}
+          onChange={(e) =>
+            setNotes(
+              e.target.value
+            )
+          }
+          className="mt-6 w-full rounded-xl border p-3"
+          placeholder="Enter notes..."
+        />
 
       </section>
-
-      {/* Actions */}
+            {/* Actions */}
 
       <div className="flex justify-end gap-3 border-t pt-6">
 
@@ -904,92 +847,127 @@ export default function UnitForm({
           onClick={async () => {
 
             if (!validate()) {
+
               return;
+
             }
 
             try {
 
               setLoading(true);
 
-              const payload = {
+              const unitSequence =
+                Number(
+                  unitNumber.replace(
+                    /\D/g,
+                    ""
+                  )
+                ) || 1;
 
-                property_id: propertyId,
-
-                unit_number: unitNumber,
-
-                unit_type:
-                  unitType || null,
-
-                floor_number:
-                  floorNumber
-                    ? Number(
-                        floorNumber
-                      )
-                    : null,
-
-                bedrooms,
-
-                bathrooms,
-
-                size_sqm: sizeSqm,
-
-                monthly_rent:
-                  monthlyRent,
-
-                deposit,
-
-                water_meter_number:
-                  waterMeterNumber ||
-                  null,
-
-                electricity_meter_number:
-                  electricityMeterNumber ||
-                  null,
-
-                gas_meter_number:
-                  gasMeterNumber ||
-                  null,
-
-                internet_account_number:
-                  internetAccountNumber ||
-                  null,
-
-                garbage_fee:
-                  garbageFee,
-
-                security_fee:
-                  securityFee,
-
-                sewer_fee:
-                  sewerFee,
-
-                parking_fee:
-                  parkingFee,
-
-                internet_fee:
-                  internetFee,
-
-                service_charge:
-                  serviceCharge,
-
-                status,
-
-                notes:
-                  notes || null,
-
-              };
-                            if (editing) {
+              if (editing) {
 
                 await updateUnit(
                   unit!.id,
-                  payload
+                  {
+
+                    unit_number:
+                      unitNumber,
+
+                    floor_number:
+                      floorNumber
+                        ? Number(
+                            floorNumber
+                          )
+                        : null,
+
+                    unit_type:
+                      unitType || null,
+
+                    bedrooms,
+
+                    bathrooms,
+
+                    size_sqm:
+                      sizeSqm,
+
+                    monthly_rent:
+                      monthlyRent,
+
+                    deposit,
+
+                    garbage_fee:
+                      garbageFee,
+
+                    security_fee:
+                      securityFee,
+
+                    sewer_fee:
+                      sewerFee,
+
+                    parking_fee:
+                      parkingFee,
+
+                    internet_fee:
+                      internetFee,
+
+                    service_charge:
+                      serviceCharge,
+
+                    status,
+
+                    notes:
+                      notes || null,
+
+                  }
+
                 );
 
               } else {
 
-                await createUnit(
-                  payload
-                );
+                await createUnit({
+
+                  propertyId,
+
+                  unitNumber,
+
+                  unitSequence,
+
+                  floorNumber:
+                    floorNumber
+                      ? Number(
+                          floorNumber
+                        )
+                      : undefined,
+
+                  unitType:
+                    unitType || null,
+
+                  bedrooms,
+
+                  bathrooms,
+
+                  sizeSqm,
+
+                  monthlyRent,
+
+                  deposit,
+
+                  garbageFee,
+
+                  securityFee,
+
+                  sewerFee,
+
+                  parkingFee,
+
+                  internetFee,
+
+                  serviceCharge,
+
+                  notes:
+                    notes || null,
+
+                });
 
               }
 
@@ -1000,9 +978,13 @@ export default function UnitForm({
               console.error(error);
 
               alert(
+
                 editing
+
                   ? "Failed to update unit."
+
                   : "Failed to create unit."
+
               );
 
             } finally {
@@ -1016,11 +998,17 @@ export default function UnitForm({
         >
 
           {loading
+
             ? editing
+
               ? "Saving..."
+
               : "Creating..."
+
             : editing
+
               ? "Save Changes"
+
               : "Create Unit"}
 
         </button>
