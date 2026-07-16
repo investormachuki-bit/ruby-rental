@@ -4,9 +4,9 @@ import { useEffect, useMemo, useState } from "react";
 
 import {
   Home,
+  Building2,
   CheckCircle,
   AlertCircle,
-  Wrench,
   Plus,
   Layers3,
 } from "lucide-react";
@@ -21,49 +21,57 @@ import Section from "@/components/ui/Section";
 import StatCard from "@/components/ui/StatCard";
 import Card from "@/components/ui/Card";
 import Loading from "@/components/ui/Loading";
-import Button from "@/components/ui/Button";
-import FilterBar from "@/components/ui/FilterBar";
 
 import UnitsList from "@/components/units/UnitsList";
-
 import BulkUnitGenerator from "@/components/units/BulkUnitGenerator";
 
 import { getUnits } from "@/services/units/getUnits";
+import { getProperties } from "@/services/properties/getProperties";
 
 import { Unit } from "@/types/unit";
-import { useRouter } from "next/navigation";
 
 export default function UnitsPage() {
-  
-const router = useRouter();
+
   const [loading, setLoading] =
     useState(true);
 
   const [units, setUnits] =
     useState<Unit[]>([]);
 
-  const [search, setSearch] =
-    useState("");
+  const [properties, setProperties] =
+    useState<any[]>([]);
 
-  const [showBulkGenerator, setShowBulkGenerator] =
-    useState(false);
+  const [
+    showBulkGenerator,
+    setShowBulkGenerator,
+  ] = useState(false);
 
   useEffect(() => {
 
-    loadUnits();
+    loadPage();
 
   }, []);
 
-  async function loadUnits() {
+  async function loadPage() {
 
     try {
 
       setLoading(true);
 
-      const data =
-        await getUnits();
+      const [
+        unitData,
+        propertyData,
+      ] = await Promise.all([
 
-      setUnits(data);
+        getUnits(),
+
+        getProperties(),
+
+      ]);
+
+      setUnits(unitData);
+
+      setProperties(propertyData);
 
     } catch (error) {
 
@@ -77,181 +85,160 @@ const router = useRouter();
 
   }
 
-  const filteredUnits =
-    useMemo(() => {
-
-      const keyword =
-        search.toLowerCase();
-
-      return units.filter((unit) => {
-
-        return (
-
-          unit.unit_number
-            .toLowerCase()
-            .includes(keyword) ||
-
-          (unit.unit_type ?? "")
-            .toLowerCase()
-            .includes(keyword)
-
-        );
-
-      });
-
-    }, [units, search]);
-
   const occupiedUnits =
-    units.filter(
-      (unit) =>
-        unit.status === "Occupied"
-    ).length;
+    useMemo(
+      () =>
+        units.filter(
+          (unit) =>
+            unit.status ===
+            "Occupied"
+        ).length,
+      [units]
+    );
 
   const vacantUnits =
-    units.filter(
-      (unit) =>
-        unit.status === "Vacant"
-    ).length;
+    useMemo(
+      () =>
+        units.filter(
+          (unit) =>
+            unit.status ===
+            "Vacant"
+        ).length,
+      [units]
+    );
 
-  const maintenanceUnits =
-    units.filter(
-      (unit) =>
-        unit.status === "Maintenance"
-    ).length;
-  return (
+  const propertyCount =
+    useMemo(
+      () =>
+        new Set(
+          units.map(
+            (unit) =>
+              unit.property_id
+          )
+        ).size,
+      [units]
+    );
+    return (
 
-  <AppShell>
+    <AppShell>
 
-    <PageContainer>
+      <PageContainer>
 
-      <Breadcrumb
-        items={[
-          {
-            label: "Dashboard",
-            href: "/",
-          },
-          {
-            label: "Units",
-          },
-        ]}
-      />
+        <Breadcrumb
+          items={[
+            {
+              label: "Dashboard",
+              href: "/",
+            },
+            {
+              label: "Units",
+            },
+          ]}
+        />
 
-      <PageHeader
-        title="Unit Management"
-        description="Manage all rental units."
-      >
+        <PageHeader
+          title="Units"
+          description="Manage every rental unit across all your properties."
+        >
 
-        <div className="flex gap-3">
+          <div className="flex flex-wrap gap-3">
 
-          <Button
-            variant="secondary"
-            onClick={() =>
-              setShowBulkGenerator(true)
-            }
-          >
+            <button
+              onClick={() =>
+                setShowBulkGenerator(true)
+              }
+              className="flex items-center gap-2 rounded-xl bg-black px-5 py-3 font-semibold text-white transition hover:bg-gray-800"
+            >
 
-            <Layers3
-              size={18}
-              className="mr-2"
-            />
+              <Layers3
+                className="h-5 w-5"
+              />
 
-            Bulk Generate
+              Bulk Generate
 
-          </Button>
+            </button>
 
- <Button
-  onClick={() =>
-    router.push("/units/new")
-  }
->
+            <button
+              className="flex items-center gap-2 rounded-xl border border-[#D4AF37] px-5 py-3 font-semibold text-[#D4AF37] transition hover:bg-[#D4AF37] hover:text-black"
+            >
 
-            <Plus
-              size={18}
-              className="mr-2"
-            />
+              <Plus
+                className="h-5 w-5"
+              />
 
-            Add Unit
+              Add Unit
 
-          </Button>
-
-        </div>
-
-      </PageHeader>
-
-      <Section>
-
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-4">
-
-          <StatCard
-            title="Total Units"
-            value={units.length}
-            subtitle="Registered rental units"
-            icon={
-              <Home className="h-6 w-6 text-[#D4AF37]" />
-            }
-          />
-
-          <StatCard
-            title="Occupied"
-            value={occupiedUnits}
-            subtitle="Currently occupied"
-            valueClassName="text-green-600"
-            icon={
-              <CheckCircle className="h-6 w-6 text-green-600" />
-            }
-          />
-
-          <StatCard
-            title="Vacant"
-            value={vacantUnits}
-            subtitle="Available for leasing"
-            valueClassName="text-amber-500"
-            icon={
-              <AlertCircle className="h-6 w-6 text-amber-500" />
-            }
-          />
-
-          <StatCard
-            title="Maintenance"
-            value={maintenanceUnits}
-            subtitle="Units under maintenance"
-            valueClassName="text-red-600"
-            icon={
-              <Wrench className="h-6 w-6 text-red-600" />
-            }
-          />
-
-        </div>
-
-      </Section>
-
-      <Section>
-
-        <Card>
-
-          <div className="mb-6">
-
-            <h2 className="text-2xl font-bold text-gray-900">
-
-              Rental Units
-
-            </h2>
-
-            <p className="mt-2 text-gray-500">
-
-              View and manage every rental unit across your portfolio.
-
-            </p>
+            </button>
 
           </div>
 
-          <FilterBar
-            search={search}
-            onSearchChange={setSearch}
-            searchPlaceholder="Search units..."
-          />
+        </PageHeader>
 
-          <div className="mt-6">
+        <Section>
+
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-4">
+
+            <StatCard
+              title="Total Units"
+              value={units.length}
+              subtitle="Registered units"
+              icon={
+                <Home className="h-6 w-6 text-[#D4AF37]" />
+              }
+            />
+
+            <StatCard
+              title="Occupied"
+              value={occupiedUnits}
+              subtitle="Currently occupied"
+              valueClassName="text-green-600"
+              icon={
+                <CheckCircle className="h-6 w-6 text-green-600" />
+              }
+            />
+
+            <StatCard
+              title="Vacant"
+              value={vacantUnits}
+              subtitle="Ready for leasing"
+              valueClassName="text-amber-500"
+              icon={
+                <AlertCircle className="h-6 w-6 text-amber-500" />
+              }
+            />
+
+            <StatCard
+              title="Properties"
+              value={propertyCount}
+              subtitle="With registered units"
+              icon={
+                <Building2 className="h-6 w-6 text-[#D4AF37]" />
+              }
+            />
+
+          </div>
+
+        </Section>
+
+        <Section>
+
+          <Card>
+
+            <div className="mb-6">
+
+              <h2 className="text-2xl font-bold text-gray-900">
+
+                Rental Units
+
+              </h2>
+
+              <p className="mt-2 text-gray-500">
+
+                View and manage all units across your portfolio.
+
+              </p>
+
+            </div>
 
             {loading ? (
 
@@ -263,35 +250,72 @@ const router = useRouter();
             ) : (
 
               <UnitsList
-                units={filteredUnits}
+                units={units}
               />
 
             )}
 
+          </Card>
+
+        </Section>
+                {/* Bulk Generator */}
+
+        {showBulkGenerator && (
+
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+
+            <div className="max-h-[90vh] w-full max-w-5xl overflow-y-auto rounded-3xl bg-white shadow-2xl">
+
+              <div className="border-b p-6">
+
+                <h2 className="text-3xl font-bold">
+
+                  Bulk Unit Generator
+
+                </h2>
+
+                <p className="mt-2 text-gray-500">
+
+                  Generate multiple rental units for one of your properties.
+
+                </p>
+
+              </div>
+
+              <div className="p-6">
+
+                <BulkUnitGenerator
+
+                  properties={properties}
+
+                  onSuccess={() => {
+
+                    setShowBulkGenerator(false);
+
+                    loadPage();
+
+                  }}
+
+                  onCancel={() =>
+
+                    setShowBulkGenerator(false)
+
+                  }
+
+                />
+
+              </div>
+
+            </div>
+
           </div>
 
-        </Card>
+        )}
 
-      </Section>
-    
+      </PageContainer>
 
-      {showBulkGenerator && (
+    </AppShell>
 
-        <BulkUnitGenerator
-          onSuccess={() => {
-            setShowBulkGenerator(false);
-            loadUnits();
-          }}
-          onCancel={() =>
-            setShowBulkGenerator(false)
-          }
-        />
+  );
 
-      )}
-
-    </PageContainer>
-
-  </AppShell>
-
-);
 }
