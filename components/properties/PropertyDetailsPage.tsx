@@ -634,11 +634,11 @@ const [
 
     onSuccess={() => {
 
-      setShowAddUnit(false);
+  setShowAddUnit(false);
 
-      loadProperty();
+  loadPage();
 
-    }}
+}}
 
   />
 
@@ -674,11 +674,11 @@ const [
 
           onSuccess={() => {
 
-            setShowBulkGenerator(false);
+  setShowBulkGenerator(false);
 
-            loadProperty();
+  loadPage();
 
-          }}
+}}
 
         />
 
