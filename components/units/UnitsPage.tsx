@@ -29,6 +29,7 @@ import { getUnits } from "@/services/units/getUnits";
 import { getProperties } from "@/services/properties/getProperties";
 
 import { Unit } from "@/types/unit";
+import AddUnitModal from "@/components/units/AddUnitModal";
 
 export default function UnitsPage() {
 
@@ -45,6 +46,10 @@ export default function UnitsPage() {
     showBulkGenerator,
     setShowBulkGenerator,
   ] = useState(false);
+  const [
+  showAddUnit,
+  setShowAddUnit,
+] = useState(false);
 
   useEffect(() => {
 
@@ -159,8 +164,11 @@ export default function UnitsPage() {
             </button>
 
             <button
-              className="flex items-center gap-2 rounded-xl border border-[#D4AF37] px-5 py-3 font-semibold text-[#D4AF37] transition hover:bg-[#D4AF37] hover:text-black"
-            >
+  onClick={() =>
+    setShowAddUnit(true)
+  }
+  className="flex items-center gap-2 rounded-xl border border-[#D4AF37] px-5 py-3 font-semibold text-[#D4AF37] transition hover:bg-[#D4AF37] hover:text-black"
+>
 
               <Plus
                 className="h-5 w-5"
@@ -311,6 +319,28 @@ export default function UnitsPage() {
           </div>
 
         )}
+
+        {showAddUnit && (
+
+  <AddUnitModal
+
+    open={showAddUnit}
+
+    onClose={() =>
+      setShowAddUnit(false)
+    }
+
+    onSuccess={() => {
+
+      setShowAddUnit(false);
+
+      loadPage();
+
+    }}
+
+  />
+
+)}
 
       </PageContainer>
 
