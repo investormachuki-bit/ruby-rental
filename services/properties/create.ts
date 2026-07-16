@@ -30,21 +30,88 @@ export async function createProperty(
     throw new Error("Profile not found.");
   }
 
-  const { data, error } = await supabase
-    .from("properties")
-    .insert({
-      workspace_id: profile.workspace_id,
-      name: input.name,
-      property_type: input.propertyType,
-      county: input.county,
-      town: input.town,
-      address: input.address,
-      description: input.description,
-    })
-    .select()
-    .single();
+  const { data: property, error } =
+    await supabase
+      .from("properties")
+      .insert({
+        workspace_id: profile.workspace_id,
 
-  if (error) throw error;
+        name: input.name,
 
-  return data;
+        property_type:
+          input.propertyType,
+
+        county: input.county,
+
+        town: input.town,
+
+        address: input.address,
+
+        description:
+          input.description,
+      })
+      .select()
+      .single();
+
+  if (error) {
+
+    throw error;
+
+  }
+    const defaultUtilities = [
+
+    {
+      workspace_id:
+        profile.workspace_id,
+
+      property_id:
+        property.id,
+
+      utility_type:
+        "Water",
+
+      billing_type:
+        "Metered",
+
+      unit_rate: 0,
+
+      is_active: true,
+    },
+
+    {
+      workspace_id:
+        profile.workspace_id,
+
+      property_id:
+        property.id,
+
+      utility_type:
+        "Electricity",
+
+      billing_type:
+        "Metered",
+
+      unit_rate: 0,
+
+      is_active: true,
+    },
+
+  ];
+
+  const {
+    error: utilityError,
+  } = await supabase
+    .from(
+      "property_utility_settings"
+    )
+    .insert(defaultUtilities);
+
+  if (utilityError) {
+
+    throw utilityError;
+
+  }
+
+  return property;
+
 }
