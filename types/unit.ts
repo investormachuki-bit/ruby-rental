@@ -15,19 +15,27 @@ export interface Unit {
 
   unit_sequence: number;
 
-  floor_name: string | null;
+  unit_type: string | null;
+
+  floor_number: number | null;
+
+  bedrooms: number;
+
+  bathrooms: number;
+
+  size_sqm: number;
 
   monthly_rent: number;
 
   deposit: number;
 
-  water_type: string;
+  water_meter_number: string | null;
 
-  water_amount: number;
+  electricity_meter_number: string | null;
 
-  electricity_type: string;
+  gas_meter_number: string | null;
 
-  electricity_amount: number;
+  internet_account_number: string | null;
 
   garbage_fee: number;
 
@@ -36,6 +44,10 @@ export interface Unit {
   internet_fee: number;
 
   service_charge: number;
+
+  security_fee: number;
+
+  sewer_fee: number;
 
   status: UnitStatus;
 
