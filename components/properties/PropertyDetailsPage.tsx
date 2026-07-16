@@ -1,18 +1,35 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
+
+import {
+  Building2,
+  Home,
+  Users,
+  FileText,
+  CreditCard,
+  Receipt,
+  Wrench,
+} from "lucide-react";
+
+import AppShell from "@/components/layout/AppShell";
 
 import Breadcrumb from "@/components/common/Breadcrumb";
-import KpiCard from "@/components/common/KpiCard";
-import BulkUnitGenerator from "@/components/units/BulkUnitGenerator";
-import UnitsList from "@/components/units/UnitsList";
+
+import PageContainer from "@/components/ui/PageContainer";
+import PageHeader from "@/components/ui/PageHeader";
+import Section from "@/components/ui/Section";
+import Card from "@/components/ui/Card";
+import StatCard from "@/components/ui/StatCard";
+import Loading from "@/components/ui/Loading";
+import Badge from "@/components/ui/Badge";
+import Button from "@/components/ui/Button";
 
 import { Property } from "@/types/property";
-import { Unit } from "@/types/unit";
 
 import { getPropertyDetails } from "@/services/properties/getPropertyDetails";
 import { getPropertyUnitStats } from "@/services/units/getPropertyUnitStats";
-import { getPropertyUnits } from "@/services/units/getPropertyUnits";
 
 type Props = {
   propertyId: string;
@@ -21,67 +38,112 @@ type Props = {
 export default function PropertyDetailsPage({
   propertyId,
 }: Props) {
+
   const [property, setProperty] =
     useState<Property | null>(null);
-
-  const [units, setUnits] =
-    useState<Unit[]>([]);
-
-  const [stats, setStats] = useState({
-    totalUnits: 0,
-    occupied: 0,
-    vacant: 0,
-    monthlyIncome: 0,
-  });
 
   const [loading, setLoading] =
     useState(true);
 
-  const [showBulkGenerator, setShowBulkGenerator] =
-    useState(false);
+  const [stats, setStats] =
+    useState({
+      totalUnits: 0,
+      occupied: 0,
+      vacant: 0,
+      monthlyIncome: 0,
+    });
 
   useEffect(() => {
     loadPage();
   }, []);
 
   async function loadPage() {
+
     try {
+
       setLoading(true);
 
       const [
         propertyData,
         statsData,
-        unitsData,
       ] = await Promise.all([
         getPropertyDetails(propertyId),
         getPropertyUnitStats(propertyId),
-        getPropertyUnits(propertyId),
       ]);
 
       setProperty(propertyData);
+
       setStats(statsData);
-      setUnits(unitsData);
+
     } catch (error) {
+
       console.error(error);
+
     } finally {
+
       setLoading(false);
+
     }
+
   }
 
   if (loading) {
+
     return (
-      <div className="p-8">
-        Loading property...
-      </div>
+
+      <AppShell>
+
+        <PageContainer>
+
+          <Loading
+            title="Loading Property"
+            description="Preparing property information..."
+          />
+
+        </PageContainer>
+
+      </AppShell>
+
     );
+
   }
 
   if (!property) {
+
     return (
-      <div className="p-8">
-        Property not found.
-      </div>
+
+      <AppShell>
+
+        <PageContainer>
+
+          <Card>
+
+            <div className="py-12 text-center">
+
+              <Building2 className="mx-auto mb-4 h-12 w-12 text-gray-400" />
+
+              <h2 className="text-2xl font-bold">
+
+                Property Not Found
+
+              </h2>
+
+              <p className="mt-2 text-gray-500">
+
+                The requested property could not be found.
+
+              </p>
+
+            </div>
+
+          </Card>
+
+        </PageContainer>
+
+      </AppShell>
+
     );
+
   }
 
   const occupancy =
@@ -92,168 +154,467 @@ export default function PropertyDetailsPage({
             stats.totalUnits) *
             100
         );
-
   return (
-    <>
-      <main className="space-y-8 p-6">
 
-        <Breadcrumb
-          items={[
-            {
-              label: "Dashboard",
-              href: "/",
-            },
-            {
-              label: "Properties",
-              href: "/properties",
-            },
-            {
-              label: property.name,
-            },
-          ]}
-        />
+  <AppShell>
 
-        {/* Header */}
+    <PageContainer>
 
-        <div>
+      <Breadcrumb
+        items={[
+          {
+            label: "Dashboard",
+            href: "/",
+          },
+          {
+            label: "Properties",
+            href: "/properties",
+          },
+          {
+            label: property.name,
+          },
+        ]}
+      />
 
-          <h1 className="text-4xl font-bold">
-            {property.name}
-          </h1>
+      <PageHeader
+        title={property.name}
+        description="Property Summary"
+      >
 
-          <p className="mt-2 text-lg text-gray-500">
-            {property.property_type}
-          </p>
+        <Badge
+          variant={
+            property.is_active
+              ? "success"
+              : "danger"
+          }
+        >
+          {property.is_active
+            ? "Active"
+            : "Archived"}
+        </Badge>
 
-        </div>
+      </PageHeader>
 
-        {/* KPI Cards */}
+      <Section>
 
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <Card>
 
-          <KpiCard
+          <h2 className="mb-6 text-xl font-bold">
+
+            Property Information
+
+          </h2>
+
+          <div className="grid gap-6 md:grid-cols-2">
+
+            <div>
+
+              <p className="text-sm text-gray-500">
+
+                Property Name
+
+              </p>
+
+              <p className="font-semibold">
+
+                {property.name}
+
+              </p>
+
+            </div>
+
+            <div>
+
+              <p className="text-sm text-gray-500">
+
+                Property Type
+
+              </p>
+
+              <p className="font-semibold">
+
+                {property.property_type}
+
+              </p>
+
+            </div>
+
+            <div>
+
+              <p className="text-sm text-gray-500">
+
+                County
+
+              </p>
+
+              <p className="font-semibold">
+
+                {property.county || "-"}
+
+              </p>
+
+            </div>
+
+            <div>
+
+              <p className="text-sm text-gray-500">
+
+                Town
+
+              </p>
+
+              <p className="font-semibold">
+
+                {property.town || "-"}
+
+              </p>
+
+            </div>
+
+            <div className="md:col-span-2">
+
+              <p className="text-sm text-gray-500">
+
+                Address
+
+              </p>
+
+              <p className="font-semibold">
+
+                {property.address || "-"}
+
+              </p>
+
+            </div>
+
+            <div className="md:col-span-2">
+
+              <p className="text-sm text-gray-500">
+
+                Description
+
+              </p>
+
+              <p className="font-semibold">
+
+                {property.description || "-"}
+
+              </p>
+
+            </div>
+
+          </div>
+
+        </Card>
+
+      </Section>
+
+      <Section>
+
+        <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
+
+          <StatCard
             title="Total Units"
             value={stats.totalUnits}
-            icon="🏠"
-            color="blue"
+            subtitle="Registered Units"
+            icon={
+              <Home className="h-6 w-6 text-[#D4AF37]" />
+            }
           />
 
-          <KpiCard
+          <StatCard
             title="Occupied"
             value={stats.occupied}
-            icon="👥"
-            color="green"
+            subtitle="Currently Occupied"
+            icon={
+              <Users className="h-6 w-6 text-green-600" />
+            }
+            valueClassName="text-green-600"
           />
 
-          <KpiCard
+          <StatCard
             title="Vacant"
             value={stats.vacant}
-            icon="🚪"
-            color="orange"
-          />
-
-          <KpiCard
-            title="Expected Monthly Rent"
-            value={`KSh ${stats.monthlyIncome.toLocaleString()}`}
-            icon="💰"
-            color="purple"
-          />
-
-        </div>
-
-        {/* Occupancy */}
-
-        <div className="rounded-2xl border bg-white p-6 shadow-sm">
-
-          <div className="mb-4 flex items-center justify-between">
-
-            <h2 className="text-xl font-semibold">
-              Occupancy
-            </h2>
-
-            <span className="text-lg font-bold">
-              {occupancy}%
-            </span>
-
-          </div>
-
-          <div className="h-3 overflow-hidden rounded-full bg-gray-200">
-
-            <div
-              className="h-full rounded-full bg-green-500 transition-all"
-              style={{
-                width: `${occupancy}%`,
-              }}
-            />
-
-          </div>
-
-          <div className="mt-4 flex justify-between text-sm text-gray-600">
-
-            <span>
-              {stats.occupied} Occupied
-            </span>
-
-            <span>
-              {stats.vacant} Vacant
-            </span>
-
-          </div>
-
-        </div>
-
-        {/* Actions */}
-
-        <div className="flex flex-wrap gap-4">
-
-          <button className="rounded-xl bg-black px-6 py-3 font-semibold text-white transition hover:bg-gray-800">
-            + Add Unit
-          </button>
-
-          <button
-            onClick={() =>
-              setShowBulkGenerator(true)
+            subtitle="Available Units"
+            icon={
+              <Home className="h-6 w-6 text-amber-500" />
             }
-            className="rounded-xl border px-6 py-3 font-semibold transition hover:bg-gray-100"
-          >
-            ⚡ Bulk Generate Units
-          </button>
+            valueClassName="text-amber-500"
+          />
+
+          <StatCard
+            title="Occupancy"
+            value={`${occupancy}%`}
+            subtitle="Current Occupancy"
+            icon={
+              <Building2 className="h-6 w-6 text-blue-600" />
+            }
+            valueClassName="text-blue-600"
+          />
 
         </div>
 
-        {/* Units */}
+      </Section>
 
-        <UnitsList units={units} />
+      <Section>
 
-      </main>
+        <Card>
 
-      {/* Bulk Generator */}
+          <h2 className="mb-6 text-xl font-bold">
 
-      {showBulkGenerator && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+            Financial Summary
 
-          <div className="max-h-[90vh] w-full max-w-xl overflow-y-auto rounded-2xl bg-white p-6 shadow-xl">
+          </h2>
 
-            <h2 className="mb-6 text-2xl font-bold">
-              Bulk Generate Units
-            </h2>
+          <div className="grid gap-6 md:grid-cols-3">
 
-            <BulkUnitGenerator
-              propertyId={propertyId}
-              onSuccess={() => {
-                setShowBulkGenerator(false);
-                loadPage();
-              }}
-              onCancel={() =>
-                setShowBulkGenerator(false)
-              }
-            />
+            <div>
+
+              <p className="text-sm text-gray-500">
+
+                Expected Monthly Rent
+
+              </p>
+
+              <p className="text-2xl font-bold text-[#D4AF37]">
+
+                KSh {stats.monthlyIncome.toLocaleString()}
+
+              </p>
+
+            </div>
+
+            <div>
+
+              <p className="text-sm text-gray-500">
+
+                Occupancy Rate
+
+              </p>
+
+              <p className="text-2xl font-bold">
+
+                {occupancy}%
+
+              </p>
+
+            </div>
+
+            <div>
+
+              <p className="text-sm text-gray-500">
+
+                Total Units
+
+              </p>
+
+              <p className="text-2xl font-bold">
+
+                {stats.totalUnits}
+
+              </p>
+
+            </div>
 
           </div>
 
-        </div>
-      )}
+        </Card>
 
-    </>
-  );
+      </Section>
+      <Section>
+
+  <Card>
+
+    <h2 className="mb-6 text-xl font-bold">
+
+      Related Modules
+
+    </h2>
+
+    <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+
+      <Link href={`/units?property=${property.id}`}>
+
+  <Card className="cursor-pointer border transition hover:border-[#D4AF37] hover:shadow-lg">
+
+    <Home className="mb-4 h-10 w-10 text-[#D4AF37]" />
+
+    <h3 className="text-lg font-semibold">
+
+      Units
+
+    </h3>
+
+    <p className="mt-2 text-sm text-gray-500">
+
+      Manage all units in this property.
+
+    </p>
+
+    <Button
+      className="mt-5 w-full"
+      variant="secondary"
+    >
+      Manage Units
+    </Button>
+
+  </Card>
+
+</Link>
+<Link href={`/occupants?property=${property.id}`}>
+
+  <Card className="cursor-pointer border transition hover:border-[#D4AF37] hover:shadow-lg">
+
+    <Users className="mb-4 h-10 w-10 text-blue-600" />
+
+    <h3 className="text-lg font-semibold">
+
+      Occupants
+
+    </h3>
+
+    <p className="mt-2 text-sm text-gray-500">
+
+      View occupants living in this property.
+
+    </p>
+
+    <Button
+      className="mt-5 w-full"
+      variant="secondary"
+    >
+      View Occupants
+    </Button>
+
+  </Card>
+
+</Link>
+      <Link href={`/leases?property=${property.id}`}>
+
+  <Card className="cursor-pointer border transition hover:border-[#D4AF37] hover:shadow-lg">
+
+    <FileText className="mb-4 h-10 w-10 text-green-600" />
+
+    <h3 className="text-lg font-semibold">
+
+      Leases
+
+    </h3>
+
+    <p className="mt-2 text-sm text-gray-500">
+
+      Manage active and past lease agreements.
+
+    </p>
+
+    <Button
+      className="mt-5 w-full"
+      variant="secondary"
+    >
+      View Leases
+    </Button>
+
+  </Card>
+
+</Link>
+
+<Link href={`/payments?property=${property.id}`}>
+
+  <Card className="cursor-pointer border transition hover:border-[#D4AF37] hover:shadow-lg">
+
+    <CreditCard className="mb-4 h-10 w-10 text-purple-600" />
+
+    <h3 className="text-lg font-semibold">
+
+      Payments
+
+    </h3>
+
+    <p className="mt-2 text-sm text-gray-500">
+
+      View rent payment records for this property.
+
+    </p>
+
+    <Button
+      className="mt-5 w-full"
+      variant="secondary"
+    >
+      View Payments
+    </Button>
+
+  </Card>
+
+</Link>
+
+      <Link href={`/expenses?property=${property.id}`}>
+
+  <Card className="cursor-pointer border transition hover:border-[#D4AF37] hover:shadow-lg">
+
+    <Receipt className="mb-4 h-10 w-10 text-red-600" />
+
+    <h3 className="text-lg font-semibold">
+
+      Expenses
+
+    </h3>
+
+    <p className="mt-2 text-sm text-gray-500">
+
+      Track all expenses for this property.
+
+    </p>
+
+    <Button
+      className="mt-5 w-full"
+      variant="secondary"
+    >
+      View Expenses
+    </Button>
+
+  </Card>
+
+</Link>
+
+      <Link href={`/maintenance?property=${property.id}`}>
+
+  <Card className="cursor-pointer border transition hover:border-[#D4AF37] hover:shadow-lg">
+
+    <Wrench className="mb-4 h-10 w-10 text-orange-600" />
+
+    <h3 className="text-lg font-semibold">
+
+      Maintenance
+
+    </h3>
+
+    <p className="mt-2 text-sm text-gray-500">
+
+      Manage maintenance requests for this property.
+
+    </p>
+
+    <Button
+      className="mt-5 w-full"
+      variant="secondary"
+    >
+      Manage Maintenance
+    </Button>
+
+  </Card>
+
+</Link>
+
+    </div>
+
+  </Card>
+
+</Section>
+
+    </PageContainer>
+
+  </AppShell>
+
+);
+
 }
