@@ -31,9 +31,11 @@ import BulkUnitGenerator from "@/components/units/BulkUnitGenerator";
 import { getUnits } from "@/services/units/getUnits";
 
 import { Unit } from "@/types/unit";
+import { useRouter } from "next/navigation";
 
 export default function UnitsPage() {
-
+  
+const router = useRouter();
   const [loading, setLoading] =
     useState(true);
 
@@ -157,11 +159,11 @@ export default function UnitsPage() {
 
           </Button>
 
-          <Button
-            onClick={() =>
-  window.location.href = "/units/new"
-}
-          >
+ <Button
+  onClick={() =>
+    router.push("/units/new")
+  }
+>
 
             <Plus
               size={18}
