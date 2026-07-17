@@ -14,70 +14,44 @@ export default function SetupUtilityMeterModal({
   onClose,
   onSaved,
 }: Props) {
-  const [loading, setLoading] =
-    useState(false);
+  const [loading, setLoading] = useState(false);
 
-  const [meterNumber, setMeterNumber] =
-    useState(
-      meter.meter_number ?? ""
-    );
-
-  const [
-    openingReading,
-    setOpeningReading,
-  ] = useState(
-    Number(
-      meter.opening_reading ?? 0
-    )
+  const [meterNumber, setMeterNumber] = useState(
+    meter.meter_number ?? ""
   );
 
-  const [unitRate, setUnitRate] =
-    useState(
-      Number(
-        meter.unit_rate ?? 0
-      )
-    );
+  const [openingReading, setOpeningReading] = useState(
+    Number(meter.opening_reading ?? 0)
+  );
 
-  const [
-    meterLocation,
-    setMeterLocation,
-  ] = useState(
+  const [unitRate, setUnitRate] = useState(
+    Number(meter.unit_rate ?? 0)
+  );
+
+  const [meterLocation, setMeterLocation] = useState(
     meter.meter_location ?? ""
   );
 
-  const [notes, setNotes] =
-    useState(
-      meter.notes ?? ""
-    );
+  const [notes, setNotes] = useState(
+    meter.notes ?? ""
+  );
 
   async function handleSave() {
     if (!meterNumber.trim()) {
-      alert(
-        "Meter number is required."
-      );
+      alert("Meter number is required.");
       return;
     }
 
     try {
       setLoading(true);
 
-      await updateUtilityMeter(
-        meter.id,
-        {
-          meter_number:
-            meterNumber.trim(),
-
-          opening_reading:
-            openingReading,
-
-          unit_rate: unitRate,
-
-          meter_location:
-            meterLocation,
-
-          notes,
-        }
-      );
+      await updateUtilityMeter(meter.id, {
+        meter_number: meterNumber.trim(),
+        opening_reading: openingReading,
+        unit_rate: unitRate,
+        meter_location: meterLocation,
+        notes,
+      });
 
       alert(
         `${meter.utility_type} meter activated successfully.`
@@ -94,9 +68,9 @@ export default function SetupUtilityMeterModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
 
-      <div className="w-full max-w-xl rounded-2xl bg-white shadow-xl">
+      <div className="max-h-[95vh] w-full max-w-xl overflow-y-auto rounded-2xl bg-white shadow-xl">
 
-        <div className="border-b p-6">
+        <div className="border-b p-4 sm:p-6">
 
           <h2 className="text-2xl font-bold">
             Setup {meter.utility_type} Meter
@@ -109,8 +83,9 @@ export default function SetupUtilityMeterModal({
 
         </div>
 
-        <div className="space-y-5 p-6">
-                    <div>
+        <div className="space-y-5 p-4 sm:p-6">
+
+          <div>
 
             <label className="mb-2 block font-medium">
               Meter Number
@@ -119,9 +94,7 @@ export default function SetupUtilityMeterModal({
             <input
               value={meterNumber}
               onChange={(e) =>
-                setMeterNumber(
-                  e.target.value
-                )
+                setMeterNumber(e.target.value)
               }
               placeholder="WM001245"
               className="w-full rounded-xl border p-3"
@@ -129,7 +102,7 @@ export default function SetupUtilityMeterModal({
 
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
 
             <div>
 
@@ -142,9 +115,7 @@ export default function SetupUtilityMeterModal({
                 value={openingReading}
                 onChange={(e) =>
                   setOpeningReading(
-                    Number(
-                      e.target.value
-                    )
+                    Number(e.target.value)
                   )
                 }
                 className="w-full rounded-xl border p-3"
@@ -163,9 +134,7 @@ export default function SetupUtilityMeterModal({
                 value={unitRate}
                 onChange={(e) =>
                   setUnitRate(
-                    Number(
-                      e.target.value
-                    )
+                    Number(e.target.value)
                   )
                 }
                 className="w-full rounded-xl border p-3"
@@ -204,9 +173,7 @@ export default function SetupUtilityMeterModal({
               rows={4}
               value={notes}
               onChange={(e) =>
-                setNotes(
-                  e.target.value
-                )
+                setNotes(e.target.value)
               }
               placeholder="Optional notes..."
               className="w-full rounded-xl border p-3"
@@ -231,12 +198,13 @@ export default function SetupUtilityMeterModal({
           </div>
 
         </div>
-                <div className="flex justify-end gap-3 border-t p-6">
+
+        <div className="flex flex-col-reverse gap-3 border-t p-4 sm:flex-row sm:justify-end sm:p-6">
 
           <button
             onClick={onClose}
             disabled={loading}
-            className="rounded-xl border px-6 py-3"
+            className="w-full rounded-xl border px-6 py-3 sm:w-auto"
           >
             Cancel
           </button>
@@ -244,7 +212,7 @@ export default function SetupUtilityMeterModal({
           <button
             onClick={handleSave}
             disabled={loading}
-            className="rounded-xl bg-black px-6 py-3 font-semibold text-white hover:bg-gray-800 disabled:opacity-50"
+            className="w-full rounded-xl bg-black px-6 py-3 font-semibold text-white transition hover:bg-gray-800 disabled:opacity-50 sm:w-auto"
           >
             {loading
               ? "Activating..."
