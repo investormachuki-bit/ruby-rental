@@ -77,9 +77,6 @@ export default function UnitForm({
   const [serviceCharge, setServiceCharge] =
     useState(0);
 
-  const [status, setStatus] =
-    useState("Vacant");
-
   const [notes, setNotes] =
     useState("");
 
@@ -733,70 +730,6 @@ export default function UnitForm({
 
       </section>
 
-      {/* Status */}
-
-      <section className="rounded-2xl border bg-white p-6">
-
-        <h2 className="text-xl font-bold">
-
-          Unit Status
-
-        </h2>
-
-        <p className="mt-1 text-gray-500">
-
-          Set the current occupancy status.
-
-        </p>
-
-        <div className="mt-6">
-
-          <label className="mb-2 block font-medium">
-
-            Status
-
-          </label>
-
-          <select
-            value={status}
-            onChange={(e) =>
-              setStatus(
-                e.target.value
-              )
-            }
-            className="w-full rounded-xl border p-3"
-          >
-
-            <option value="Vacant">
-
-              Vacant
-
-            </option>
-
-            <option value="Occupied">
-
-              Occupied
-
-            </option>
-
-            <option value="Reserved">
-
-              Reserved
-
-            </option>
-
-            <option value="Maintenance">
-
-              Maintenance
-
-            </option>
-
-          </select>
-
-        </div>
-
-      </section>
-
       {/* Notes */}
 
       <section className="rounded-2xl border bg-white p-6">
@@ -913,8 +846,6 @@ export default function UnitForm({
                     service_charge:
                       serviceCharge,
 
-                    status,
-
                     notes:
                       notes || null,
 
@@ -979,12 +910,11 @@ export default function UnitForm({
 
   alert(JSON.stringify(error, null, 2));
 
+} finally {
+
+  setLoading(false);
+
 }
-            } finally {
-
-              setLoading(false);
-
-            }
 
           }}
           className="rounded-xl bg-black px-6 py-3 font-semibold text-white transition hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50"
