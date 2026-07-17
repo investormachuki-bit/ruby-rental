@@ -34,7 +34,8 @@ export async function createProperty(
     await supabase
       .from("properties")
       .insert({
-        workspace_id: profile.workspace_id,
+        workspace_id:
+          profile.workspace_id,
 
         name: input.name,
 
@@ -54,45 +55,46 @@ export async function createProperty(
       .single();
 
   if (error) {
-
     throw error;
-
   }
-      const { error: utilityError } =
-    await supabase
-      .from("property_utility_settings")
-      .insert({
-        workspace_id:
-          profile.workspace_id,
 
-        property_id:
-          property.id,
+  const {
+    error: utilityError,
+  } = await supabase
+    .from("property_utility_settings")
+    .insert({
+      workspace_id:
+        profile.workspace_id,
 
-        water_enabled: true,
-        water_billing_method: "Metered",
-        water_base_charge: 0,
-        water_rate_per_unit: 0,
+      property_id:
+        property.id,
 
-        electricity_enabled: true,
-        electricity_billing_method: "Metered",
-        electricity_base_charge: 0,
-        electricity_rate_per_unit: 0,
+      water_enabled: true,
+      water_billing_method: "Metered",
+      water_base_charge: 0,
+      water_rate_per_unit: 0,
 
-        gas_enabled: false,
-        gas_billing_method: "Metered",
-        gas_base_charge: 0,
-        gas_rate_per_unit: 0,
+      electricity_enabled: true,
+      electricity_billing_method: "Metered",
+      electricity_base_charge: 0,
+      electricity_rate_per_unit: 0,
 
-        default_garbage_fee: 0,
-        default_security_fee: 0,
-        default_sewer_fee: 0,
-        default_parking_fee: 0,
-        default_internet_fee: 0,
-        default_service_charge: 0,
-      });
+      gas_enabled: false,
+      gas_billing_method: "Metered",
+      gas_base_charge: 0,
+      gas_rate_per_unit: 0,
+
+      default_garbage_fee: 0,
+      default_security_fee: 0,
+      default_sewer_fee: 0,
+      default_parking_fee: 0,
+      default_internet_fee: 0,
+      default_service_charge: 0,
+    });
 
   if (utilityError) {
     throw utilityError;
   }
 
   return property;
+}
