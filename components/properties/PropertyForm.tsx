@@ -100,18 +100,21 @@ export default function PropertyForm({
         await createProperty(form);
       }
 
-      onSuccess();
+            onSuccess();
+
     } catch (error: any) {
 
-  console.error(error);
+      console.error(error);
 
-  alert(JSON.stringify(error));
+      alert(
+        error?.message ??
+          JSON.stringify(error)
+      );
 
-}
-
-      alert(message);
     } finally {
+
       setLoading(false);
+
     }
   }
 
