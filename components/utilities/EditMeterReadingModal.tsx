@@ -85,9 +85,9 @@ export default function EditMeterReadingModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
 
-      <div className="w-full max-w-lg rounded-2xl bg-white shadow-xl">
+      <div className="max-h-[95vh] w-full max-w-lg overflow-y-auto rounded-2xl bg-white shadow-xl">
 
-        <div className="border-b p-6">
+        <div className="border-b p-4 sm:p-6">
 
           <h2 className="text-2xl font-bold">
             Edit Meter Reading
@@ -99,8 +99,9 @@ export default function EditMeterReadingModal({
 
         </div>
 
-        <div className="space-y-5 p-6">
-                    <div>
+        <div className="space-y-5 p-4 sm:p-6">
+
+          <div>
 
             <label className="mb-2 block font-medium">
               Previous Reading
@@ -133,7 +134,7 @@ export default function EditMeterReadingModal({
 
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
 
             <div className="rounded-xl bg-gray-50 p-4">
 
@@ -142,7 +143,9 @@ export default function EditMeterReadingModal({
               </p>
 
               <h3 className="mt-2 text-2xl font-bold">
-                {unitsUsed < 0 ? 0 : unitsUsed}
+                {unitsUsed < 0
+                  ? 0
+                  : unitsUsed}
               </h3>
 
             </div>
@@ -153,9 +156,11 @@ export default function EditMeterReadingModal({
                 Amount
               </p>
 
-              <h3 className="mt-2 text-2xl font-bold text-green-700">
+              <h3 className="mt-2 break-words text-2xl font-bold text-green-700">
                 KSh{" "}
-                {(amount < 0 ? 0 : amount).toLocaleString()}
+                {(amount < 0
+                  ? 0
+                  : amount).toLocaleString()}
               </h3>
 
             </div>
@@ -182,12 +187,12 @@ export default function EditMeterReadingModal({
 
         </div>
 
-        <div className="flex justify-end gap-3 border-t p-6">
+        <div className="flex flex-col-reverse gap-3 border-t p-4 sm:flex-row sm:justify-end sm:p-6">
 
           <button
             onClick={onClose}
             disabled={loading}
-            className="rounded-xl border px-6 py-3"
+            className="w-full rounded-xl border px-6 py-3 sm:w-auto"
           >
             Cancel
           </button>
@@ -195,7 +200,7 @@ export default function EditMeterReadingModal({
           <button
             onClick={handleSave}
             disabled={loading}
-            className="rounded-xl bg-black px-6 py-3 font-semibold text-white hover:bg-gray-800 disabled:opacity-50"
+            className="w-full rounded-xl bg-black px-6 py-3 font-semibold text-white transition hover:bg-gray-800 disabled:opacity-50 sm:w-auto"
           >
             {loading
               ? "Saving..."
