@@ -168,10 +168,6 @@ export default function UnitForm({
       )
     );
 
-    setStatus(
-      unit.status
-    );
-
     setNotes(
       unit.notes ?? ""
     );
