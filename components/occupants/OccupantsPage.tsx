@@ -5,9 +5,10 @@ import { useEffect, useMemo, useState } from "react";
 import {
   Users,
   Home,
+  UserMinus,
   Building2,
-  DollarSign,
   Plus,
+  Search,
 } from "lucide-react";
 
 import AppShell from "@/components/layout/AppShell";
@@ -34,13 +35,14 @@ type Occupant = {
   full_name: string;
   phone: string;
   property_name?: string | null;
-  unit_number?: string | null;
+  unit_number?: string |null;
   move_in_date?: string | null;
   status: string;
   monthly_rent?: number;
 };
 
 export default function OccupantsPage() {
+
   const [occupants, setOccupants] =
     useState<Occupant[]>([]);
 
@@ -55,32 +57,46 @@ export default function OccupantsPage() {
   const [search, setSearch] =
     useState("");
 
+  const [status, setStatus] =
+    useState("All");
+
   useEffect(() => {
     loadOccupants();
   }, []);
 
   async function loadOccupants() {
+
     try {
+
       setLoading(true);
 
       const data =
         await getOccupants();
 
       setOccupants(data ?? []);
+
     } catch (error) {
+
       console.error(error);
+
     } finally {
+
       setLoading(false);
+
     }
+
   }
 
   const filteredOccupants =
     useMemo(() => {
+
       const keyword =
         search.toLowerCase();
 
-      return occupants.filter(
-        (occupant) =>
+      return occupants.filter((occupant) => {
+
+        const matchesSearch =
+
           occupant.full_name
             ?.toLowerCase()
             .includes(keyword) ||
@@ -99,27 +115,41 @@ export default function OccupantsPage() {
 
           (occupant.unit_number ?? "")
             .toLowerCase()
-            .includes(keyword)
-      );
-    }, [occupants, search]);
+            .includes(keyword);
 
-  const activeOccupants =
+        const matchesStatus =
+
+          status === "All" ||
+
+          occupant.status === status;
+
+        return (
+          matchesSearch &&
+          matchesStatus
+        );
+
+      });
+
+    }, [
+      occupants,
+      search,
+      status,
+    ]);
+
+  const currentTenants =
     occupants.filter(
       (o) => o.status === "Active"
     ).length;
 
-  const unassignedOccupants =
+  const formerTenants =
+    occupants.filter(
+      (o) => o.status !== "Active"
+    ).length;
+
+  const unassignedTenants =
     occupants.filter(
       (o) => !o.unit_number
     ).length;
-
-  const expectedMonthlyRent =
-    occupants.reduce(
-      (sum, occupant) =>
-        sum +
-        (occupant.monthly_rent ?? 0),
-      0
-    );
 
   return (
 
@@ -134,50 +164,53 @@ export default function OccupantsPage() {
               href: "/",
             },
             {
-              label: "Occupants",
+              label: "Tenants",
             },
           ]}
         />
 
         <PageHeader
-          title="Occupants"
-          description="Manage tenants and occupants."
+          title="Tenants"
+          description="Manage tenants across your rental portfolio."
         >
+
           <Button
             variant="primary"
             onClick={() =>
               setShowCreateModal(true)
             }
           >
+
             <Plus
               size={18}
               className="mr-2"
             />
 
-            New Occupant
+            New Tenant
 
           </Button>
 
         </PageHeader>
-                {/* Summary Cards */}
+
+        {/* Summary */}
 
         <Section>
 
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-4">
 
             <StatCard
-              title="Occupants"
+              title="Total Tenants"
               value={occupants.length}
-              subtitle="Registered occupants"
+              subtitle="Registered tenants"
               icon={
                 <Users className="h-6 w-6 text-[#D4AF37]" />
               }
             />
 
             <StatCard
-              title="Active"
-              value={activeOccupants}
-              subtitle="Currently occupying"
+              title="Current"
+              value={currentTenants}
+              subtitle="Currently occupying units"
               valueClassName="text-green-600"
               icon={
                 <Home className="h-6 w-6 text-green-600" />
@@ -185,65 +218,120 @@ export default function OccupantsPage() {
             />
 
             <StatCard
-              title="Not Assigned"
-              value={unassignedOccupants}
-              subtitle="Without a unit"
+              title="Former"
+              value={formerTenants}
+              subtitle="Previous tenants"
+              valueClassName="text-blue-600"
+              icon={
+                <UserMinus className="h-6 w-6 text-blue-600" />
+              }
+            />
+
+            <StatCard
+              title="Unassigned"
+              value={unassignedTenants}
+              subtitle="No active lease"
               valueClassName="text-amber-500"
               icon={
                 <Building2 className="h-6 w-6 text-amber-500" />
               }
             />
 
-            <StatCard
-              title="Monthly Rent"
-              value={`KSh ${expectedMonthlyRent.toLocaleString()}`}
-              subtitle="Expected collections"
-              valueClassName="text-[#D4AF37]"
-              icon={
-                <DollarSign className="h-6 w-6 text-[#D4AF37]" />
-              }
-            />
-
           </div>
 
         </Section>
-
-        {/* Occupants */}
+                {/* Tenants */}
 
         <Section>
 
           <Card>
 
-            <div className="mb-6">
+            <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
 
-              <h2 className="text-2xl font-bold text-gray-900">
+              <div>
 
-                Occupants
+                <h2 className="text-2xl font-bold text-gray-900">
 
-              </h2>
+                  Tenants
 
-              <p className="mt-2 text-gray-500">
+                </h2>
 
-                Search and manage every occupant across your rental portfolio.
+                <p className="mt-2 text-gray-500">
 
-              </p>
+                  Search and manage every tenant across your rental portfolio.
+
+                </p>
+
+              </div>
+
+              <div className="flex flex-col gap-3 sm:flex-row">
+
+                <div className="relative">
+
+                  <Search
+                    size={18}
+                    className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+                  />
+
+                  <input
+                    type="text"
+                    placeholder="Search tenant..."
+                    value={search}
+                    onChange={(e) =>
+                      setSearch(e.target.value)
+                    }
+                    className="w-full rounded-xl border border-gray-300 bg-white py-3 pl-10 pr-4 focus:border-[#D4AF37] focus:outline-none lg:w-80"
+                  />
+
+                </div>
+
+                <select
+                  value={status}
+                  onChange={(e) =>
+                    setStatus(e.target.value)
+                  }
+                  className="rounded-xl border border-gray-300 bg-white px-4 py-3 focus:border-[#D4AF37] focus:outline-none"
+                >
+
+                  <option value="All">
+
+                    All Tenants
+
+                  </option>
+
+                  <option value="Active">
+
+                    Current
+
+                  </option>
+
+                  <option value="Inactive">
+
+                    Former
+
+                  </option>
+
+                </select>
+
+              </div>
 
             </div>
-                        {loading ? (
+
+            {loading ? (
 
               <Loading
-                title="Loading Occupants"
-                description="Preparing occupant records..."
+                title="Loading Tenants"
+                description="Preparing tenant records..."
               />
 
             ) : filteredOccupants.length === 0 ? (
 
               <EmptyState
-                title="No Occupants Found"
+                title="No Tenants Found"
                 description={
                   search
-                    ? "No occupants match your search."
-                    : "Create your first occupant to start managing tenants."
+                    ? "No tenants match your search."
+                    : "Create your first tenant to start managing your rental portfolio."
                 }
               />
 
@@ -258,7 +346,8 @@ export default function OccupantsPage() {
           </Card>
 
         </Section>
-              </PageContainer>
+
+      </PageContainer>
 
       {showCreateModal && (
 
@@ -277,4 +366,5 @@ export default function OccupantsPage() {
     </AppShell>
 
   );
+
 }
