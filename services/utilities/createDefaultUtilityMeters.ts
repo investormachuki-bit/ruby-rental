@@ -35,7 +35,6 @@ export async function createDefaultUtilityMeters({
       utility_type: "Water",
       meter_number: "",
       opening_reading: 0,
-      current_reading: 0,
       unit_rate: Number(settings.water_rate_per_unit ?? 0),
       status: "Pending Setup",
       notes: `${settings.water_billing_method} Water meter`,
@@ -50,7 +49,6 @@ export async function createDefaultUtilityMeters({
       utility_type: "Electricity",
       meter_number: "",
       opening_reading: 0,
-      current_reading: 0,
       unit_rate: Number(settings.electricity_rate_per_unit ?? 0),
       status: "Pending Setup",
       notes: `${settings.electricity_billing_method} Electricity meter`,
@@ -65,7 +63,6 @@ export async function createDefaultUtilityMeters({
       utility_type: "Gas",
       meter_number: "",
       opening_reading: 0,
-      current_reading: 0,
       unit_rate: Number(settings.gas_rate_per_unit ?? 0),
       status: "Pending Setup",
       notes: `${settings.gas_billing_method} Gas meter`,
@@ -81,6 +78,7 @@ export async function createDefaultUtilityMeters({
     .insert(meters);
 
   if (error) {
+    console.error("Utility meter insert failed:", error);
     throw error;
   }
 }
