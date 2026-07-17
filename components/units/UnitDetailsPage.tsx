@@ -170,7 +170,7 @@ export default function UnitDetailsPage({
 
     <>
 
-      <main className="space-y-8 p-6">
+      <main className="mx-auto w-full max-w-7xl space-y-8 p-4 sm:p-6">
 
         <Breadcrumb
           items={[
@@ -229,7 +229,7 @@ export default function UnitDetailsPage({
 
           </div>
 
-          <div className="flex flex-wrap gap-3">
+          <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
 
             {unit.status === "Vacant" ? (
 
@@ -574,10 +574,10 @@ export default function UnitDetailsPage({
 
               <div
                 key={meter.id}
-                className="rounded-2xl border p-6"
+                className="w-full rounded-2xl border bg-white p-4 shadow-sm sm:p-6"
               >
 
-                <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+                <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
 
                   <div>
 
@@ -627,7 +627,7 @@ export default function UnitDetailsPage({
                           );
 
                         }}
-                        className="rounded-xl bg-black px-5 py-3 font-semibold text-white hover:bg-gray-800"
+                        className="w-full rounded-xl bg-black px-5 py-3 font-semibold text-white transition hover:bg-gray-800 sm:w-auto"
                       >
 
                         Setup Meter
@@ -648,7 +648,7 @@ export default function UnitDetailsPage({
                           );
 
                         }}
-                        className="rounded-xl bg-black px-5 py-3 font-semibold text-white hover:bg-gray-800"
+                        className="w-full rounded-xl bg-black px-5 py-3 font-semibold text-white transition hover:bg-gray-800 sm:w-auto"
                       >
 
                         Record Reading
@@ -657,7 +657,7 @@ export default function UnitDetailsPage({
 
                     )}
 
-                    <button className="rounded-xl border px-5 py-3 font-semibold hover:bg-gray-100">
+                    <button className="w-full rounded-xl border px-5 py-3 font-semibold transition hover:bg-gray-100 sm:w-auto">
 
                       History
 
@@ -667,7 +667,7 @@ export default function UnitDetailsPage({
 
                 </div>
 
-                <div className="mt-6 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+                <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
 
                   <Info
                     label="Status"
@@ -919,7 +919,7 @@ function Info({
 
   return (
 
-    <div className="flex items-center justify-between border-b pb-3">
+    <div className="flex flex-wrap items-center justify-between gap-2 border-b pb-3">
 
       <span className="text-gray-500">
 
@@ -927,7 +927,7 @@ function Info({
 
       </span>
 
-      <strong className="text-right">
+      <strong className="max-w-[60%] break-words text-right">
 
         {value}
 
