@@ -973,20 +973,13 @@ export default function UnitForm({
 
               onSuccess();
 
-            } catch (error) {
+            } catch (error: any) {
 
-              console.error(error);
+  console.error(error);
 
-              alert(
+  alert(JSON.stringify(error, null, 2));
 
-                editing
-
-                  ? "Failed to update unit."
-
-                  : "Failed to create unit."
-
-              );
-
+}
             } finally {
 
               setLoading(false);
