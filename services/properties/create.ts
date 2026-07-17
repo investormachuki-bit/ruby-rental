@@ -58,60 +58,41 @@ export async function createProperty(
     throw error;
 
   }
-    const defaultUtilities = [
+      const { error: utilityError } =
+    await supabase
+      .from("property_utility_settings")
+      .insert({
+        workspace_id:
+          profile.workspace_id,
 
-    {
-      workspace_id:
-        profile.workspace_id,
+        property_id:
+          property.id,
 
-      property_id:
-        property.id,
+        water_enabled: true,
+        water_billing_method: "Metered",
+        water_base_charge: 0,
+        water_rate_per_unit: 0,
 
-      utility_type:
-        "Water",
+        electricity_enabled: true,
+        electricity_billing_method: "Metered",
+        electricity_base_charge: 0,
+        electricity_rate_per_unit: 0,
 
-      billing_type:
-        "Metered",
+        gas_enabled: false,
+        gas_billing_method: "Metered",
+        gas_base_charge: 0,
+        gas_rate_per_unit: 0,
 
-      unit_rate: 0,
-
-      is_active: true,
-    },
-
-    {
-      workspace_id:
-        profile.workspace_id,
-
-      property_id:
-        property.id,
-
-      utility_type:
-        "Electricity",
-
-      billing_type:
-        "Metered",
-
-      unit_rate: 0,
-
-      is_active: true,
-    },
-
-  ];
-
-  const {
-    error: utilityError,
-  } = await supabase
-    .from(
-      "property_utility_settings"
-    )
-    .insert(defaultUtilities);
+        default_garbage_fee: 0,
+        default_security_fee: 0,
+        default_sewer_fee: 0,
+        default_parking_fee: 0,
+        default_internet_fee: 0,
+        default_service_charge: 0,
+      });
 
   if (utilityError) {
-
     throw utilityError;
-
   }
 
   return property;
-
-}
