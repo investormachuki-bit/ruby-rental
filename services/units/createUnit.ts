@@ -69,12 +69,16 @@ export async function createUnit(
     throw error;
   }
 
-  // Automatically create utility meters for this unit
-  await createDefaultUtilityMeters({
-    workspace_id: profile.workspace_id,
-    property_id: input.propertyId,
-    unit_id: unit.id,
-  });
+  try {
+    await createDefaultUtilityMeters({
+      workspace_id: profile.workspace_id,
+      property_id: input.propertyId,
+      unit_id: unit.id,
+    });
+  } catch (error) {
+    console.error("Failed to create default utility meters:", error);
+    throw error;
+  }
 
   return unit;
 }
