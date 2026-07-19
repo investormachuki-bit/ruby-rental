@@ -26,8 +26,7 @@ import EmptyState from "@/components/ui/EmptyState";
 
 import CreateOccupantModal from "@/components/occupants/CreateOccupantModal";
 import OccupantsList from "@/components/occupants/OccupantsList";
-
-import { getOccupants } from "@/services/occupants/getOccupants";
+import { getTenants } from "@/services/tenants/getTenants";
 
 type Occupant = {
   id: string;
@@ -71,7 +70,7 @@ export default function OccupantsPage() {
       setLoading(true);
 
       const data =
-        await getOccupants();
+  await getTenants();
 
       setOccupants(data ?? []);
 
