@@ -23,8 +23,7 @@ import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import Loading from "@/components/ui/Loading";
 import EmptyState from "@/components/ui/EmptyState";
-
-import CreateOccupantModal from "@/components/occupants/CreateOccupantModal";
+import CreateTenantModal from "@/components/tenants/CreateTenantModal";
 import OccupantsList from "@/components/occupants/OccupantsList";
 import { getTenants } from "@/services/tenants/getTenants";
 
@@ -350,15 +349,15 @@ export default function OccupantsPage() {
 
       {showCreateModal && (
 
-        <CreateOccupantModal
-          onClose={() =>
-            setShowCreateModal(false)
-          }
-          onSaved={() => {
-            setShowCreateModal(false);
-            loadOccupants();
-          }}
-        />
+        <CreateTenantModal
+  onClose={() =>
+    setShowCreateModal(false)
+  }
+  onSaved={() => {
+    setShowCreateModal(false);
+    loadOccupants();
+  }}
+/>
 
       )}
 
