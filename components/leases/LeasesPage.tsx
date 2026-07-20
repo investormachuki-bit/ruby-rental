@@ -147,18 +147,14 @@ export default function LeasesPage() {
             property === "All" ||
             lease.property.id ===
               property;
-
-          const matchesLeaseType =
-            leaseType === "All" ||
-            lease.lease_type ===
-              leaseType;
+const matchesLeaseType = true;
 
           return (
-            matchesSearch &&
-            matchesStatus &&
-            matchesProperty &&
-            matchesLeaseType
-          );
+  matchesSearch &&
+  matchesStatus &&
+  matchesProperty &&
+  matchesLeaseType
+);
 
         }
       );
