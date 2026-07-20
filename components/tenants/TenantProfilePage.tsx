@@ -19,7 +19,8 @@ import { getTenant } from "@/services/tenants/getTenant";
 import { getLeases } from "@/services/leases/getLeases";
 import { getTenantInvoices } from "@/services/invoices/getTenantInvoices";
 import TenantFinancialSummary from "@/components/tenants/TenantFinancialSummary";
-
+import { getTenantPayments } from "@/services/payments/getTenantPayments";
+import TenantPaymentsTable from "@/components/tenants/TenantPaymentsTable";
 
 interface Props {
   tenantId: string;
@@ -44,6 +45,8 @@ export default function TenantProfilePage({
   overdueInvoices: 0,
 });
 
+  const [payments, setPayments] = useState<any[]>([]);
+
   useEffect(() => {
     loadData();
   }, [tenantId]);
@@ -56,6 +59,8 @@ const tenantData = await getTenant(tenantId);
 const leases = await getLeases();
 
 const invoiceData = await getTenantInvoices(tenantId);
+      const tenantPayments =
+  await getTenantPayments(tenantId);
 
 const currentLease =
   leases.find(
@@ -67,6 +72,8 @@ const currentLease =
 setTenant(tenantData);
 setLease(currentLease);
 setInvoiceSummary(invoiceData.summary);
+setPayments(tenantPayments);
+      
     } catch (error) {
       console.error(error);
     } finally {
@@ -441,36 +448,10 @@ setInvoiceSummary(invoiceData.summary);
           )}
 
           {activeTab === "payments" && (
-            <div className="rounded-xl border">
-
-              <table className="w-full">
-
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-4 py-3 text-left">Date</th>
-                    <th className="px-4 py-3 text-left">Receipt</th>
-                    <th className="px-4 py-3 text-left">Method</th>
-                    <th className="px-4 py-3 text-right">Amount</th>
-                  </tr>
-                </thead>
-
-                <tbody>
-
-                  <tr>
-                    <td
-                      colSpan={4}
-                      className="py-12 text-center text-gray-500"
-                    >
-                      No payments recorded.
-                    </td>
-                  </tr>
-
-                </tbody>
-
-              </table>
-
-            </div>
-          )}
+  <TenantPaymentsTable
+    payments={payments}
+  />
+)}
 
           {activeTab === "documents" && (
             <div className="rounded-xl border border-dashed p-12 text-center">
