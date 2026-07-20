@@ -1,5 +1,6 @@
 import { supabase } from "@/lib/supabase";
 import { getProfile } from "@/services/auth/getProfile";
+import { TABLES } from "@/constants/tables";
 
 export async function getLeases() {
   const {
@@ -17,7 +18,7 @@ export async function getLeases() {
   }
 
   const { data, error } = await supabase
-    .from("leases")
+    .from(TABLES.LEASES)
     .select(`
       *,
       property:properties(
@@ -28,8 +29,16 @@ export async function getLeases() {
         id,
         unit_number
       ),
-      occupant:occupants(
+      tenant:occupants(
         id,
+        occupant_code,
+        full_name,
+        phone,
+        email,
+        id_number,
+        occupation,
+        employer,
+
         first_name,
         last_name,
         phone_number
