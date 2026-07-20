@@ -471,7 +471,7 @@ const matchesLeaseType = true;
                               ? "bg-green-100 text-green-700"
                               : lease.status === "Draft"
                               ? "bg-yellow-100 text-yellow-700"
-                              : lease.status === "Ended"
+                              :lease.status === "Expired"
                               ? "bg-gray-100 text-gray-700"
                               : "bg-red-100 text-red-700"
                           }`}
