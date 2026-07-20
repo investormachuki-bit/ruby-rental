@@ -14,6 +14,13 @@ import { getPayments } from "@/services/payments/getPayments";
 
 import CreateInvoiceModal from "@/components/invoices/CreateInvoiceModal";
 import { getInvoices } from "@/services/invoices/getInvoices";
+import RenewLeaseModal from "@/components/leases/RenewLeaseModal";
+
+import TerminateLeaseModal from "@/components/leases/TerminateLeaseModal";
+
+import LeaseLedger from "@/components/leases/LeaseLedger";
+
+import LeaseActivityTimeline from "@/components/leases/LeaseActivityTimeline";
 
 type Props = {
   leaseId: string;
@@ -73,7 +80,12 @@ export default function LeaseDetailsPage({
 
   const [showInvoiceModal, setShowInvoiceModal] =
     useState(false);
+const [showRenewModal, setShowRenewModal] =
+  useState(false);
 
+const [showTerminateModal, setShowTerminateModal] =
+  useState(false);
+  
   const totalInvoiced =
     invoices.reduce(
       (sum, invoice) =>
@@ -235,13 +247,18 @@ export default function LeaseDetailsPage({
             Record Payment
           </button>
 
-          <button className="rounded-xl border px-5 py-3">
-            Renew Lease
-          </button>
-
-          <button className="rounded-xl border border-red-300 px-5 py-3 text-red-600">
-            Terminate
-          </button>
+          <button
+  onClick={() => setShowRenewModal(true)}
+  className="rounded-xl border px-5 py-3"
+>
+  Renew Lease
+</button>
+<button
+  onClick={() => setShowTerminateModal(true)}
+  className="rounded-xl border border-red-300 px-5 py-3 text-red-600"
+>
+  Terminate
+</button>
 
         </div>
 
@@ -894,22 +911,41 @@ export default function LeaseDetailsPage({
   </div>
 
 )}
+{/* Ledger */}
 
-{activeTab !== "Overview" &&
- activeTab !== "Payments" &&
- activeTab !== "Invoices" && (
+{activeTab === "Ledger" && (
+
+  <LeaseLedger
+    leaseId={lease.id}
+  />
+
+)}
+
+{/* Documents */}
+
+{activeTab === "Documents" && (
 
   <div className="rounded-2xl border border-dashed bg-white p-16 text-center">
 
     <h2 className="text-2xl font-bold">
-      {activeTab}
+      Documents
     </h2>
 
     <p className="mt-3 text-gray-500">
-      Coming soon.
+      Document management will be available soon.
     </p>
 
   </div>
+
+)}
+
+{/* Activity */}
+
+{activeTab === "Activity" && (
+
+  <LeaseActivityTimeline
+    leaseId={lease.id}
+  />
 
 )}
 
@@ -939,6 +975,35 @@ export default function LeaseDetailsPage({
 
 )}
 
+{/* Renew Lease */}
+
+{showRenewModal && lease && (
+
+  <RenewLeaseModal
+    lease={lease}
+    onCancel={() => setShowRenewModal(false)}
+    onSuccess={() => {
+      setShowRenewModal(false);
+      loadLease();
+    }}
+  />
+
+)}
+
+{/* Terminate Lease */}
+
+{showTerminateModal && lease && (
+
+  <TerminateLeaseModal
+    lease={lease}
+    onCancel={() => setShowTerminateModal(false)}
+    onSuccess={() => {
+      setShowTerminateModal(false);
+      loadLease();
+    }}
+  />
+
+)}
     </div>
 
   );
