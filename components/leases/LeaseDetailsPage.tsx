@@ -143,8 +143,7 @@ const [showTerminateModal, setShowTerminateModal] =
       setInvoices(invoiceData ?? []);
 
     } catch (error) {
-
-      console.error(error);
+console.error("LeaseDetailsPage", error);
 
     } finally {
 
