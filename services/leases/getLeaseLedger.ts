@@ -117,10 +117,26 @@ export async function getLeaseLedger(
   );
 
   ledger.sort(
-    (a, b) =>
-      new Date(a.date).getTime() -
-      new Date(b.date).getTime()
-  );
+  (a, b) =>
+    new Date(a.date).getTime() -
+    new Date(b.date).getTime()
+);
 
-  return ledger;
-}
+let runningBalance = 0;
+
+const runningLedger = ledger.map((entry) => {
+
+  if (entry.type === "Invoice") {
+    runningBalance += entry.debit;
+  } else {
+    runningBalance -= entry.credit;
+  }
+
+  return {
+    ...entry,
+    balance: runningBalance,
+  };
+
+});
+
+return runningLedger;
