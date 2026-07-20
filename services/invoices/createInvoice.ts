@@ -8,7 +8,7 @@ type CreateInvoiceInput = {
 
   unit_id: string;
 
-  occupant_id: string;
+  tenant_id: string;
 
   invoice_type:
     | "Rent"
@@ -101,8 +101,9 @@ export async function createInvoice(
         unit_id:
           input.unit_id,
 
+        // Legacy database column
         occupant_id:
-          input.occupant_id,
+          input.tenant_id,
 
         invoice_number:
           invoiceNumber,
@@ -136,9 +137,7 @@ export async function createInvoice(
       .single();
 
   if (error) {
-
     throw error;
-
   }
 
   return data;
