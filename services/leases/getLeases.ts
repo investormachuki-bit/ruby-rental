@@ -29,19 +29,17 @@ export async function getLeases() {
         id,
         unit_number
       ),
-      tenant:occupants(
+      tenant:tenants(
         id,
-        occupant_code,
+        tenant_code,
         full_name,
         phone,
         email,
         id_number,
         occupation,
         employer,
-
         first_name,
-        last_name,
-        phone_number
+        last_name
       )
     `)
     .eq("workspace_id", profile.workspace_id)
@@ -50,6 +48,7 @@ export async function getLeases() {
     });
 
   if (error) {
+    console.error("Get Leases Error:", error);
     throw error;
   }
 
