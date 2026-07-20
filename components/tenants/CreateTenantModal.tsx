@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-
 import { createTenant } from "@/services/tenants/createTenant";
 
 type Props = {
@@ -13,39 +12,19 @@ export default function CreateTenantModal({
   onClose,
   onSaved,
 }: Props) {
-  const [loading, setLoading] =
-    useState(false);
+  const [loading, setLoading] = useState(false);
 
-  const [fullName, setFullName] =
+  const [fullName, setFullName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
+  const [idNumber, setIdNumber] = useState("");
+  const [occupation, setOccupation] = useState("");
+  const [employer, setEmployer] = useState("");
+  const [emergencyContactName, setEmergencyContactName] =
     useState("");
-
-  const [phone, setPhone] =
+  const [emergencyContactPhone, setEmergencyContactPhone] =
     useState("");
-
-  const [email, setEmail] =
-    useState("");
-
-  const [idNumber, setIdNumber] =
-    useState("");
-
-  const [occupation, setOccupation] =
-    useState("");
-
-  const [employer, setEmployer] =
-    useState("");
-
-  const [
-    emergencyContactName,
-    setEmergencyContactName,
-  ] = useState("");
-
-  const [
-    emergencyContactPhone,
-    setEmergencyContactPhone,
-  ] = useState("");
-
-  const [notes, setNotes] =
-    useState("");
+  const [notes, setNotes] = useState("");
 
   async function handleSave() {
     if (!fullName.trim()) {
@@ -73,30 +52,37 @@ export default function CreateTenantModal({
         notes,
       });
 
-      alert(
-        "Tenant created successfully."
-      );
+      alert("Tenant created successfully.");
+
+      // Reset form
+      setFullName("");
+      setPhone("");
+      setEmail("");
+      setIdNumber("");
+      setOccupation("");
+      setEmployer("");
+      setEmergencyContactName("");
+      setEmergencyContactPhone("");
+      setNotes("");
 
       onSaved();
+      onClose();
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Failed to create tenant.";
 
-    } catch (error: any) {
-
-      alert(error.message);
-
+      alert(message);
     } finally {
-
       setLoading(false);
-
     }
   }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-
       <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-white shadow-xl">
-
         <div className="border-b p-6">
-
           <h2 className="text-2xl font-bold">
             Add Tenant
           </h2>
@@ -104,16 +90,14 @@ export default function CreateTenantModal({
           <p className="mt-2 text-gray-500">
             Create a new tenant profile.
           </p>
-
         </div>
 
         <div className="space-y-5 p-6">
-                    <div className="grid gap-5 md:grid-cols-2">
-
+          <div className="grid gap-5 md:grid-cols-2">
             <div>
-
               <label className="mb-2 block font-medium">
-                Full Name <span className="text-red-500">*</span>
+                Full Name{" "}
+                <span className="text-red-500">*</span>
               </label>
 
               <input
@@ -124,13 +108,12 @@ export default function CreateTenantModal({
                 placeholder="John Doe"
                 className="w-full rounded-xl border p-3"
               />
-
             </div>
 
             <div>
-
               <label className="mb-2 block font-medium">
-                Phone Number <span className="text-red-500">*</span>
+                Phone Number{" "}
+                <span className="text-red-500">*</span>
               </label>
 
               <input
@@ -141,15 +124,11 @@ export default function CreateTenantModal({
                 placeholder="07XXXXXXXX"
                 className="w-full rounded-xl border p-3"
               />
-
             </div>
-
           </div>
 
           <div className="grid gap-5 md:grid-cols-2">
-
             <div>
-
               <label className="mb-2 block font-medium">
                 Email
               </label>
@@ -163,11 +142,9 @@ export default function CreateTenantModal({
                 placeholder="john@example.com"
                 className="w-full rounded-xl border p-3"
               />
-
             </div>
 
             <div>
-
               <label className="mb-2 block font-medium">
                 ID Number
               </label>
@@ -180,15 +157,11 @@ export default function CreateTenantModal({
                 placeholder="National ID"
                 className="w-full rounded-xl border p-3"
               />
-
             </div>
-
           </div>
 
           <div className="grid gap-5 md:grid-cols-2">
-
             <div>
-
               <label className="mb-2 block font-medium">
                 Occupation
               </label>
@@ -201,11 +174,9 @@ export default function CreateTenantModal({
                 placeholder="Business Owner"
                 className="w-full rounded-xl border p-3"
               />
-
             </div>
 
             <div>
-
               <label className="mb-2 block font-medium">
                 Employer
               </label>
@@ -218,15 +189,11 @@ export default function CreateTenantModal({
                 placeholder="ABC Company Ltd"
                 className="w-full rounded-xl border p-3"
               />
-
             </div>
-
           </div>
 
           <div className="grid gap-5 md:grid-cols-2">
-
             <div>
-
               <label className="mb-2 block font-medium">
                 Emergency Contact Name
               </label>
@@ -234,16 +201,16 @@ export default function CreateTenantModal({
               <input
                 value={emergencyContactName}
                 onChange={(e) =>
-                  setEmergencyContactName(e.target.value)
+                  setEmergencyContactName(
+                    e.target.value
+                  )
                 }
                 placeholder="Jane Doe"
                 className="w-full rounded-xl border p-3"
               />
-
             </div>
 
             <div>
-
               <label className="mb-2 block font-medium">
                 Emergency Contact Phone
               </label>
@@ -251,18 +218,17 @@ export default function CreateTenantModal({
               <input
                 value={emergencyContactPhone}
                 onChange={(e) =>
-                  setEmergencyContactPhone(e.target.value)
+                  setEmergencyContactPhone(
+                    e.target.value
+                  )
                 }
                 placeholder="07XXXXXXXX"
                 className="w-full rounded-xl border p-3"
               />
-
             </div>
-
           </div>
 
           <div>
-
             <label className="mb-2 block font-medium">
               Notes
             </label>
@@ -276,16 +242,14 @@ export default function CreateTenantModal({
               placeholder="Optional notes..."
               className="w-full rounded-xl border p-3"
             />
-
           </div>
-                  </div>
+        </div>
 
         <div className="flex justify-end gap-3 border-t p-6">
-
           <button
             onClick={onClose}
             disabled={loading}
-            className="rounded-xl border px-6 py-3"
+            className="rounded-xl border px-6 py-3 transition hover:bg-gray-100 disabled:opacity-50"
           >
             Cancel
           </button>
@@ -293,18 +257,14 @@ export default function CreateTenantModal({
           <button
             onClick={handleSave}
             disabled={loading}
-            className="rounded-xl bg-black px-6 py-3 font-semibold text-white hover:bg-gray-800 disabled:opacity-50"
+            className="rounded-xl bg-black px-6 py-3 font-semibold text-white transition hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {loading
               ? "Saving..."
               : "Save Tenant"}
           </button>
-
         </div>
-
       </div>
-
     </div>
   );
 }
-          
