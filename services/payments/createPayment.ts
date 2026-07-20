@@ -14,7 +14,7 @@ type CreatePaymentInput = {
 
   unit_id: string;
 
-  occupant_id: string;
+  tenant_id: string;
 
   payment_type:
     | "Rent"
@@ -132,8 +132,9 @@ export async function createPayment(
         unit_id:
           input.unit_id,
 
+        // Legacy database column
         occupant_id:
-          input.occupant_id,
+          input.tenant_id,
 
         receipt_number:
           receiptNumber,
