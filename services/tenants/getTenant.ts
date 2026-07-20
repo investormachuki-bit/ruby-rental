@@ -4,6 +4,10 @@ import { TABLES } from "@/constants/tables";
 export async function getTenant(
   tenantId: string
 ) {
+  if (!tenantId) {
+    throw new Error("Tenant ID is required.");
+  }
+
   const { data, error } = await supabase
     .from(TABLES.TENANTS)
     .select("*")
