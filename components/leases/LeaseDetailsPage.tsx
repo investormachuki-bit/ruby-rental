@@ -17,9 +17,10 @@ type Props = {
 export default function LeaseDetailsPage({
   leaseId,
 }: Props) {
+import type { LeaseDetails } from "@/types/lease";
 
-  const [lease, setLease] =
-    useState<any>(null);
+const [lease, setLease] =
+  useState<LeaseDetails | null>(null);
 
   const [loading, setLoading] =
     useState(true);
