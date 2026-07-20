@@ -8,7 +8,7 @@ import StickyActionBar from "@/components/common/StickyActionBar";
 import { createLease } from "@/services/leases/createLease";
 
 import { getProperties } from "@/services/properties/getAll";
-import { getOccupants } from "@/services/occupants/getOccupants";
+import { getTenants } from "@/services/tenants/getTenants";
 import { getPropertyUnits } from "@/services/units/getPropertyUnits";
 
 type Property = {
@@ -16,13 +16,25 @@ type Property = {
   name: string;
 };
 
-type Occupant = {
+type Tenant = {
   id: string;
-  first_name: string;
-  last_name: string;
-  phone_number?: string;
+  occupant_code?: string;
+
+  full_name: string;
+
+  phone?: string;
+
   email?: string;
+
   id_number?: string;
+
+  occupation?: string;
+
+  employer?: string;
+
+  emergency_contact_name?: string;
+
+  emergency_contact_phone?: string;
 };
 
 type Unit = {
@@ -37,7 +49,6 @@ type Unit = {
 };
 
 type Props = {
-
   propertyId?: string;
 
   unitId?: string;
@@ -45,21 +56,14 @@ type Props = {
   onSuccess: () => void;
 
   onCancel: () => void;
-
 };
 
 export default function CreateLeaseModal({
-
   propertyId,
-
   unitId,
-
   onSuccess,
-
   onCancel,
-
 }: Props) {
-
   const [loading, setLoading] =
     useState(false);
 
@@ -71,8 +75,8 @@ export default function CreateLeaseModal({
   const [properties, setProperties] =
     useState<Property[]>([]);
 
-  const [occupants, setOccupants] =
-    useState<Occupant[]>([]);
+  const [tenants, setTenants] =
+    useState<Tenant[]>([]);
 
   const [units, setUnits] =
     useState<Unit[]>([]);
@@ -80,18 +84,17 @@ export default function CreateLeaseModal({
   const [selectedUnit, setSelectedUnit] =
     useState<Unit | null>(null);
 
-  const [selectedOccupant, setSelectedOccupant] =
-    useState<Occupant | null>(null);
+  const [selectedTenant, setSelectedTenant] =
+    useState<Tenant | null>(null);
 
   const [form, setForm] = useState({
-
     property_id:
       propertyId ?? "",
 
     unit_id:
       unitId ?? "",
 
-    occupant_id: "",
+    tenant_id: "",
 
     start_date:
       new Date()
@@ -109,7 +112,6 @@ export default function CreateLeaseModal({
     grace_period_days: "5",
 
     notes: "",
-
   });
 
   useEffect(() => {
@@ -117,58 +119,44 @@ export default function CreateLeaseModal({
   }, []);
 
   async function loadData() {
-
     try {
-
-      const [props, occs] =
+      const [props, tenantData] =
         await Promise.all([
           getProperties(),
-          getOccupants(),
+          getTenants(),
         ]);
 
       setProperties(props ?? []);
 
-      setOccupants(occs ?? []);
-
+      setTenants(tenantData ?? []);
     } catch (error) {
-
       console.error(error);
-
     }
-
   }
 
   useEffect(() => {
-
     if (!form.property_id) {
-
       setUnits([]);
 
       setSelectedUnit(null);
 
       if (!propertyId) {
-
         setForm((prev) => ({
           ...prev,
           unit_id: "",
         }));
-
       }
 
       return;
-
     }
 
     loadUnits(form.property_id);
-
   }, [form.property_id]);
 
   async function loadUnits(
     propertyIdValue: string
   ) {
-
     try {
-
       const data =
         await getPropertyUnits(
           propertyIdValue
@@ -184,7 +172,6 @@ export default function CreateLeaseModal({
       setUnits(vacantUnits);
 
       if (unitId) {
-
         const unit =
           vacantUnits.find(
             (u) =>
@@ -192,11 +179,9 @@ export default function CreateLeaseModal({
           );
 
         if (unit) {
-
           setSelectedUnit(unit);
 
           setForm((prev) => ({
-
             ...prev,
 
             unit_id:
@@ -211,44 +196,32 @@ export default function CreateLeaseModal({
               String(
                 unit.deposit
               ),
-
           }));
-
         }
-
       }
-
     } catch (error) {
-
       console.error(error);
-
     }
-
   }
 
   useEffect(() => {
-
     if (!propertyId) return;
 
     setForm((prev) => ({
-
       ...prev,
 
       property_id:
         propertyId,
-
     }));
-
   }, [propertyId]);
 
   function handleChange(
     e: React.ChangeEvent<
-      HTMLInputElement |
-      HTMLSelectElement |
-      HTMLTextAreaElement
+      | HTMLInputElement
+      | HTMLSelectElement
+      | HTMLTextAreaElement
     >
   ) {
-
     const {
       name,
       value,
@@ -258,15 +231,15 @@ export default function CreateLeaseModal({
       ...prev,
       [name]: value,
     }));
-
   }
-    function handleUnitChange(
+
+  function handleUnitChange(
     unitIdValue: string
   ) {
-
     const unit =
       units.find(
-        (u) => u.id === unitIdValue
+        (u) =>
+          u.id === unitIdValue
       );
 
     if (!unit) return;
@@ -274,7 +247,6 @@ export default function CreateLeaseModal({
     setSelectedUnit(unit);
 
     setForm((prev) => ({
-
       ...prev,
 
       unit_id:
@@ -289,69 +261,58 @@ export default function CreateLeaseModal({
         String(
           unit.deposit
         ),
-
     }));
-
   }
 
-  function handleOccupantChange(
-    occupantId: string
+  function handleTenantChange(
+    tenantId: string
   ) {
-
-    const occupant =
-      occupants.find(
-        (o) =>
-          o.id === occupantId
+    const tenant =
+      tenants.find(
+        (t) =>
+          t.id === tenantId
       );
 
-    if (!occupant) return;
+    if (!tenant) return;
 
-    setSelectedOccupant(
-      occupant
+    setSelectedTenant(
+      tenant
     );
 
     setForm((prev) => ({
-
       ...prev,
 
-      occupant_id:
-        occupant.id,
-
+      tenant_id:
+        tenant.id,
     }));
-
   }
 
   async function handleSubmit() {
-
     try {
-
       setLoading(true);
 
       if (
         !form.property_id ||
         !form.unit_id ||
-        !form.occupant_id
+        !form.tenant_id
       ) {
-
         alert(
           "Please complete all required fields."
         );
 
         return;
-
       }
 
       const lease =
         await createLease({
-
           property_id:
             form.property_id,
 
           unit_id:
             form.unit_id,
 
-          occupant_id:
-            form.occupant_id,
+          tenant_id:
+            form.tenant_id,
 
           start_date:
             form.start_date,
@@ -387,15 +348,12 @@ export default function CreateLeaseModal({
 
           notes:
             form.notes,
-
         });
 
       if (!lease) {
-
         throw new Error(
           "Lease creation failed."
         );
-
       }
 
       alert(
@@ -403,23 +361,16 @@ export default function CreateLeaseModal({
       );
 
       onSuccess();
-
     } catch (error) {
-
       console.error(error);
 
       alert(
         "Failed to create lease."
       );
-
     } finally {
-
       setLoading(false);
-
     }
-
   }
-
   return (
 
   <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
@@ -456,8 +407,6 @@ export default function CreateLeaseModal({
         >
 
           <div className="grid gap-5 lg:grid-cols-2">
-
-            {/* Property */}
 
             <div>
 
@@ -508,8 +457,6 @@ export default function CreateLeaseModal({
               )}
 
             </div>
-
-            {/* Unit */}
 
             <div>
 
@@ -618,7 +565,6 @@ export default function CreateLeaseModal({
                   <p className="font-semibold">
                     {selectedUnit.floor_name ??
                       "-"}
-
                   </p>
 
                 </div>
@@ -630,26 +576,27 @@ export default function CreateLeaseModal({
           )}
 
         </SectionCard>
-                {/* Occupant */}
+
+        {/* Tenant */}
 
         <SectionCard
-          title="👤 Occupant"
-          description="Assign the occupant to this lease."
+          title="👤 Tenant"
+          description="Assign the tenant to this lease."
           completed={
-            form.occupant_id !== ""
+            form.tenant_id !== ""
           }
         >
 
           <div>
 
             <label className="mb-2 block font-medium">
-              Occupant
+              Tenant
             </label>
 
             <select
-              value={form.occupant_id}
+              value={form.tenant_id}
               onChange={(e) =>
-                handleOccupantChange(
+                handleTenantChange(
                   e.target.value
                 )
               }
@@ -657,17 +604,16 @@ export default function CreateLeaseModal({
             >
 
               <option value="">
-                Select Occupant
+                Select Tenant
               </option>
 
-              {occupants.map((occupant) => (
+              {tenants.map((tenant) => (
 
                 <option
-                  key={occupant.id}
-                  value={occupant.id}
+                  key={tenant.id}
+                  value={tenant.id}
                 >
-                  {occupant.first_name}{" "}
-                  {occupant.last_name}
+                  {tenant.full_name}
                 </option>
 
               ))}
@@ -676,12 +622,12 @@ export default function CreateLeaseModal({
 
           </div>
 
-          {selectedOccupant && (
+          {selectedTenant && (
 
             <div className="mt-6 rounded-xl border bg-slate-50 p-5">
 
               <h4 className="mb-4 font-semibold">
-                Selected Occupant
+                Selected Tenant
               </h4>
 
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -693,8 +639,7 @@ export default function CreateLeaseModal({
                   </p>
 
                   <p className="font-semibold">
-                    {selectedOccupant.first_name}{" "}
-                    {selectedOccupant.last_name}
+                    {selectedTenant.full_name}
                   </p>
 
                 </div>
@@ -706,7 +651,7 @@ export default function CreateLeaseModal({
                   </p>
 
                   <p className="font-semibold">
-                    {selectedOccupant.phone_number ??
+                    {selectedTenant.phone ??
                       "-"}
                   </p>
 
@@ -719,7 +664,7 @@ export default function CreateLeaseModal({
                   </p>
 
                   <p className="font-semibold">
-                    {selectedOccupant.id_number ??
+                    {selectedTenant.id_number ??
                       "-"}
                   </p>
 
@@ -732,7 +677,7 @@ export default function CreateLeaseModal({
                   </p>
 
                   <p className="font-semibold">
-                    {selectedOccupant.email ??
+                    {selectedTenant.email ??
                       "-"}
                   </p>
 
@@ -745,8 +690,7 @@ export default function CreateLeaseModal({
           )}
 
         </SectionCard>
-
-        {/* Lease Terms */}
+                {/* Lease Terms */}
 
         <SectionCard
           title="📄 Lease Terms"
@@ -849,7 +793,8 @@ export default function CreateLeaseModal({
           </div>
 
         </SectionCard>
-                {/* Financial Terms */}
+
+        {/* Financial Terms */}
 
         <SectionCard
           title="💰 Financial Terms"
@@ -995,5 +940,3 @@ export default function CreateLeaseModal({
 
 );
 }
-        
-  
