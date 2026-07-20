@@ -2,38 +2,15 @@
 
 import { useState } from "react";
 
+import type { LeaseDetails } from "@/types/lease";
+
 import SectionCard from "@/components/common/SectionCard";
 import StickyActionBar from "@/components/common/StickyActionBar";
 
 import { createPayment } from "@/services/payments/createPayment";
-type Lease = {
-  id: string;
-
-  property_id: string;
-
-  unit_id: string;
-
-  occupant_id: string;
-
-  rent_amount: number;
-
-  property: {
-    name: string;
-  };
-
-  unit: {
-    unit_number: string;
-  };
-
-  occupant: {
-    first_name: string;
-    last_name: string;
-    phone_number?: string;
-  };
-};
 
 type Props = {
-  lease: Lease;
+  lease: LeaseDetails;
 
   onSuccess: () => void;
 
@@ -107,54 +84,55 @@ export default function ReceivePaymentModal({
 
       await createPayment({
 
-  lease_id:
-    lease.id,
+        lease_id:
+          lease.id,
 
-  property_id:
-    lease.property_id,
+        property_id:
+          lease.property_id,
 
-  unit_id:
-    lease.unit_id,
+        unit_id:
+          lease.unit_id,
 
-  occupant_id:
-    lease.occupant_id,
+        tenant_id:
+          lease.tenant_id,
 
-  payment_type:
-    form.payment_type as any,
+        payment_type:
+          form.payment_type as any,
 
-  payment_method:
-    form.payment_method as any,
+        payment_method:
+          form.payment_method as any,
 
-  payment_date:
-    form.payment_date,
+        payment_date:
+          form.payment_date,
 
-  amount:
-    Number(form.amount),
+        amount:
+          Number(form.amount),
 
-  reference_number:
-    form.reference_number,
+        reference_number:
+          form.reference_number,
 
-  notes:
-    form.notes,
+        notes:
+          form.notes,
 
-});
+      });
 
       onSuccess();
-} catch (error: any) {
 
-  console.error(error);
+    } catch (error: any) {
 
-  alert(
-    error?.message ||
-    JSON.stringify(error) ||
-    "Failed to receive payment."
-  );
+      console.error(error);
 
-} finally {
+      alert(
+        error?.message ||
+        JSON.stringify(error) ||
+        "Failed to receive payment."
+      );
 
-  setLoading(false);
+    } finally {
 
-}
+      setLoading(false);
+
+    }
 
   }
 
@@ -191,8 +169,7 @@ export default function ReceivePaymentModal({
                 </p>
 
                 <p className="mt-1 font-semibold">
-                  {lease.occupant.first_name}{" "}
-                  {lease.occupant.last_name}
+                  {lease.tenant.full_name}
                 </p>
 
               </div>
@@ -204,7 +181,7 @@ export default function ReceivePaymentModal({
                 </p>
 
                 <p className="mt-1 font-semibold">
-                  {lease.occupant.phone_number ?? "-"}
+                  {lease.tenant.phone ?? "-"}
                 </p>
 
               </div>
@@ -326,7 +303,8 @@ export default function ReceivePaymentModal({
             </div>
 
           </SectionCard>
-                    <SectionCard
+
+          <SectionCard
             title="Reference & Notes"
             description="Optional payment reference and notes."
           >
@@ -397,8 +375,7 @@ export default function ReceivePaymentModal({
                 </span>
 
                 <span className="font-semibold">
-                  {lease.occupant.first_name}{" "}
-                  {lease.occupant.last_name}
+                  {lease.tenant.full_name}
                 </span>
 
               </div>
@@ -435,9 +412,7 @@ export default function ReceivePaymentModal({
 
                 <span className="text-2xl font-bold text-green-600">
                   KSh{" "}
-                  {Number(
-                    form.amount
-                  ).toLocaleString()}
+                  {Number(form.amount).toLocaleString()}
                 </span>
 
               </div>
@@ -463,4 +438,3 @@ export default function ReceivePaymentModal({
   );
 
 }
-          
