@@ -54,7 +54,6 @@ export default function CreateTenantModal({
 
       alert("Tenant created successfully.");
 
-      // Reset form
       setFullName("");
       setPhone("");
       setEmail("");
@@ -67,11 +66,14 @@ export default function CreateTenantModal({
 
       onSaved();
       onClose();
-    } catch (error) {
+    } catch (error: any) {
+      console.error("Create Tenant Error:", error);
+
       const message =
-        error instanceof Error
-          ? error.message
-          : "Failed to create tenant.";
+        error?.message ||
+        error?.details ||
+        error?.hint ||
+        JSON.stringify(error, null, 2);
 
       alert(message);
     } finally {
