@@ -1,10 +1,13 @@
 import { supabase } from "@/lib/supabase";
 import { getProfile } from "@/services/auth/getProfile";
+import { TABLES } from "@/constants/tables";
 
 export type CreateLeaseInput = {
   property_id: string;
   unit_id: string;
-  occupant_id: string;
+
+  // New architecture
+  tenant_id: string;
 
   start_date: string;
   end_date?: string | null;
@@ -38,7 +41,7 @@ export async function createLease(
     throw new Error("Profile not found.");
   }
 
-  // Generate lease number
+  // Generate Lease Number
 
   const today = new Date();
 
@@ -55,7 +58,7 @@ export async function createLease(
   const prefix = `LSE-${yyyy}${mm}${dd}`;
 
   const { count } = await supabase
-    .from("leases")
+    .from(TABLES.LEASES)
     .select("*", {
       count: "exact",
       head: true,
@@ -72,13 +75,13 @@ export async function createLease(
   const leaseNumber =
     `${prefix}-${sequence}`;
 
-  // Create lease
+  // Create Lease
 
   const {
     data,
     error,
   } = await supabase
-    .from("leases")
+    .from(TABLES.LEASES)
     .insert({
       workspace_id:
         profile.workspace_id,
@@ -92,8 +95,9 @@ export async function createLease(
       unit_id:
         input.unit_id,
 
+      // Temporary database compatibility
       occupant_id:
-        input.occupant_id,
+        input.tenant_id,
 
       start_date:
         input.start_date,
@@ -129,7 +133,7 @@ export async function createLease(
     throw error;
   }
 
-  // Mark unit as occupied
+  // Mark Unit as Occupied
 
   const { error: unitError } =
     await supabase
