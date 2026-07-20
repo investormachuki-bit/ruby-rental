@@ -1,10 +1,13 @@
 import { supabase } from "@/lib/supabase";
 import { getProfile } from "@/services/auth/getProfile";
+import { TABLES } from "@/constants/tables";
 
 export type UpdateLeaseInput = {
   property_id: string;
   unit_id: string;
-  occupant_id: string;
+
+  // New application terminology
+  tenant_id: string;
 
   start_date: string;
   end_date?: string | null;
@@ -47,13 +50,14 @@ export async function updateLease(
   }
 
   const { data, error } = await supabase
-    .from("leases")
+    .from(TABLES.LEASES)
     .update({
       property_id: input.property_id,
 
       unit_id: input.unit_id,
 
-      occupant_id: input.occupant_id,
+      // Temporary compatibility with current database
+      occupant_id: input.tenant_id,
 
       start_date: input.start_date,
 
