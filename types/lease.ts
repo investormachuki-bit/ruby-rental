@@ -1,9 +1,9 @@
 export type LeaseStatus =
   | "Draft"
   | "Active"
-  | "Ended"
-  | "Terminated"
-  | "Renewed";
+  | "Expired"
+  | "Renewed"
+  | "Terminated";
 
 export interface Lease {
   id: string;
