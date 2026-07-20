@@ -42,7 +42,7 @@ export async function generateMonthlyInvoices() {
         *,
         property:properties(id),
         unit:units(id),
-        occupant:occupants(id)
+        tenant:occupants(id)
       `)
       .eq(
         "workspace_id",
@@ -70,7 +70,9 @@ export async function generateMonthlyInvoices() {
   for (const lease of leases) {
 
     const dueDay =
-      lease.rent_due_day ?? 1;
+      lease.billing_day ??
+      lease.rent_due_day ??
+      1;
 
     // Skip until the configured billing day
     if (
@@ -115,7 +117,7 @@ export async function generateMonthlyInvoices() {
         unit_id:
           lease.unit_id,
 
-        occupant_id:
+        tenant_id:
           lease.occupant_id,
 
         invoice_type:
