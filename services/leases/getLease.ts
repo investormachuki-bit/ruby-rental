@@ -33,9 +33,9 @@ county,
 town
 ),
 unit:units(
-id,
-unit_number,
-floor_name
+  id,
+  unit_number,
+  floor_number
 ),
 tenant:tenants(
 id,
