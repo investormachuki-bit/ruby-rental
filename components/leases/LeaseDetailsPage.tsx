@@ -142,18 +142,15 @@ const [showTerminateModal, setShowTerminateModal] =
 
       setInvoices(invoiceData ?? []);
 
-    } catch (error) {
-if (error instanceof Error) {
-  alert(error.message);
-} else {
-  alert("Unknown error");
+    } catch (error: any) {
+
+  alert(JSON.stringify(error, null, 2));
+
+} finally {
+
+  setLoading(false);
+
 }
-
-    } finally {
-
-      setLoading(false);
-
-    }
 
   }
 
