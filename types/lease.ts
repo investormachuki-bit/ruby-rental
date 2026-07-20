@@ -35,3 +35,72 @@ export interface Lease {
 
   updated_at: string;
 }
+
+export interface Tenant {
+  id: string;
+
+  occupant_code?: string;
+
+  full_name: string;
+
+  phone?: string | null;
+
+  email?: string | null;
+
+  id_number?: string | null;
+
+  occupation?: string | null;
+
+  employer?: string | null;
+
+  emergency_contact_name?: string | null;
+
+  emergency_contact_phone?: string | null;
+
+  // Temporary legacy fields (remove after DB migration)
+  first_name?: string | null;
+
+  last_name?: string | null;
+
+  phone_number?: string | null;
+}
+
+export interface Property {
+  id: string;
+
+  property_code?: string;
+
+  name: string;
+
+  county?: string | null;
+
+  town?: string | null;
+
+  address?: string | null;
+}
+
+export interface Unit {
+  id: string;
+
+  unit_number: string;
+
+  floor_name?: string | null;
+
+  monthly_rent: number;
+
+  deposit: number;
+
+  status?: string;
+}
+
+/**
+ * Full lease object returned by getLease()
+ * Includes related entities.
+ */
+export interface LeaseDetails extends Lease {
+  tenant: Tenant;
+
+  property: Property;
+
+  unit: Unit;
+}
