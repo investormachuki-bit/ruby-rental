@@ -98,10 +98,10 @@ export const FEATURE_REGISTRY: Feature[] = [
   },
 
   {
-    moduleKey: "occupants",
+    moduleKey: "tenants",
     name: "Occupants",
     description: "Manage tenants and occupants.",
-    route: "/occupants",
+    route: "/tenants",
     icon: Users,
     category: "Core",
     permission: "occupants.view",
