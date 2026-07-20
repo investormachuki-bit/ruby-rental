@@ -6,7 +6,6 @@ export type CreateLeaseInput = {
   property_id: string;
   unit_id: string;
 
-  // New architecture
   tenant_id: string;
 
   start_date: string;
@@ -46,27 +45,36 @@ export async function createLease(
   const today = new Date();
 
   const yyyy = today.getFullYear();
-
-  const mm = String(
-    today.getMonth() + 1
-  ).padStart(2, "0");
-
-  const dd = String(
-    today.getDate()
-  ).padStart(2, "0");
+  const mm = String(today.getMonth() + 1).padStart(
+    2,
+    "0"
+  );
+  const dd = String(today.getDate()).padStart(
+    2,
+    "0"
+  );
 
   const prefix = `LSE-${yyyy}${mm}${dd}`;
 
-  const { count } = await supabase
-    .from(TABLES.LEASES)
-    .select("*", {
-      count: "exact",
-      head: true,
-    })
-    .eq(
-      "workspace_id",
-      profile.workspace_id
+  const { count, error: countError } =
+    await supabase
+      .from(TABLES.LEASES)
+      .select("*", {
+        count: "exact",
+        head: true,
+      })
+      .eq(
+        "workspace_id",
+        profile.workspace_id
+      );
+
+  if (countError) {
+    console.error(
+      "Lease count error:",
+      countError
     );
+    throw countError;
+  }
 
   const sequence = String(
     (count ?? 0) + 1
@@ -95,8 +103,7 @@ export async function createLease(
       unit_id:
         input.unit_id,
 
-      // Temporary database compatibility
-      occupant_id:
+      tenant_id:
         input.tenant_id,
 
       start_date:
@@ -130,6 +137,10 @@ export async function createLease(
     .single();
 
   if (error) {
+    console.error(
+      "Create Lease Error:",
+      error
+    );
     throw error;
   }
 
@@ -151,6 +162,10 @@ export async function createLease(
       );
 
   if (unitError) {
+    console.error(
+      "Unit Update Error:",
+      unitError
+    );
     throw unitError;
   }
 
