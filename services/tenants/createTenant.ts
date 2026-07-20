@@ -31,9 +31,7 @@ export async function createTenant(
   }
 
   // Get profile
-  const profile = await getProfile(
-    session.user.id
-  );
+  const profile = await getProfile(session.user.id);
 
   if (!profile) {
     throw new Error("Profile not found.");
@@ -41,88 +39,62 @@ export async function createTenant(
 
   // Generate Tenant Code
   const {
-    data: occupantCode,
+    data: tenantCode,
     error: codeError,
-  } = await supabase.rpc(
-    "generate_occupant_code",
-    {
-      p_workspace_id:
-        profile.workspace_id,
-    }
-  );
+  } = await supabase.rpc("generate_tenant_code", {
+    p_workspace_id: profile.workspace_id,
+  });
 
   if (codeError) {
     throw codeError;
   }
 
-  // Split full name into first & last
-  const parts = input.fullName
-    .trim()
-    .split(/\s+/);
+  // Split full name
+  const parts = input.fullName.trim().split(/\s+/);
 
-  const firstName =
-    parts.shift() ?? "";
-
-  const lastName =
-    parts.join(" ");
+  const firstName = parts.shift() ?? "";
+  const lastName = parts.join(" ");
 
   // Create Tenant
-  const { data, error } =
-    await supabase
-      .from(TABLES.TENANTS)
-      .insert({
-        workspace_id:
-          profile.workspace_id,
+  const { data, error } = await supabase
+    .from(TABLES.TENANTS)
+    .insert({
+      workspace_id: profile.workspace_id,
 
-        occupant_code:
-          occupantCode,
+      tenant_code: tenantCode,
 
-        // New schema
-        full_name:
-          input.fullName.trim(),
+      full_name: input.fullName.trim(),
 
-        phone:
-          input.phone.trim(),
+      first_name: firstName,
+      last_name: lastName,
 
-        // Legacy compatibility
-        first_name:
-          firstName,
+      phone: input.phone.trim(),
 
-        last_name:
-          lastName,
+      email: input.email?.trim() || null,
 
-        phone_number:
-          input.phone.trim(),
+      id_number: input.idNumber?.trim() || null,
 
-        email:
-          input.email?.trim() || null,
+      emergency_contact_name:
+        input.emergencyContactName?.trim() || null,
 
-        id_number:
-          input.idNumber?.trim() || null,
+      emergency_contact_phone:
+        input.emergencyContactPhone?.trim() || null,
 
-        emergency_contact_name:
-          input.emergencyContactName?.trim() ||
-          null,
+      occupation:
+        input.occupation?.trim() || null,
 
-        emergency_contact_phone:
-          input.emergencyContactPhone?.trim() ||
-          null,
+      employer:
+        input.employer?.trim() || null,
 
-        occupation:
-          input.occupation?.trim() || null,
+      status: "Prospective",
 
-        employer:
-          input.employer?.trim() || null,
+      notes:
+        input.notes?.trim() || null,
 
-        status: "Prospective",
-
-        notes:
-          input.notes?.trim() || null,
-
-        is_primary: true,
-      })
-      .select()
-      .single();
+      is_primary: true,
+    })
+    .select()
+    .single();
 
   if (error) {
     throw error;
