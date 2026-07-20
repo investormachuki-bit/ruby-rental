@@ -37,22 +37,21 @@ export async function getLease(
           unit_number,
           floor_name
         ),
-        tenant:occupants(
-          id,
-          occupant_code,
-          full_name,
-          phone,
-          email,
-          id_number,
-          occupation,
-          employer,
-          emergency_contact_name,
-          emergency_contact_phone,
+        tenant:tenants(
+  id,
+  tenant_code,
+  full_name,
+  phone,
+  email,
+  id_number,
+  occupation,
+  employer,
+  emergency_contact_name,
+  emergency_contact_phone,
 
-          first_name,
-          last_name,
-          phone_number
-        ),
+  first_name,
+  last_name
+),
         invoices(
           id,
           invoice_number,
