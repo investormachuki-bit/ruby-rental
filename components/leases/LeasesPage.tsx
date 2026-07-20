@@ -29,40 +29,7 @@ import CreateLeaseModal from "./CreateLeaseModal";
 import { getLeases } from "@/services/leases/getLeases";
 import { getProperties } from "@/services/properties/getAll";
 
-type Lease = {
-  id: string;
-
-  lease_number: string;
-
-  lease_type: "Open-ended" | "Fixed Term";
-
-  start_date: string;
-
-  end_date: string | null;
-
-  rent_amount: number;
-
-  rent_due_day: number;
-
-  status: string;
-
-  property: {
-    id: string;
-    name: string;
-  };
-
-  unit: {
-    id: string;
-    unit_number: string;
-  };
-
-  occupant: {
-    id: string;
-    first_name: string;
-    last_name: string;
-    phone_number?: string;
-  };
-};
+import type { LeaseDetails } from "@/types/lease";
 
 type Property = {
   id: string;
@@ -72,7 +39,7 @@ type Property = {
 export default function LeasesPage() {
 
   const [leases, setLeases] =
-    useState<Lease[]>([]);
+    useState<LeaseDetails[]>([]);
 
   const [properties, setProperties] =
     useState<Property[]>([]);
@@ -165,7 +132,7 @@ export default function LeasesPage() {
                 search.toLowerCase()
               ) ||
 
-            `${lease.occupant.first_name} ${lease.occupant.last_name}`
+            lease.tenant.full_name
               .toLowerCase()
               .includes(
                 search.toLowerCase()
@@ -222,12 +189,12 @@ export default function LeasesPage() {
     filteredLeases.filter(
       (lease) => {
 
-        if (!lease.end_date)
+        if (!lease.move_out_date)
           return false;
 
         const end =
           new Date(
-            lease.end_date
+            lease.move_out_date
           );
 
         const today =
@@ -254,8 +221,7 @@ export default function LeasesPage() {
 
       }
     ).length;
-
-  return (
+    return (
 
     <AppShell>
 
@@ -275,7 +241,7 @@ export default function LeasesPage() {
 
         <PageHeader
           title="Leases"
-          description="Manage all active, draft and expired leases."
+          description="Manage all active, draft and ended leases."
         >
 
           <Button
@@ -294,7 +260,8 @@ export default function LeasesPage() {
           </Button>
 
         </PageHeader>
-                {/* Summary Cards */}
+
+        {/* Summary Cards */}
 
         <Section>
 
@@ -368,9 +335,10 @@ export default function LeasesPage() {
             {/* Filters */}
 
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-                            <input
+
+              <input
                 type="text"
-                placeholder="Search lease..."
+                placeholder="Search lease, tenant, property or unit..."
                 value={search}
                 onChange={(e) =>
                   setSearch(e.target.value)
@@ -385,6 +353,7 @@ export default function LeasesPage() {
                 }
                 className="rounded-xl border border-gray-200 bg-white p-3"
               >
+
                 <option value="All">
                   All Properties
                 </option>
@@ -409,6 +378,7 @@ export default function LeasesPage() {
                 }
                 className="rounded-xl border border-gray-200 bg-white p-3"
               >
+
                 <option value="All">
                   All Statuses
                 </option>
@@ -421,8 +391,8 @@ export default function LeasesPage() {
                   Active
                 </option>
 
-                <option value="Expired">
-                  Expired
+                <option value="Ended">
+                  Ended
                 </option>
 
                 <option value="Terminated">
@@ -438,6 +408,7 @@ export default function LeasesPage() {
                 }
                 className="rounded-xl border border-gray-200 bg-white p-3"
               >
+
                 <option value="All">
                   All Lease Types
                 </option>
@@ -467,14 +438,13 @@ export default function LeasesPage() {
 
                 <EmptyState
                   title="No Leases Found"
-                  description="Create your first lease to begin managing tenancy."
+                  description="Create your first lease to begin managing tenants."
                 />
 
               ) : (
 
                 <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-
-                  {filteredLeases.map((lease) => (
+                                    {filteredLeases.map((lease) => (
 
                     <Card
                       key={lease.id}
@@ -487,8 +457,7 @@ export default function LeasesPage() {
 
                           <h2 className="text-xl font-bold text-gray-900">
 
-                            {lease.occupant.first_name}{" "}
-                            {lease.occupant.last_name}
+                            {lease.tenant.full_name}
 
                           </h2>
 
@@ -506,6 +475,8 @@ export default function LeasesPage() {
                               ? "bg-green-100 text-green-700"
                               : lease.status === "Draft"
                               ? "bg-yellow-100 text-yellow-700"
+                              : lease.status === "Ended"
+                              ? "bg-gray-100 text-gray-700"
                               : "bg-red-100 text-red-700"
                           }`}
                         >
@@ -542,16 +513,16 @@ export default function LeasesPage() {
 
                         <p>
 
-                          📅 <strong>Due Day:</strong>{" "}
-                          {lease.rent_due_day}
+                          📅 <strong>Billing Day:</strong>{" "}
+                          {lease.billing_day}
 
                         </p>
 
                         <p>
 
                           📆 <strong>Period:</strong>{" "}
-                          {lease.start_date} →{" "}
-                          {lease.end_date ??
+                          {lease.move_in_date} →{" "}
+                          {lease.move_out_date ??
                             "Open-ended"}
 
                         </p>
@@ -599,7 +570,8 @@ export default function LeasesPage() {
           </Card>
 
         </Section>
-              </PageContainer>
+
+      </PageContainer>
 
       {showModal && (
 
@@ -615,5 +587,5 @@ export default function LeasesPage() {
     </AppShell>
 
   );
+
 }
-        
