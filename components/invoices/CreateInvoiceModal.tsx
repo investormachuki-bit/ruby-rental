@@ -2,39 +2,16 @@
 
 import { useState } from "react";
 
+import type { LeaseDetails } from "@/types/lease";
+
 import SectionCard from "@/components/common/SectionCard";
 import StickyActionBar from "@/components/common/StickyActionBar";
 
 import { createInvoice } from "@/services/invoices/createInvoice";
 import { createInvoiceItem } from "@/services/invoiceItems/createInvoiceItem";
 
-type Lease = {
-  id: string;
-
-  property_id: string;
-
-  unit_id: string;
-
-  occupant_id: string;
-
-  rent_amount: number;
-
-  property: {
-    name: string;
-  };
-
-  unit: {
-    unit_number: string;
-  };
-
-  occupant: {
-    first_name: string;
-    last_name: string;
-  };
-};
-
 type Props = {
-  lease: Lease;
+  lease: LeaseDetails;
 
   onSuccess: () => void;
 
@@ -125,8 +102,8 @@ export default function CreateInvoiceModal({
           unit_id:
             lease.unit_id,
 
-          occupant_id:
-            lease.occupant_id,
+          tenant_id:
+            lease.tenant_id,
 
           invoice_type:
             form.invoice_type as
@@ -166,9 +143,7 @@ export default function CreateInvoiceModal({
         quantity: 1,
 
         unit_price:
-          Number(
-            form.amount
-          ),
+          Number(form.amount),
 
       });
 
@@ -191,7 +166,8 @@ export default function CreateInvoiceModal({
   }
 
   return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
 
       <div className="flex max-h-[95vh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl bg-gray-50 shadow-2xl">
 
@@ -208,8 +184,7 @@ export default function CreateInvoiceModal({
         </div>
 
         <div className="flex-1 space-y-6 overflow-y-auto p-6">
-
-          <SectionCard
+                    <SectionCard
             title="Invoice Information"
             description="Select the invoice type and billing period."
           >
@@ -326,7 +301,8 @@ export default function CreateInvoiceModal({
             </div>
 
           </SectionCard>
-                    <SectionCard
+
+          <SectionCard
             title="Notes"
             description="Optional notes for this invoice."
           >
@@ -356,8 +332,7 @@ export default function CreateInvoiceModal({
                 </span>
 
                 <span className="font-semibold">
-                  {lease.occupant.first_name}{" "}
-                  {lease.occupant.last_name}
+                  {lease.tenant.full_name}
                 </span>
 
               </div>
@@ -418,9 +393,7 @@ export default function CreateInvoiceModal({
 
                 <span className="text-2xl font-bold text-blue-600">
                   KSh{" "}
-                  {Number(
-                    form.amount
-                  ).toLocaleString()}
+                  {Number(form.amount).toLocaleString()}
                 </span>
 
               </div>
