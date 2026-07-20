@@ -3,64 +3,107 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 
+import type { LeaseDetails } from "@/types/lease";
+
 import Breadcrumb from "@/components/common/Breadcrumb";
+
 import { getLease } from "@/services/leases/getLease";
+
 import ReceivePaymentModal from "@/components/payments/ReceivePaymentModal";
 import { getPayments } from "@/services/payments/getPayments";
+
 import CreateInvoiceModal from "@/components/invoices/CreateInvoiceModal";
 import { getInvoices } from "@/services/invoices/getInvoices";
-import type { LeaseDetails } from "@/types/lease";
 
 type Props = {
   leaseId: string;
+};
+
+type Payment = {
+  id: string;
+
+  receipt_number: string;
+
+  payment_date: string;
+
+  payment_method: string;
+
+  payment_type: string;
+
+  amount: number;
+};
+
+type Invoice = {
+  id: string;
+
+  invoice_number: string;
+
+  billing_period: string;
+
+  due_date: string;
+
+  amount: number;
+
+  balance: number;
+
+  status: string;
 };
 
 export default function LeaseDetailsPage({
   leaseId,
 }: Props) {
 
-const [lease, setLease] =
-  useState<LeaseDetails | null>(null);
+  const [lease, setLease] =
+    useState<LeaseDetails | null>(null);
 
   const [loading, setLoading] =
     useState(true);
 
   const [activeTab, setActiveTab] =
     useState("Overview");
+
   const [payments, setPayments] =
-  useState<any[]>([]);
+    useState<Payment[]>([]);
 
-const [showPaymentModal, setShowPaymentModal] =
-  useState(false);
+  const [showPaymentModal, setShowPaymentModal] =
+    useState(false);
+
   const [invoices, setInvoices] =
-  useState<any[]>([]);
+    useState<Invoice[]>([]);
 
-const [showInvoiceModal, setShowInvoiceModal] =
-  useState(false);
+  const [showInvoiceModal, setShowInvoiceModal] =
+    useState(false);
 
+  const totalInvoiced =
+    invoices.reduce(
+      (sum, invoice) =>
+        sum + Number(invoice.amount ?? 0),
+      0
+    );
 
-const totalInvoiced =
-  invoices.reduce(
-    (sum, invoice) => sum + Number(invoice.amount ?? 0),
-    0
-  );
+  const totalPaid =
+    payments.reduce(
+      (sum, payment) =>
+        sum + Number(payment.amount ?? 0),
+      0
+    );
 
-const totalPaid =
-  payments.reduce(
-    (sum, payment) => sum + Number(payment.amount ?? 0),
-    0
-  );
+  const outstandingBalance =
+    invoices.reduce(
+      (sum, invoice) =>
+        sum + Number(invoice.balance ?? 0),
+      0
+    );
 
-const outstandingBalance =
-  invoices.reduce(
-    (sum, invoice) => sum + Number(invoice.balance ?? 0),
-    0
-  );
+  const latestInvoice =
+    invoices.length > 0
+      ? invoices[0]
+      : null;
 
-const latestInvoice = invoices.length ? invoices[0] : null;
-const latestPayment = payments.length ? payments[0] : null;
-
-  
+  const latestPayment =
+    payments.length > 0
+      ? payments[0]
+      : null;
 
   useEffect(() => {
     loadLease();
@@ -68,36 +111,36 @@ const latestPayment = payments.length ? payments[0] : null;
 
   async function loadLease() {
 
-  try {
+    try {
 
-    setLoading(true);
+      setLoading(true);
 
-    const data =
-      await getLease(leaseId);
+      const leaseData =
+        await getLease(leaseId);
 
-    setLease(data);
+      setLease(leaseData);
 
-    const paymentData =
-      await getPayments(leaseId);
+      const paymentData =
+        await getPayments(leaseId);
 
-    setPayments(paymentData);
-    const invoiceData =
-  await getInvoices(leaseId);
+      setPayments(paymentData ?? []);
 
-setInvoices(invoiceData);
+      const invoiceData =
+        await getInvoices(leaseId);
 
-  } catch (error) {
+      setInvoices(invoiceData ?? []);
 
-    console.error(error);
+    } catch (error) {
 
-  } finally {
+      console.error(error);
 
-    setLoading(false);
+    } finally {
+
+      setLoading(false);
+
+    }
 
   }
-
-}
-
 
   if (loading) {
 
@@ -126,8 +169,7 @@ setInvoices(invoiceData);
     );
 
   }
-
-  return (
+    return (
 
     <div className="space-y-8">
 
@@ -161,18 +203,13 @@ setInvoices(invoiceData);
           </Link>
 
           <h1 className="mt-3 text-4xl font-bold">
-
-            {lease.occupant.first_name}{" "}
-            {lease.occupant.last_name}
-
+            {lease.tenant.full_name}
           </h1>
 
           <p className="mt-2 text-gray-500">
-
             {lease.property.name}
             {" • "}
             Unit {lease.unit.unit_number}
-
           </p>
 
         </div>
@@ -183,38 +220,34 @@ setInvoices(invoiceData);
             className={`rounded-full px-4 py-2 text-sm font-semibold ${
               lease.status === "Active"
                 ? "bg-green-100 text-green-700"
+                : lease.status === "Ended"
+                ? "bg-gray-200 text-gray-700"
                 : "bg-yellow-100 text-yellow-700"
             }`}
           >
             {lease.status}
           </span>
-<button
-  onClick={() =>
-    setShowPaymentModal(true)
-  }
-  className="rounded-xl bg-black px-5 py-3 font-semibold text-white"
->
 
+          <button
+            onClick={() => setShowPaymentModal(true)}
+            className="rounded-xl bg-black px-5 py-3 font-semibold text-white"
+          >
             Record Payment
-
           </button>
 
           <button className="rounded-xl border px-5 py-3">
-
             Renew Lease
-
           </button>
 
           <button className="rounded-xl border border-red-300 px-5 py-3 text-red-600">
-
             Terminate
-
           </button>
 
         </div>
 
       </div>
-            {/* Executive Summary */}
+
+      {/* Executive Summary */}
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
 
@@ -225,10 +258,7 @@ setInvoices(invoiceData);
           </p>
 
           <h2 className="mt-2 text-3xl font-bold">
-            KSh{" "}
-            {Number(
-              lease.rent_amount
-            ).toLocaleString()}
+            KSh {Number(lease.rent_amount).toLocaleString()}
           </h2>
 
         </div>
@@ -240,10 +270,7 @@ setInvoices(invoiceData);
           </p>
 
           <h2 className="mt-2 text-3xl font-bold">
-            KSh{" "}
-            {Number(
-              lease.deposit_amount
-            ).toLocaleString()}
+            KSh {Number(lease.deposit_amount).toLocaleString()}
           </h2>
 
         </div>
@@ -251,11 +278,11 @@ setInvoices(invoiceData);
         <div className="rounded-2xl border bg-white p-5 shadow-sm">
 
           <p className="text-sm text-gray-500">
-            Rent Due Day
+            Billing Day
           </p>
 
           <h2 className="mt-2 text-3xl font-bold">
-            {lease.rent_due_day}
+            {lease.billing_day}
           </h2>
 
         </div>
@@ -267,7 +294,7 @@ setInvoices(invoiceData);
           </p>
 
           <h2 className="mt-2 text-3xl font-bold text-red-600">
-            KSh 0
+            KSh {outstandingBalance.toLocaleString()}
           </h2>
 
         </div>
@@ -291,9 +318,7 @@ setInvoices(invoiceData);
 
             <button
               key={tab}
-              onClick={() =>
-                setActiveTab(tab)
-              }
+              onClick={() => setActiveTab(tab)}
               className={`rounded-xl px-5 py-3 font-medium transition ${
                 activeTab === tab
                   ? "bg-black text-white"
@@ -308,465 +333,434 @@ setInvoices(invoiceData);
         </div>
 
       </div>
+      {activeTab === "Overview" && (
 
-      {activeTab ===
-        "Overview" && (
+  <div className="grid gap-6 xl:grid-cols-2">
 
-        <div className="grid gap-6 xl:grid-cols-2">
-                    {/* Tenant Information */}
+    {/* Tenant Information */}
 
-          <div className="rounded-2xl border bg-white p-6 shadow-sm">
+    <div className="rounded-2xl border bg-white p-6 shadow-sm">
 
-            <h3 className="text-xl font-bold">
-              Tenant Information
-            </h3>
+      <h3 className="text-xl font-bold">
+        Tenant Information
+      </h3>
 
-            <div className="mt-6 grid gap-5 md:grid-cols-2">
+      <div className="mt-6 grid gap-5 md:grid-cols-2">
 
-              <div>
+        <div>
 
-                <p className="text-sm text-gray-500">
-                  Full Name
-                </p>
+          <p className="text-sm text-gray-500">
+            Full Name
+          </p>
 
-                <p className="mt-1 font-semibold">
-                  {lease.occupant.first_name}{" "}
-                  {lease.occupant.last_name}
-                </p>
+          <p className="mt-1 font-semibold">
+            {lease.tenant.full_name}
+          </p>
 
-              </div>
+        </div>
 
-              <div>
+        <div>
 
-                <p className="text-sm text-gray-500">
-                  Phone Number
-                </p>
+          <p className="text-sm text-gray-500">
+            Phone Number
+          </p>
 
-                <p className="mt-1 font-semibold">
-                  {lease.occupant.phone_number || "-"}
-                </p>
+          <p className="mt-1 font-semibold">
+            {lease.tenant.phone || "-"}
+          </p>
 
-              </div>
+        </div>
 
-              <div>
+        <div>
 
-                <p className="text-sm text-gray-500">
-                  Email
-                </p>
+          <p className="text-sm text-gray-500">
+            Email
+          </p>
 
-                <p className="mt-1 font-semibold">
-                  {lease.occupant.email || "-"}
-                </p>
+          <p className="mt-1 font-semibold">
+            {lease.tenant.email || "-"}
+          </p>
 
-              </div>
+        </div>
 
-              <div>
+        <div>
 
-                <p className="text-sm text-gray-500">
-                  ID Number
-                </p>
+          <p className="text-sm text-gray-500">
+            ID Number
+          </p>
 
-                <p className="mt-1 font-semibold">
-                  {lease.occupant.id_number || "-"}
-                </p>
+          <p className="mt-1 font-semibold">
+            {lease.tenant.id_number || "-"}
+          </p>
 
-              </div>
+        </div>
 
-            </div>
+      </div>
 
-          </div>
+    </div>
 
-          {/* Property Information */}
+    {/* Property Information */}
 
-          <div className="rounded-2xl border bg-white p-6 shadow-sm">
+    <div className="rounded-2xl border bg-white p-6 shadow-sm">
 
-            <h3 className="text-xl font-bold">
-              Property Information
-            </h3>
+      <h3 className="text-xl font-bold">
+        Property Information
+      </h3>
 
-            <div className="mt-6 grid gap-5 md:grid-cols-2">
+      <div className="mt-6 grid gap-5 md:grid-cols-2">
 
-              <div>
+        <div>
 
-                <p className="text-sm text-gray-500">
-                  Property
-                </p>
+          <p className="text-sm text-gray-500">
+            Property
+          </p>
 
-                <p className="mt-1 font-semibold">
-                  {lease.property.name}
-                </p>
+          <p className="mt-1 font-semibold">
+            {lease.property.name}
+          </p>
 
-              </div>
+        </div>
 
-              <div>
+        <div>
 
-                <p className="text-sm text-gray-500">
-                  Unit
-                </p>
+          <p className="text-sm text-gray-500">
+            Unit
+          </p>
 
-                <p className="mt-1 font-semibold">
-                  {lease.unit.unit_number}
-                </p>
+          <p className="mt-1 font-semibold">
+            {lease.unit.unit_number}
+          </p>
 
-              </div>
+        </div>
 
-              <div>
+        <div>
 
-                <p className="text-sm text-gray-500">
-                  County
-                </p>
+          <p className="text-sm text-gray-500">
+            County
+          </p>
 
-                <p className="mt-1 font-semibold">
-                  {lease.property.county || "-"}
-                </p>
+          <p className="mt-1 font-semibold">
+            {lease.property.county || "-"}
+          </p>
 
-              </div>
+        </div>
 
-              <div>
+        <div>
 
-                <p className="text-sm text-gray-500">
-                  Town
-                </p>
+          <p className="text-sm text-gray-500">
+            Town
+          </p>
 
-                <p className="mt-1 font-semibold">
-                  {lease.property.town || "-"}
-                </p>
+          <p className="mt-1 font-semibold">
+            {lease.property.town || "-"}
+          </p>
 
-              </div>
+        </div>
 
-              <div>
+        <div>
 
-                <p className="text-sm text-gray-500">
-                  Floor
-                </p>
+          <p className="text-sm text-gray-500">
+            Floor
+          </p>
 
-                <p className="mt-1 font-semibold">
-                  {lease.unit.floor_name || "-"}
-                </p>
+          <p className="mt-1 font-semibold">
+            {lease.unit.floor_name || "-"}
+          </p>
 
-              </div>
+        </div>
 
-            </div>
+      </div>
 
-          </div>
-          
-                    {/* Lease Information */}
+    </div>
 
-          <div className="rounded-2xl border bg-white p-6 shadow-sm">
+    {/* Lease Information */}
 
-            <h3 className="text-xl font-bold">
-              Lease Information
-            </h3>
+    <div className="rounded-2xl border bg-white p-6 shadow-sm">
 
-            <div className="mt-6 grid gap-5 md:grid-cols-2">
+      <h3 className="text-xl font-bold">
+        Lease Information
+      </h3>
 
-              <div>
+      <div className="mt-6 grid gap-5 md:grid-cols-2">
 
-                <p className="text-sm text-gray-500">
-                  Lease Number
-                </p>
+        <div>
 
-                <p className="mt-1 font-semibold">
-                  {lease.lease_number}
-                </p>
+          <p className="text-sm text-gray-500">
+            Lease Number
+          </p>
 
-              </div>
+          <p className="mt-1 font-semibold">
+            {lease.lease_number}
+          </p>
 
-              <div>
+        </div>
 
-                <p className="text-sm text-gray-500">
-                  Status
-                </p>
+        <div>
 
-                <p className="mt-1 font-semibold">
-                  {lease.status}
-                </p>
+          <p className="text-sm text-gray-500">
+            Status
+          </p>
 
-              </div>
+          <p className="mt-1 font-semibold">
+            {lease.status}
+          </p>
 
-              <div>
+        </div>
 
-                <p className="text-sm text-gray-500">
-                  Lease Type
-                </p>
+        <div>
 
-                <p className="mt-1 font-semibold">
-                  {lease.lease_type}
-                </p>
+          <p className="text-sm text-gray-500">
+            Move In Date
+          </p>
 
-              </div>
+          <p className="mt-1 font-semibold">
+            {lease.move_in_date}
+          </p>
 
-              <div>
+        </div>
 
-                <p className="text-sm text-gray-500">
-                  Start Date
-                </p>
+        <div>
 
-                <p className="mt-1 font-semibold">
-                  {lease.start_date}
-                </p>
+          <p className="text-sm text-gray-500">
+            Move Out Date
+          </p>
 
-              </div>
+          <p className="mt-1 font-semibold">
+            {lease.move_out_date || "Open-ended"}
+          </p>
 
-              <div>
+        </div>
 
-                <p className="text-sm text-gray-500">
-                  End Date
-                </p>
+        <div>
 
-                <p className="mt-1 font-semibold">
-                  {lease.end_date ??
-                    "Open-ended"}
-                </p>
+          <p className="text-sm text-gray-500">
+            Billing Day
+          </p>
 
-              </div>
+          <p className="mt-1 font-semibold">
+            Every {lease.billing_day}
+            {lease.billing_day === 1
+              ? "st"
+              : lease.billing_day === 2
+              ? "nd"
+              : lease.billing_day === 3
+              ? "rd"
+              : "th"}
+          </p>
 
-              <div>
+        </div>
 
-                <p className="text-sm text-gray-500">
-                  Grace Period
-                </p>
+      </div>
 
-                <p className="mt-1 font-semibold">
-                  {lease.grace_period_days} Days
-                </p>
+    </div>
 
-              </div>
+    {/* Financial Information */}
 
-              <div>
+    <div className="rounded-2xl border bg-white p-6 shadow-sm">
 
-                <p className="text-sm text-gray-500">
-                  Rent Due Day
-                </p>
+      <h3 className="text-xl font-bold">
+        Financial Information
+      </h3>
 
-                <p className="mt-1 font-semibold">
-                  Every {lease.rent_due_day}
-                  {lease.rent_due_day === 1
-                    ? "st"
-                    : lease.rent_due_day === 2
-                    ? "nd"
-                    : lease.rent_due_day === 3
-                    ? "rd"
-                    : "th"}
-                </p>
+      <div className="mt-6 grid gap-5 md:grid-cols-2">
 
-              </div>
+        <div>
 
-            </div>
+          <p className="text-sm text-gray-500">
+            Monthly Rent
+          </p>
 
-          </div>
+          <p className="mt-1 text-2xl font-bold">
+            KSh {Number(lease.rent_amount).toLocaleString()}
+          </p>
 
-          {/* Financial Information */}
+        </div>
 
-          <div className="rounded-2xl border bg-white p-6 shadow-sm">
+        <div>
 
-            <h3 className="text-xl font-bold">
-              Financial Information
-            </h3>
+          <p className="text-sm text-gray-500">
+            Deposit
+          </p>
 
-            <div className="mt-6 grid gap-5 md:grid-cols-2">
+          <p className="mt-1 text-2xl font-bold">
+            KSh {Number(lease.deposit_amount).toLocaleString()}
+          </p>
 
-              <div>
+        </div>
 
-                <p className="text-sm text-gray-500">
-                  Monthly Rent
-                </p>
+        <div>
 
-                <p className="mt-1 text-2xl font-bold">
-                  KSh{" "}
-                  {Number(
-                    lease.rent_amount
-                  ).toLocaleString()}
-                </p>
+          <p className="text-sm text-gray-500">
+            Total Invoiced
+          </p>
 
-              </div>
+          <p className="mt-1 text-2xl font-bold">
+            KSh {totalInvoiced.toLocaleString()}
+          </p>
 
-              <div>
+        </div>
 
-                <p className="text-sm text-gray-500">
-                  Deposit
-                </p>
+        <div>
 
-                <p className="mt-1 text-2xl font-bold">
-                  KSh{" "}
-                  {Number(
-                    lease.deposit_amount
-                  ).toLocaleString()}
-                </p>
+          <p className="text-sm text-gray-500">
+            Total Paid
+          </p>
 
-              </div>
+          <p className="mt-1 text-2xl font-bold text-green-600">
+            KSh {totalPaid.toLocaleString()}
+          </p>
 
-              <div>
+        </div>
 
-                <p className="text-sm text-gray-500">
-                  Outstanding Balance
-                </p>
+        <div>
 
-                <p className="mt-1 text-2xl font-bold text-red-600">
-                  KSh 0
-                </p>
+          <p className="text-sm text-gray-500">
+            Outstanding Balance
+          </p>
 
-              </div>
+          <p className="mt-1 text-2xl font-bold text-red-600">
+            KSh {outstandingBalance.toLocaleString()}
+          </p>
 
-              <div>
+        </div>
 
-                <p className="text-sm text-gray-500">
-                  Current Balance
-                </p>
+      </div>
 
-                <p className="mt-1 text-2xl font-bold text-green-600">
-                  KSh 0
-                </p>
+      {lease.notes && (
 
-              </div>
+        <div className="mt-8 border-t pt-6">
 
-            </div>
+          <h4 className="font-semibold">
+            Notes
+          </h4>
 
-            {lease.notes && (
-
-              <div className="mt-8 border-t pt-6">
-
-                <h4 className="font-semibold">
-                  Notes
-                </h4>
-
-                <p className="mt-3 whitespace-pre-wrap text-gray-600">
-                  {lease.notes}
-                </p>
-
-              </div>
-
-            )}
-
-          </div>
+          <p className="mt-3 whitespace-pre-wrap text-gray-600">
+            {lease.notes}
+          </p>
 
         </div>
 
       )}
-{activeTab ===
-"Payments" && (
 
-<div className="rounded-2xl border bg-white shadow-sm">
+    </div>
 
-<div className="flex items-center justify-between border-b p-6">
-
-<div>
-
-<h3 className="text-xl font-bold">
-Payments
-</h3>
-
-<p className="text-gray-500">
-Payment history for this lease.
-</p>
-
-</div>
-
-<button
-onClick={() =>
-setShowPaymentModal(true)
-}
-className="rounded-xl bg-black px-5 py-3 font-semibold text-white"
->
-+ Receive Payment
-</button>
-
-</div>
-
-{payments.length === 0 ? (
-
-<div className="p-12 text-center text-gray-500">
-
-No payments recorded.
-
-</div>
-
-) : (
-
-<div className="overflow-x-auto">
-
-<table className="min-w-full">
-
-<thead className="bg-gray-50">
-
-<tr>
-
-<th className="p-4 text-left">
-Date
-</th>
-
-<th className="p-4 text-left">
-Receipt
-</th>
-
-<th className="p-4 text-left">
-Method
-</th>
-
-<th className="p-4 text-left">
-Type
-</th>
-
-<th className="p-4 text-right">
-Amount
-</th>
-
-</tr>
-
-</thead>
-
-<tbody>
-
-{payments.map(
-(payment) => (
-
-<tr
-key={payment.id}
-className="border-t"
->
-
-<td className="p-4">
-{payment.payment_date}
-</td>
-
-<td className="p-4">
-{payment.receipt_number}
-</td>
-
-<td className="p-4">
-{payment.payment_method}
-</td>
-
-<td className="p-4">
-{payment.payment_type}
-</td>
-
-<td className="p-4 text-right font-semibold">
-
-KSh{" "}
-
-{Number(
-payment.amount
-).toLocaleString()}
-
-</td>
-
-</tr>
-
-)
-)}
-
-</tbody>
-
-</table>
-
-</div>
+  </div>
 
 )}
+      {activeTab === "Payments" && (
 
-</div>
+  <div className="rounded-2xl border bg-white shadow-sm">
+
+    <div className="flex items-center justify-between border-b p-6">
+
+      <div>
+
+        <h3 className="text-xl font-bold">
+          Payments
+        </h3>
+
+        <p className="text-gray-500">
+          Payment history for this lease.
+        </p>
+
+      </div>
+
+      <button
+        onClick={() => setShowPaymentModal(true)}
+        className="rounded-xl bg-black px-5 py-3 font-semibold text-white"
+      >
+        + Receive Payment
+      </button>
+
+    </div>
+
+    {payments.length === 0 ? (
+
+      <div className="p-12 text-center text-gray-500">
+
+        No payments recorded.
+
+      </div>
+
+    ) : (
+
+      <div className="overflow-x-auto">
+
+        <table className="min-w-full">
+
+          <thead className="bg-gray-50">
+
+            <tr>
+
+              <th className="p-4 text-left">
+                Date
+              </th>
+
+              <th className="p-4 text-left">
+                Receipt
+              </th>
+
+              <th className="p-4 text-left">
+                Method
+              </th>
+
+              <th className="p-4 text-left">
+                Type
+              </th>
+
+              <th className="p-4 text-right">
+                Amount
+              </th>
+
+            </tr>
+
+          </thead>
+
+          <tbody>
+
+            {payments.map((payment) => (
+
+              <tr
+                key={payment.id}
+                className="border-t"
+              >
+
+                <td className="p-4">
+                  {payment.payment_date}
+                </td>
+
+                <td className="p-4">
+                  {payment.receipt_number}
+                </td>
+
+                <td className="p-4">
+                  {payment.payment_method}
+                </td>
+
+                <td className="p-4">
+                  {payment.payment_type}
+                </td>
+
+                <td className="p-4 text-right font-semibold">
+                  KSh {Number(payment.amount).toLocaleString()}
+                </td>
+
+              </tr>
+
+            ))}
+
+          </tbody>
+
+        </table>
+
+      </div>
+
+    )}
+
+  </div>
 
 )}
+
 {activeTab === "Invoices" && (
 
   <div className="rounded-2xl border bg-white shadow-sm">
@@ -786,9 +780,7 @@ payment.amount
       </div>
 
       <button
-        onClick={() =>
-          setShowInvoiceModal(true)
-        }
+        onClick={() => setShowInvoiceModal(true)}
         className="rounded-xl bg-black px-5 py-3 font-semibold text-white"
       >
         + Create Invoice
@@ -880,23 +872,11 @@ payment.amount
                 </td>
 
                 <td className="p-4 text-right">
-
-                  KSh{" "}
-
-                  {Number(
-                    invoice.amount
-                  ).toLocaleString()}
-
+                  KSh {Number(invoice.amount).toLocaleString()}
                 </td>
 
                 <td className="p-4 text-right font-semibold">
-
-                  KSh{" "}
-
-                  {Number(
-                    invoice.balance
-                  ).toLocaleString()}
-
+                  KSh {Number(invoice.balance).toLocaleString()}
                 </td>
 
               </tr>
@@ -916,8 +896,8 @@ payment.amount
 )}
 
 {activeTab !== "Overview" &&
-activeTab !== "Payments" &&
-activeTab !== "Invoices" && (
+ activeTab !== "Payments" &&
+ activeTab !== "Invoices" && (
 
   <div className="rounded-2xl border border-dashed bg-white p-16 text-center">
 
@@ -933,43 +913,31 @@ activeTab !== "Invoices" && (
 
 )}
 
-{showPaymentModal &&
-  lease && (
+{showPaymentModal && lease && (
 
   <ReceivePaymentModal
     lease={lease}
-    onCancel={() =>
-      setShowPaymentModal(false)
-    }
+    onCancel={() => setShowPaymentModal(false)}
     onSuccess={() => {
-
       setShowPaymentModal(false);
-
       loadLease();
-
     }}
   />
 
 )}
-      {showInvoiceModal &&
-  lease && (
+
+{showInvoiceModal && lease && (
 
   <CreateInvoiceModal
     lease={lease}
-    onCancel={() =>
-      setShowInvoiceModal(false)
-    }
+    onCancel={() => setShowInvoiceModal(false)}
     onSuccess={() => {
-
       setShowInvoiceModal(false);
-
       loadLease();
-
     }}
   />
 
 )}
-      
 
     </div>
 
