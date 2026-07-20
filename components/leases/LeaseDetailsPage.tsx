@@ -9,6 +9,7 @@ import ReceivePaymentModal from "@/components/payments/ReceivePaymentModal";
 import { getPayments } from "@/services/payments/getPayments";
 import CreateInvoiceModal from "@/components/invoices/CreateInvoiceModal";
 import { getInvoices } from "@/services/invoices/getInvoices";
+import type { LeaseDetails } from "@/types/lease";
 
 type Props = {
   leaseId: string;
@@ -17,7 +18,6 @@ type Props = {
 export default function LeaseDetailsPage({
   leaseId,
 }: Props) {
-import type { LeaseDetails } from "@/types/lease";
 
 const [lease, setLease] =
   useState<LeaseDetails | null>(null);
