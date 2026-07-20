@@ -481,7 +481,7 @@ const [showTerminateModal, setShowTerminateModal] =
           </p>
 
           <p className="mt-1 font-semibold">
-            {lease.unit.floor_name || "-"}
+            {lease.unit.floor_number || "-"}
           </p>
 
         </div>
