@@ -17,6 +17,9 @@ import Link from "next/link";
 
 import { getTenant } from "@/services/tenants/getTenant";
 import { getLeases } from "@/services/leases/getLeases";
+import { getTenantInvoices } from "@/services/invoices/getTenantInvoices";
+import TenantFinancialSummary from "@/components/tenants/TenantFinancialSummary";
+
 
 interface Props {
   tenantId: string;
@@ -34,6 +37,13 @@ export default function TenantProfilePage({
     "overview" | "payments" | "documents" | "activity"
   >("overview");
 
+  const [invoiceSummary, setInvoiceSummary] = useState({
+  outstandingBalance: 0,
+  totalPaid: 0,
+  totalInvoiced: 0,
+  overdueInvoices: 0,
+});
+
   useEffect(() => {
     loadData();
   }, [tenantId]);
@@ -41,20 +51,22 @@ export default function TenantProfilePage({
   async function loadData() {
     try {
       setLoading(true);
+const tenantData = await getTenant(tenantId);
 
-      const tenantData = await getTenant(tenantId);
+const leases = await getLeases();
 
-      const leases = await getLeases();
+const invoiceData = await getTenantInvoices(tenantId);
 
-      const currentLease =
-        leases.find(
-          (lease: any) =>
-            lease.tenant_id === tenantId &&
-            lease.status === "Active"
-        ) ?? null;
+const currentLease =
+  leases.find(
+    (lease: any) =>
+      lease.tenant_id === tenantId &&
+      lease.status === "Active"
+  ) ?? null;
 
-      setTenant(tenantData);
-      setLease(currentLease);
+setTenant(tenantData);
+setLease(currentLease);
+setInvoiceSummary(invoiceData.summary);
     } catch (error) {
       console.error(error);
     } finally {
@@ -282,51 +294,9 @@ export default function TenantProfilePage({
         </div>
 
         {/* Financial Summary */}
-
-        <div className="rounded-2xl border bg-white p-6 shadow-sm">
-
-          <div className="mb-5 flex items-center gap-2">
-            <Wallet className="text-[#D4AF37]" />
-            <h2 className="text-xl font-semibold">
-              Financial Summary
-            </h2>
-          </div>
-
-          <div className="space-y-4">
-
-            <div className="rounded-xl bg-gray-50 p-4">
-              <p className="text-sm text-gray-500">
-                Outstanding Balance
-              </p>
-
-              <p className="mt-2 text-2xl font-bold text-red-600">
-                KSh 0
-              </p>
-            </div>
-
-            <div className="rounded-xl bg-gray-50 p-4">
-              <p className="text-sm text-gray-500">
-                Total Paid
-              </p>
-
-              <p className="mt-2 text-2xl font-bold text-green-600">
-                KSh 0
-              </p>
-            </div>
-
-            <div className="rounded-xl bg-gray-50 p-4">
-              <p className="text-sm text-gray-500">
-                Total Invoiced
-              </p>
-
-              <p className="mt-2 text-2xl font-bold text-[#D4AF37]">
-                KSh 0
-              </p>
-            </div>
-
-          </div>
-
-        </div>
+<TenantFinancialSummary
+  summary={invoiceSummary}
+/>
 
       </div>
 
