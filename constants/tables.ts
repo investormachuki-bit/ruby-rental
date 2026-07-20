@@ -1,4 +1,4 @@
 export const TABLES = {
-  TENANTS: "occupants", // Temporary until database migration
+  TENANTS: "tenants",
   LEASES: "leases",
 } as const;
