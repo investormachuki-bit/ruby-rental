@@ -2,7 +2,8 @@ export type LeaseStatus =
   | "Draft"
   | "Active"
   | "Ended"
-  | "Terminated";
+  | "Terminated"
+  | "Renewed";
 
 export interface Lease {
   id: string;
@@ -17,7 +18,11 @@ export interface Lease {
 
   unit_id: string;
 
-  move_in_date: string;
+  start_date: string;
+
+  end_date?: string | null;
+
+  move_in_date?: string | null;
 
   move_out_date?: string | null;
 
@@ -25,7 +30,9 @@ export interface Lease {
 
   deposit_amount: number;
 
-  billing_day: number;
+  rent_due_day: number;
+
+  billing_day?: number | null;
 
   status: LeaseStatus;
 
@@ -39,7 +46,7 @@ export interface Lease {
 export interface Tenant {
   id: string;
 
-  occupant_code?: string;
+  tenant_code?: string;
 
   full_name: string;
 
@@ -57,12 +64,9 @@ export interface Tenant {
 
   emergency_contact_phone?: string | null;
 
-  // Temporary legacy fields (remove after DB migration)
   first_name?: string | null;
 
   last_name?: string | null;
-
-  phone_number?: string | null;
 }
 
 export interface Property {
@@ -84,19 +88,15 @@ export interface Unit {
 
   unit_number: string;
 
-  floor_name?: string | null;
+  floor_number?: number | null;
 
-  monthly_rent: number;
+  monthly_rent?: number;
 
-  deposit: number;
+  deposit?: number;
 
   status?: string;
 }
 
-/**
- * Full lease object returned by getLease()
- * Includes related entities.
- */
 export interface LeaseDetails extends Lease {
   tenant: Tenant;
 
