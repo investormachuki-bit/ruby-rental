@@ -91,10 +91,10 @@ export async function getLease(
         ascending: false,
       })
       .single();
-
-  if (error) {
-    throw error;
-  }
+if (error) {
+  console.error("getLease error:", error);
+  throw error;
+}
 
   return data;
 }
