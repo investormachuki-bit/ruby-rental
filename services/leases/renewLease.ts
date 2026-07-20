@@ -37,52 +37,83 @@ export async function renewLease(
       .eq("id", input.leaseId)
       .single();
 
-  if (leaseError) {
-    throw leaseError;
+  if (leaseError || !currentLease) {
+    throw leaseError ?? new Error("Lease not found.");
   }
 
-  // Close current lease
-  const { error: updateError } = await supabase
+  // Generate next lease number
+  const { count } = await supabase
     .from(TABLES.LEASES)
-    .update({
-      status: "Renewed",
-      move_out_date: input.startDate,
-      updated_at: new Date().toISOString(),
-    })
-    .eq("id", input.leaseId);
+    .select("*", {
+      count: "exact",
+      head: true,
+    });
+
+  const leaseNumber = `LS-${String((count ?? 0) + 1).padStart(6, "0")}`;
+
+  // Close current lease
+  const { error: updateError } =
+    await supabase
+      .from(TABLES.LEASES)
+      .update({
+        status: "Renewed",
+
+        end_date: input.startDate,
+
+        move_out_date: input.startDate,
+
+        renewal_count:
+          (currentLease.renewal_count ?? 0) + 1,
+
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", input.leaseId);
 
   if (updateError) {
     throw updateError;
   }
 
-  // Create the renewed lease
-  const { data, error } = await supabase
-    .from(TABLES.LEASES)
-    .insert({
-      workspace_id: profile.workspace_id,
+  // Create renewed lease
+  const { data, error } =
+    await supabase
+      .from(TABLES.LEASES)
+      .insert({
+        workspace_id: profile.workspace_id,
 
-      tenant_id: currentLease.tenant_id,
+        tenant_id: currentLease.tenant_id,
 
-      property_id: currentLease.property_id,
+        property_id: currentLease.property_id,
 
-      unit_id: currentLease.unit_id,
+        unit_id: currentLease.unit_id,
 
-      rent_amount: input.rentAmount,
+        lease_number: leaseNumber,
 
-      deposit_amount: input.depositAmount,
+        start_date: input.startDate,
 
-      billing_day: input.billingDay,
+        end_date: input.endDate,
 
-      move_in_date: input.startDate,
+        // Compatibility fields
+        move_in_date: input.startDate,
 
-      move_out_date: input.endDate,
+        move_out_date: input.endDate,
 
-      status: "Active",
+        rent_amount: input.rentAmount,
 
-      notes: input.notes,
-    })
-    .select()
-    .single();
+        deposit_amount: input.depositAmount,
+
+        rent_due_day: input.billingDay,
+
+        billing_day: input.billingDay,
+
+        status: "Active",
+
+        renewed_from_lease_id:
+          currentLease.id,
+
+        notes: input.notes,
+      })
+      .select()
+      .single();
 
   if (error) {
     throw error;
