@@ -3,7 +3,6 @@ import { getProfile } from "@/services/auth/getProfile";
 import { TABLES } from "@/constants/tables";
 
 export async function getTenants() {
-  // Get logged in user
   const {
     data: { session },
   } = await supabase.auth.getSession();
@@ -12,10 +11,7 @@ export async function getTenants() {
     throw new Error("You are not logged in.");
   }
 
-  // Get profile
-  const profile = await getProfile(
-    session.user.id
-  );
+  const profile = await getProfile(session.user.id);
 
   if (!profile) {
     throw new Error("Profile not found.");
@@ -33,5 +29,5 @@ export async function getTenants() {
     throw error;
   }
 
-  return data;
+  return data ?? [];
 }
