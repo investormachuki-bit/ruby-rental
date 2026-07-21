@@ -1,5 +1,11 @@
 import InvoiceDetailsPage from "@/components/invoices/InvoiceDetailsPage";
 
-export default function Page({ params }: { params: Promise<{ id: string }> }) {
-  return <InvoiceDetailsPage invoiceId={(await params).id} />;
+export default async function Page({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = await params;
+
+  return <InvoiceDetailsPage invoiceId={id} />;
 }
