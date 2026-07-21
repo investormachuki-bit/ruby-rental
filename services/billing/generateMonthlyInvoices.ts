@@ -92,8 +92,8 @@ export async function generateMonthlyInvoices(targetDate = new Date()): Promise<
 }
 
 async function fetchExistingInvoice(leaseId: string, billingPeriod: string) {
-  const { createClient } = await import("@/lib/supabase");
-  const supabase = createClient();
+const { supabase } =
+  await import("@/lib/supabase");
   const { data } = await supabase
     .from("invoices")
     .select("id")
