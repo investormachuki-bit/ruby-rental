@@ -27,8 +27,12 @@ export async function generateMonthlyInvoices(targetDate = new Date()): Promise<
   };
 
   for (const lease of leases) {
-    const unitLabel = lease.unit?.unit_number ?? "Unit";
-    const tenantName = lease.tenant?.full_name ?? lease.tenant?.first_name ?? "Tenant";
+    const unitLabel =
+  lease.unit?.[0]?.unit_number ?? "Unit";
+    const tenantName =
+  lease.tenant?.[0]?.full_name ??
+  lease.tenant?.[0]?.first_name ??
+  "Tenant";
 
     try {
       const invoiceData = await buildInvoice(lease.id, billingPeriod);
