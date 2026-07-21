@@ -35,7 +35,10 @@ export async function generateMonthlyInvoices(targetDate = new Date()): Promise<
   "Tenant";
 
     try {
-      const invoiceData = await buildInvoice(lease.id, billingPeriod);
+      const invoiceData =
+  await buildInvoice(
+    lease.id
+  );
       const existingInvoice = await fetchExistingInvoice(lease.id, billingPeriod);
 
       if (existingInvoice) {
