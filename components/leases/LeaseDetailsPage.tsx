@@ -138,10 +138,14 @@ const [showTerminateModal, setShowTerminateModal] =
       setPayments(paymentData ?? []);
 
       const invoiceData =
-        await getInvoices(leaseId);
+  await getInvoices();
 
-      setInvoices(invoiceData ?? []);
-
+setInvoices(
+  invoiceData.filter(
+    (invoice) =>
+      invoice.lease_id === leaseId
+  )
+);
     } catch (error: any) {
 
   alert(JSON.stringify(error, null, 2));
