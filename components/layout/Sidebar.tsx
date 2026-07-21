@@ -62,12 +62,14 @@ export default function SidebarNavigation({
                 />
 
                 <span
-                  className={
-                    isActive(item.route)
-                      ? "font-semibold tracking-wide text-white"
-                      : "font-semibold tracking-wide"
-                  }
-                >
+  className={
+    isActive(item.route)
+      ? "font-semibold tracking-wide text-white"
+      : "font-semibold tracking-wide text-white group-hover:text-[#D4AF37]"
+  }
+>
+  {item.name}
+</span>
                   {item.name}
                 </span>
               </Link>
