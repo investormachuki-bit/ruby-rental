@@ -86,33 +86,28 @@ export default function BulkReadingDialog({
 
         await createMeterReading({
 
-          organization_id: "",
+  property_id: propertyId,
 
-          property_id: propertyId,
+  unit_id: row.unit_id,
 
-          unit_id: row.unit_id,
+  meter_type: meterType,
 
-          meter_type: meterType,
+  previous_reading:
+    row.previous_reading,
 
-          previous_reading:
-            row.previous_reading,
+  current_reading:
+    row.current_reading,
 
-          current_reading:
-            row.current_reading,
+  rate_per_unit:
+    ratePerUnit,
 
-          rate_per_unit:
-            ratePerUnit,
+  reading_date:
+    readingDate,
 
-          reading_date:
-            readingDate,
+  billing_period:
+    billingPeriod,
 
-          billing_period:
-            billingPeriod,
-
-          created_by: "",
-
-        });
-
+});
       }
 
       onSuccess();
