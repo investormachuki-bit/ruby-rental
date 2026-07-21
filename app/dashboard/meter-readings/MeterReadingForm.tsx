@@ -2,14 +2,12 @@
 
 import { useEffect, useMemo, useState } from "react";
 
+import { getProperties } from "@/services/properties";
+import { getUnits } from "@/services/units";
+
 import { createMeterReading } from "@/services/meterReadings/createMeterReading";
 import { updateMeterReading } from "@/services/meterReadings/updateMeterReading";
 import { getLatestReading } from "@/services/meterReadings/getLatestReading";
-
-// TODO:
-// Replace these imports with your actual services.
-import { getProperties } from "@/services/properties/getProperties";
-import { getUnits } from "@/services/units/getUnits";
 
 type Props = {
   reading?: any | null;
@@ -35,14 +33,10 @@ export default function MeterReadingForm({
     useState<any[]>([]);
 
   const [propertyId, setPropertyId] =
-    useState(
-      reading?.property_id ?? ""
-    );
+    useState(reading?.property_id ?? "");
 
   const [unitId, setUnitId] =
-    useState(
-      reading?.unit_id ?? ""
-    );
+    useState(reading?.unit_id ?? "");
 
   const [meterType, setMeterType] =
     useState<"Water" | "Electricity">(
@@ -77,14 +71,25 @@ export default function MeterReadingForm({
 
   useEffect(() => {
 
-    async function loadProperties() {
+    async function loadData() {
 
       try {
 
-        const data =
-          await getProperties();
+        const [
+          propertiesData,
+          unitsData,
+        ] = await Promise.all([
+          getProperties(),
+          getUnits(),
+        ]);
 
-        setProperties(data ?? []);
+        setProperties(
+          propertiesData ?? []
+        );
+
+        setUnits(
+          unitsData ?? []
+        );
 
       } catch (error) {
 
@@ -94,48 +99,34 @@ export default function MeterReadingForm({
 
     }
 
-    loadProperties();
+    loadData();
 
   }, []);
 
-  useEffect(() => {
-
-    async function loadUnits() {
+  const filteredUnits =
+    useMemo(() => {
 
       if (!propertyId) {
-
-        setUnits([]);
-
-        return;
-
+        return [];
       }
 
-      try {
+      return units.filter(
+        (unit) =>
+          unit.property_id === propertyId
+      );
 
-        const data =
-          await getUnits(propertyId);
-
-        setUnits(data ?? []);
-
-      } catch (error) {
-
-        console.error(error);
-
-      }
-
-    }
-
-    loadUnits();
-
-  }, [propertyId]);
+    }, [
+      units,
+      propertyId,
+    ]);
 
   useEffect(() => {
 
     async function loadPreviousReading() {
 
       if (
-        !unitId ||
-        isEditing
+        isEditing ||
+        !unitId
       ) {
         return;
       }
@@ -171,12 +162,12 @@ export default function MeterReadingForm({
   const unitsConsumed =
     useMemo(() => {
 
-      const units =
+      const consumed =
         currentReading -
         previousReading;
 
-      return units > 0
-        ? units
+      return consumed > 0
+        ? consumed
         : 0;
 
     }, [
@@ -196,7 +187,97 @@ export default function MeterReadingForm({
       unitsConsumed,
       ratePerUnit,
     ]);
-    return (
+    async function handleSubmit(
+    e: React.FormEvent<HTMLFormElement>
+  ) {
+
+    e.preventDefault();
+
+    if (!propertyId) {
+      alert("Please select a property.");
+      return;
+    }
+
+    if (!unitId) {
+      alert("Please select a unit.");
+      return;
+    }
+
+    if (currentReading < previousReading) {
+      alert(
+        "Current reading cannot be less than the previous reading."
+      );
+      return;
+    }
+
+    if (ratePerUnit <= 0) {
+      alert(
+        "Rate per unit must be greater than zero."
+      );
+      return;
+    }
+
+    try {
+
+      setSaving(true);
+
+      if (isEditing) {
+
+        await updateMeterReading({
+
+          id: reading.id,
+
+          current_reading: currentReading,
+
+          rate_per_unit: ratePerUnit,
+
+          reading_date: readingDate,
+
+        });
+
+      } else {
+
+        await createMeterReading({
+
+          property_id: propertyId,
+
+          unit_id: unitId,
+
+          meter_type: meterType,
+
+          previous_reading: previousReading,
+
+          current_reading: currentReading,
+
+          rate_per_unit: ratePerUnit,
+
+          reading_date: readingDate,
+
+          billing_period: billingPeriod,
+
+        });
+
+      }
+
+      onSuccess();
+
+    } catch (error) {
+
+      console.error(error);
+
+      alert(
+        "Unable to save meter reading."
+      );
+
+    } finally {
+
+      setSaving(false);
+
+    }
+
+  }
+
+  return (
 
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
 
@@ -214,13 +295,14 @@ export default function MeterReadingForm({
 
           <p className="mt-1 text-gray-500">
 
-            Record water or electricity meter readings.
+            Record water and electricity meter readings.
 
           </p>
 
         </div>
 
         <form
+          onSubmit={handleSubmit}
           className="space-y-6 p-6"
         >
 
@@ -275,7 +357,7 @@ export default function MeterReadingForm({
                 onChange={(e) =>
                   setUnitId(e.target.value)
                 }
-                disabled={isEditing}
+                disabled={!propertyId || isEditing}
                 required
               >
 
@@ -283,7 +365,7 @@ export default function MeterReadingForm({
                   Select Unit
                 </option>
 
-                {units.map((unit) => (
+                {filteredUnits.map((unit) => (
 
                   <option
                     key={unit.id}
@@ -373,7 +455,7 @@ export default function MeterReadingForm({
             <div>
 
               <label className="mb-2 block text-sm font-medium">
-                Rate Per Unit
+                Rate Per Unit (KSh)
               </label>
 
               <input
@@ -432,7 +514,7 @@ export default function MeterReadingForm({
 
           </div>
 
-          <div className="grid gap-4 rounded-xl border bg-blue-50 p-5 md:grid-cols-2">
+          <div className="grid gap-4 rounded-xl bg-blue-50 p-5 md:grid-cols-2">
 
             <div>
 
@@ -440,7 +522,7 @@ export default function MeterReadingForm({
                 Units Consumed
               </p>
 
-              <p className="mt-1 text-3xl font-bold text-blue-700">
+              <p className="mt-2 text-3xl font-bold text-blue-700">
 
                 {unitsConsumed.toLocaleString()}
 
@@ -454,7 +536,7 @@ export default function MeterReadingForm({
                 Estimated Amount
               </p>
 
-              <p className="mt-1 text-3xl font-bold text-green-700">
+              <p className="mt-2 text-3xl font-bold text-green-700">
 
                 KSh {amount.toLocaleString()}
 
@@ -469,7 +551,7 @@ export default function MeterReadingForm({
               type="button"
               onClick={onCancel}
               disabled={saving}
-              className="rounded-xl border px-6 py-3 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
+              className="rounded-xl border border-gray-300 px-6 py-3 font-medium hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
             >
               Cancel
             </button>
@@ -477,7 +559,7 @@ export default function MeterReadingForm({
             <button
               type="submit"
               disabled={saving}
-              className="rounded-xl bg-blue-600 px-6 py-3 text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+              className="rounded-xl bg-blue-600 px-6 py-3 font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {saving
                 ? "Saving..."
@@ -496,98 +578,5 @@ export default function MeterReadingForm({
 
   );
 
-  async function handleSubmit(
-    e: React.FormEvent<HTMLFormElement>
-  ) {
-
-    e.preventDefault();
-
-    if (!propertyId) {
-      alert("Please select a property.");
-      return;
-    }
-
-    if (!unitId) {
-      alert("Please select a unit.");
-      return;
-    }
-
-    if (currentReading < previousReading) {
-      alert(
-        "Current reading cannot be less than the previous reading."
-      );
-      return;
-    }
-
-    if (ratePerUnit <= 0) {
-      alert(
-        "Rate per unit must be greater than zero."
-      );
-      return;
-    }
-
-    try {
-
-      setSaving(true);
-
-      if (isEditing) {
-
-        await updateMeterReading({
-
-          id: reading.id,
-
-          current_reading: currentReading,
-
-          rate_per_unit: ratePerUnit,
-
-          reading_date: readingDate,
-
-        });
-
-      } else {
-
-        await createMeterReading({
-
-          // TODO:
-          // Replace these with values from the logged-in user/session.
-          organization_id: "",
-
-          created_by: "",
-
-          property_id: propertyId,
-
-          unit_id: unitId,
-
-          meter_type: meterType,
-
-          previous_reading: previousReading,
-
-          current_reading: currentReading,
-
-          rate_per_unit: ratePerUnit,
-
-          reading_date: readingDate,
-
-          billing_period: billingPeriod,
-
-        });
-
-      }
-
-      onSuccess();
-
-    } catch (error) {
-
-      console.error(error);
-
-      alert(
-        "Unable to save meter reading."
-      );
-
-    } finally {
-
-      setSaving(false);
-
-    }
-
 }
+          
