@@ -2,8 +2,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 
-import { getProperties } from "@/services/properties";
-import { getUnits } from "@/services/units";
+import { getProperties } from "@/services/properties/getAll";
+import { getUnits } from "@/services/units/getUnits";
 
 import { createMeterReading } from "@/services/meterReadings/createMeterReading";
 import { updateMeterReading } from "@/services/meterReadings/updateMeterReading";
