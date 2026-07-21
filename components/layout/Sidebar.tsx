@@ -70,9 +70,7 @@ export default function SidebarNavigation({
 >
   {item.name}
 </span>
-                  {item.name}
-                </span>
-              </Link>
+</Link>
             </li>
           );
         })}
