@@ -6,15 +6,16 @@ type CreateInvoiceItemInput = {
   invoice_id: string;
 
   item_type:
-    | "Rent"
-    | "Water"
-    | "Electricity"
-    | "Garbage"
-    | "Service Charge"
-    | "Parking"
-    | "Penalty"
-    | "Previous Balance"
-    | "Other";
+  | "Rent"
+  | "Water"
+  | "Electricity"
+  | "Garbage"
+  | "Service Charge"
+  | "Parking"
+  | "Penalty"
+  | "Previous Balance"
+  | "Deposit"
+  | "Other";
 
   description: string;
 
