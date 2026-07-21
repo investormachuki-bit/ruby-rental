@@ -89,18 +89,71 @@ export async function buildInvoice(
 
   const total = subtotal;
 
-  const invoice: InvoiceBuildResult = {
+const rentTotal = items
+  .filter(
+    (item) => item.item_type === "Rent"
+  )
+  .reduce(
+    (sum, item) =>
+      sum +
+      item.quantity *
+      item.unit_price,
+    0
+  );
 
-    billing_period:
-      billingPeriod,
+const utilityCharges = items
+  .filter((item) =>
+    [
+      "Water",
+      "Electricity",
+      "Garbage",
+      "Service Charge",
+      "Parking",
+    ].includes(item.item_type)
+  )
+  .reduce(
+    (sum, item) =>
+      sum +
+      item.quantity *
+      item.unit_price,
+    0
+  );
 
-    items,
+const previousBalances = items
+  .filter(
+    (item) =>
+      item.item_type ===
+      "Previous Balance"
+  )
+  .reduce(
+    (sum, item) =>
+      sum +
+      item.quantity *
+      item.unit_price,
+    0
+  );
 
-    subtotal,
+const invoice: InvoiceBuildResult = {
 
-    total,
+  billing_period:
+    billingPeriod,
 
-  };
+  items,
 
-  return invoice;
+  subtotal,
+
+  total,
+
+  rent_total:
+    rentTotal,
+
+  utility_charges:
+    utilityCharges,
+
+  previous_balances:
+    previousBalances,
+
+};
+
+return invoice;
 }
