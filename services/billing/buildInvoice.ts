@@ -103,3 +103,4 @@ export async function buildInvoice(
   };
 
   return invoice;
+}
