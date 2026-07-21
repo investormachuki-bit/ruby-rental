@@ -1,334 +1,245 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import Link from "next/link";
+import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 
 import AppShell from "@/components/layout/AppShell";
-
 import Breadcrumb from "@/components/common/Breadcrumb";
-
 import PageContainer from "@/components/ui/PageContainer";
 import PageHeader from "@/components/ui/PageHeader";
 import Section from "@/components/ui/Section";
-import StatCard from "@/components/ui/StatCard";
-import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
+import InvoiceFilters from "@/components/invoices/InvoiceFilters";
+import InvoiceSummaryCards from "@/components/invoices/InvoiceSummaryCards";
+import InvoicesList from "@/components/invoices/InvoicesList";
+import { getInvoices } from "@/services/invoices/getInvoices";
+import { generateMonthlyInvoices } from "@/services/billing/generateMonthlyInvoices";
+import MonthlyBillingModal from "@/components/invoices/MonthlyBillingModal";
+import type { InvoiceRowData } from "@/components/invoices/InvoiceRow";
+import type { MonthlyBillingSummary } from "@/services/billing/types";
 
-import {
-  FileText,
-  Clock3,
-  CheckCircle2,
-  AlertTriangle,
-  Wallet,
-  Receipt,
-} from "lucide-react";
-
-type Invoice = {
-  id: string;
-
-  invoice_number: string;
-
-  tenant_name: string;
-
-  property_name: string;
-
-  unit_number: string;
-
-  billing_period: string;
-
-  due_date: string;
-
-  amount: number;
-
-  amount_paid: number;
-
-  balance: number;
-
-  status: string;
-};
+type InvoiceSortField = "invoice_date" | "due_date" | "amount" | "balance";
+type InvoiceSortDirection = "asc" | "desc";
 
 export default function InvoicesPage() {
+  const router = useRouter();
+  const [invoices, setInvoices] = useState<InvoiceRowData[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const [status, setStatus] = useState("All");
+  const [property, setProperty] = useState("All");
+  const [tenant, setTenant] = useState("All");
+  const [billingPeriod, setBillingPeriod] = useState("");
+  const [page, setPage] = useState(1);
+  const [sortConfig, setSortConfig] = useState<{ field: InvoiceSortField; direction: InvoiceSortDirection }>({
+    field: "due_date",
+    direction: "asc",
+  });
+  const [showBillingModal, setShowBillingModal] = useState(false);
+  const [billingMonth, setBillingMonth] = useState(() => new Date().toISOString().slice(0, 7));
+  const [billingLoading, setBillingLoading] = useState(false);
+  const [billingProgress, setBillingProgress] = useState<string[]>([]);
+  const [billingSummary, setBillingSummary] = useState<MonthlyBillingSummary | null>(null);
 
-  // Data will come from Supabase in Part 2
-  const [invoices] = useState<Invoice[]>([]);
+  async function loadInvoices() {
+    try {
+      setLoading(true);
+      const data = await getInvoices();
+      setInvoices(data as InvoiceRowData[]);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  }
 
-  const [search, setSearch] =
-    useState("");
+  useEffect(() => {
+    loadInvoices();
+  }, []);
 
-  const [status, setStatus] =
-    useState("All");
+  useEffect(() => {
+    setPage(1);
+  }, [search, status, property, tenant, billingPeriod]);
 
-  const filteredInvoices =
-    useMemo(() => {
+  const filteredInvoices = useMemo(() => {
+    const keyword = search.toLowerCase();
 
-      const keyword =
-        search.toLowerCase();
+    return invoices.filter((invoice) => {
+      const matchesSearch =
+        invoice.invoice_number.toLowerCase().includes(keyword) ||
+        invoice.tenant_name.toLowerCase().includes(keyword) ||
+        invoice.property_name.toLowerCase().includes(keyword) ||
+        invoice.unit_number.toLowerCase().includes(keyword);
 
-      return invoices.filter(
-        (invoice) => {
+      const matchesStatus = status === "All" || invoice.status === status;
+      const matchesProperty = property === "All" || invoice.property_name === property;
+      const matchesTenant = tenant === "All" || invoice.tenant_name === tenant;
+      const matchesBillingPeriod = !billingPeriod || invoice.billing_period === billingPeriod;
 
-          const matchesSearch =
+      return matchesSearch && matchesStatus && matchesProperty && matchesTenant && matchesBillingPeriod;
+    });
+  }, [invoices, search, status, property, tenant, billingPeriod]);
 
-            invoice.invoice_number
-              .toLowerCase()
-              .includes(keyword) ||
-
-            invoice.tenant_name
-              .toLowerCase()
-              .includes(keyword) ||
-
-            invoice.property_name
-              .toLowerCase()
-              .includes(keyword) ||
-
-            invoice.unit_number
-              .toLowerCase()
-              .includes(keyword);
-
-          const matchesStatus =
-
-            status === "All" ||
-
-            invoice.status === status;
-
-          return (
-            matchesSearch &&
-            matchesStatus
-          );
-
+  const sortedInvoices = useMemo(() => {
+    const list = [...filteredInvoices];
+    list.sort((a, b) => {
+      const getValue = (invoice: InvoiceRowData) => {
+        switch (sortConfig.field) {
+          case "invoice_date":
+            return invoice.invoice_date || "";
+          case "due_date":
+            return invoice.due_date || "";
+          case "amount":
+            return invoice.amount;
+          case "balance":
+            return invoice.balance;
+          default:
+            return invoice.due_date || "";
         }
-      );
+      };
 
-    }, [
-      invoices,
-      search,
-      status,
-    ]);
+      const left = getValue(a);
+      const right = getValue(b);
 
-  const totalInvoices =
-    filteredInvoices.length;
+      if (typeof left === "number" && typeof right === "number") {
+        return sortConfig.direction === "asc" ? left - right : right - left;
+      }
 
-  const unpaid =
-    filteredInvoices.filter(
-      (i) =>
-        i.status === "Unpaid"
-    ).length;
+      const comparison = String(left).localeCompare(String(right));
+      return sortConfig.direction === "asc" ? comparison : -comparison;
+    });
 
-  const partial =
-    filteredInvoices.filter(
-      (i) =>
-        i.status ===
-        "Partially Paid"
-    ).length;
+    return list;
+  }, [filteredInvoices, sortConfig]);
 
-  const paid =
-    filteredInvoices.filter(
-      (i) =>
-        i.status === "Paid"
-    ).length;
+  const pageSize = 10;
+  const totalPages = Math.max(1, Math.ceil(sortedInvoices.length / pageSize));
+  const safePage = Math.min(page, totalPages);
+  const paginatedInvoices = sortedInvoices.slice((safePage - 1) * pageSize, safePage * pageSize);
 
-  const overdue =
-    filteredInvoices.filter(
-      (i) =>
-        i.status ===
-        "Overdue"
-    ).length;
+  const properties = useMemo(() => [...new Set(invoices.map((invoice) => invoice.property_name).filter(Boolean))], [invoices]);
+  const tenants = useMemo(() => [...new Set(invoices.map((invoice) => invoice.tenant_name).filter(Boolean))], [invoices]);
 
-  const outstanding =
-    filteredInvoices.reduce(
-      (sum, invoice) =>
-        sum + Number(invoice.balance),
-      0
-    );
+  const totalInvoices = sortedInvoices.length;
+  const totalAmount = sortedInvoices.reduce((sum, invoice) => sum + invoice.amount, 0);
+  const paid = sortedInvoices.filter((invoice) => invoice.status === "Paid").length;
+  const outstanding = sortedInvoices.reduce((sum, invoice) => sum + invoice.balance, 0);
+  const overdue = sortedInvoices.filter((invoice) => invoice.status === "Overdue").length;
+  const draft = sortedInvoices.filter((invoice) => invoice.status === "Draft").length;
+  const sent = sortedInvoices.filter((invoice) => invoice.status === "Sent").length;
+  const partiallyPaid = sortedInvoices.filter((invoice) => invoice.status === "Partially Paid").length;
 
   return (
-
     <AppShell>
-
       <PageContainer>
+        <Breadcrumb items={[{ label: "Dashboard", href: "/" }, { label: "Invoices" }]} />
 
-        <Breadcrumb
-          items={[
-            {
-              label: "Dashboard",
-              href: "/",
-            },
-            {
-              label: "Invoices",
-            },
-          ]}
-        />
-
-        <PageHeader
-          title="Invoices"
-          description="Manage tenant billing, invoice generation, collections and statements."
-        >
-
+        <PageHeader title="Invoices" description="Manage tenant billing, invoice generation, collections and statements.">
           <div className="flex gap-3">
-
-            <Button
-              variant="secondary"
-            >
-              Generate Monthly
-            </Button>
-
-            <Button
-              variant="primary"
-            >
-              Generate Invoice
-            </Button>
-
+            <Button variant="secondary" onClick={() => setShowBillingModal(true)}>Generate Monthly</Button>
+            <Button variant="primary">Generate Invoice</Button>
           </div>
-
         </PageHeader>
 
         <Section>
-
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-6">
-
-            <StatCard
-              title="Invoices"
-              value={totalInvoices}
-              subtitle="Total invoices"
-              icon={
-                <FileText className="h-6 w-6 text-[#D4AF37]" />
-              }
-            />
-
-            <StatCard
-              title="Unpaid"
-              value={unpaid}
-              subtitle="Awaiting payment"
-              icon={
-                <Clock3 className="h-6 w-6 text-amber-500" />
-              }
-            />
-
-            <StatCard
-              title="Partial"
-              value={partial}
-              subtitle="Partially paid"
-              icon={
-                <Wallet className="h-6 w-6 text-blue-600" />
-              }
-            />
-
-            <StatCard
-              title="Paid"
-              value={paid}
-              subtitle="Fully settled"
-              icon={
-                <CheckCircle2 className="h-6 w-6 text-green-600" />
-              }
-            />
-
-            <StatCard
-              title="Overdue"
-              value={overdue}
-              subtitle="Past due date"
-              icon={
-                <AlertTriangle className="h-6 w-6 text-red-600" />
-              }
-            />
-
-            <StatCard
-              title="Outstanding"
-              value={`KSh ${outstanding.toLocaleString()}`}
-              subtitle="Amount due"
-              valueClassName="text-[#D4AF37]"
-              icon={
-                <Receipt className="h-6 w-6 text-[#D4AF37]" />
-              }
-            />
-
-          </div>
-
+          <InvoiceSummaryCards
+            totalInvoices={totalInvoices}
+            totalAmount={totalAmount}
+            paid={paid}
+            outstanding={outstanding}
+            overdue={overdue}
+            draft={draft}
+            sent={sent}
+            partiallyPaid={partiallyPaid}
+          />
         </Section>
 
         <Section>
+          <div className="space-y-6">
+            <InvoiceFilters
+              search={search}
+              status={status}
+              property={property}
+              tenant={tenant}
+              billingPeriod={billingPeriod}
+              properties={properties}
+              tenants={tenants}
+              onSearchChange={setSearch}
+              onStatusChange={setStatus}
+              onPropertyChange={setProperty}
+              onTenantChange={setTenant}
+              onBillingPeriodChange={setBillingPeriod}
+              onReset={() => {
+                setSearch("");
+                setStatus("All");
+                setProperty("All");
+                setTenant("All");
+                setBillingPeriod("");
+              }}
+            />
 
-          <Card>
-
-            <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-
-              <div>
-
-                <h2 className="text-2xl font-bold text-gray-900">
-
-                  Invoice Dashboard
-
-                </h2>
-
-                <p className="mt-2 text-gray-500">
-
-                  Manage invoices, balances and tenant billing.
-
-                </p>
-
-              </div>
-
-              <div className="flex flex-col gap-3 md:flex-row">
-
-                <input
-                  type="text"
-                  placeholder="Search invoice, tenant, property..."
-                  value={search}
-                  onChange={(e) =>
-                    setSearch(
-                      e.target.value
-                    )
-                  }
-                  className="rounded-xl border px-4 py-2"
-                />
-
-                <select
-                  value={status}
-                  onChange={(e) =>
-                    setStatus(
-                      e.target.value
-                    )
-                  }
-                  className="rounded-xl border px-4 py-2"
-                >
-                  <option>All</option>
-                  <option>Unpaid</option>
-                  <option>Partially Paid</option>
-                  <option>Paid</option>
-                  <option>Overdue</option>
-                  <option>Cancelled</option>
-                </select>
-
-              </div>
-
-            </div>
-
-            <div className="rounded-2xl border border-dashed p-12 text-center">
-
-              <FileText className="mx-auto mb-4 h-14 w-14 text-gray-400" />
-
-              <h3 className="text-xl font-semibold">
-
-                Invoice List Coming Next
-
-              </h3>
-
-              <p className="mt-2 text-gray-500">
-
-                Part 2 will connect the database and display
-                the complete invoice table with actions.
-
-              </p>
-
-            </div>
-
-          </Card>
-
+            <InvoicesList
+              invoices={paginatedInvoices}
+              loading={loading}
+              sortConfig={sortConfig}
+              onSortChange={(field) => setSortConfig((current) => ({ field, direction: current.field === field && current.direction === "asc" ? "desc" : "asc" }))}
+              page={safePage}
+              pageSize={pageSize}
+              totalItems={sortedInvoices.length}
+              totalPages={totalPages}
+              onPageChange={setPage}
+              onView={(invoiceId) => router.push(`/invoices/${invoiceId}`)}
+              onRecordPayment={(invoiceId) => router.push(`/invoices/${invoiceId}?action=payment`)}
+              onDownload={() => window.alert("PDF download is not available yet.")}
+              onPrint={() => window.print()}
+              onDuplicate={() => window.alert("Duplicate invoice is not available yet.")}
+              onCancel={() => window.alert("Cancel invoice is not available yet.")}
+            />
+          </div>
         </Section>
-
       </PageContainer>
-
+      <MonthlyBillingModal
+        open={showBillingModal}
+        onClose={() => setShowBillingModal(false)}
+        billingMonth={billingMonth}
+        onBillingMonthChange={setBillingMonth}
+        onPreview={async () => {
+          setBillingLoading(true);
+          setBillingProgress(["Preparing billing preview..."]);
+          try {
+            const targetDate = new Date(`${billingMonth}-01T12:00:00`);
+            const summary = await generateMonthlyInvoices(targetDate);
+            setBillingSummary(summary);
+            setBillingProgress([`Previewed ${summary.generated} invoices for ${summary.billing_period}.`]);
+          } catch (error: any) {
+            setBillingProgress([error?.message ?? "Unable to preview billing run."]);
+          } finally {
+            setBillingLoading(false);
+          }
+        }}
+        onGenerate={async () => {
+          setBillingLoading(true);
+          setBillingProgress(["Starting monthly billing generation..."]);
+          try {
+            const targetDate = new Date(`${billingMonth}-01T12:00:00`);
+            const summary = await generateMonthlyInvoices(targetDate);
+            setBillingSummary(summary);
+            setBillingProgress([
+              `Generated ${summary.generated} invoices.`,
+              `Skipped ${summary.skipped_units} units.`,
+              `Encountered ${summary.failed_units} failures.`,
+            ]);
+            await loadInvoices();
+          } catch (error: any) {
+            setBillingProgress([error?.message ?? "Monthly billing generation failed."]);
+          } finally {
+            setBillingLoading(false);
+          }
+        }}
+        loading={billingLoading}
+        progress={billingProgress}
+        summary={billingSummary}
+      />
     </AppShell>
-
   );
-
 }

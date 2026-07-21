@@ -1,62 +1,79 @@
 "use client";
 
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   Eye,
   Wallet,
   Download,
   Printer,
-  MessageCircle,
-  Share2,
-  MoreHorizontal,
+  Copy,
+  XCircle,
 } from "lucide-react";
 
 type Props = {
   invoiceId: string;
+  status?: string;
+  onView?: (invoiceId: string) => void;
+  onRecordPayment?: (invoiceId: string) => void;
   onDownload?: (invoiceId: string) => void;
   onPrint?: (invoiceId: string) => void;
-  onWhatsApp?: (invoiceId: string) => void;
-  onShare?: (invoiceId: string) => void;
+  onDuplicate?: (invoiceId: string) => void;
+  onCancel?: (invoiceId: string) => void;
 };
 
 export default function InvoiceActions({
   invoiceId,
+  status,
+  onView,
+  onRecordPayment,
   onDownload,
   onPrint,
-  onWhatsApp,
-  onShare,
+  onDuplicate,
+  onCancel,
 }: Props) {
+  const router = useRouter();
+  const isLocked = status === "Paid" || status === "Cancelled";
+
+  const handleView = () => {
+    if (onView) {
+      onView(invoiceId);
+      return;
+    }
+    router.push(`/invoices/${invoiceId}`);
+  };
+
+  const handleRecordPayment = () => {
+    if (onRecordPayment) {
+      onRecordPayment(invoiceId);
+      return;
+    }
+    router.push(`/invoices/${invoiceId}?action=payment`);
+  };
+
   return (
-    <div className="flex items-center justify-end gap-2">
-
-      <Link
-        href={`/invoices/${invoiceId}`}
-        className="rounded-lg p-2 hover:bg-gray-100"
-        title="View Invoice"
-      >
-        <Eye className="h-4 w-4" />
-      </Link>
-
-      <Link
-        href={`/payments/new?invoice=${invoiceId}`}
-        className="rounded-lg p-2 hover:bg-gray-100"
-        title="Record Payment"
-      >
-        <Wallet className="h-4 w-4" />
-      </Link>
-
+    <div className="flex flex-wrap items-center justify-end gap-2">
       <button
-        onClick={() => onDownload?.(invoiceId)}
-        className="rounded-lg p-2 hover:bg-gray-100"
-        title="Download PDF"
+        onClick={handleView}
+        className="rounded-lg p-2 text-gray-600 transition hover:bg-gray-100"
+        title="View Invoice"
         type="button"
       >
-        <Download className="h-4 w-4" />
+        <Eye className="h-4 w-4" />
       </button>
 
       <button
-        onClick={() => onPrint?.(invoiceId)}
-        className="rounded-lg p-2 hover:bg-gray-100"
+        onClick={handleRecordPayment}
+        disabled={isLocked}
+        className="rounded-lg p-2 text-gray-600 transition hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-40"
+        title="Record Payment"
+        type="button"
+      >
+        <Wallet className="h-4 w-4" />
+      </button>
+
+      <button
+        onClick={() => (onPrint ? onPrint(invoiceId) : window.print())}
+        className="rounded-lg p-2 text-gray-600 transition hover:bg-gray-100"
         title="Print"
         type="button"
       >
@@ -64,31 +81,33 @@ export default function InvoiceActions({
       </button>
 
       <button
-        onClick={() => onWhatsApp?.(invoiceId)}
-        className="rounded-lg p-2 hover:bg-gray-100"
-        title="WhatsApp"
+        onClick={() => (onDownload ? onDownload(invoiceId) : window.alert("PDF download is not available yet."))}
+        className="rounded-lg p-2 text-gray-600 transition hover:bg-gray-100"
+        title="Download PDF"
         type="button"
       >
-        <MessageCircle className="h-4 w-4 text-green-600" />
+        <Download className="h-4 w-4" />
       </button>
 
       <button
-        onClick={() => onShare?.(invoiceId)}
-        className="rounded-lg p-2 hover:bg-gray-100"
-        title="Share"
+        onClick={() => onDuplicate?.(invoiceId)}
+        disabled={isLocked}
+        className="rounded-lg p-2 text-gray-600 transition hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-40"
+        title="Duplicate Invoice"
         type="button"
       >
-        <Share2 className="h-4 w-4" />
+        <Copy className="h-4 w-4" />
       </button>
 
       <button
-        className="rounded-lg p-2 hover:bg-gray-100"
-        title="More Actions"
+        onClick={() => onCancel?.(invoiceId)}
+        disabled={isLocked}
+        className="rounded-lg p-2 text-red-600 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-40"
+        title="Cancel Invoice"
         type="button"
       >
-        <MoreHorizontal className="h-4 w-4" />
+        <XCircle className="h-4 w-4" />
       </button>
-
     </div>
   );
 }

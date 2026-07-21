@@ -1,7 +1,6 @@
 "use client";
 
 import StatCard from "@/components/ui/StatCard";
-
 import {
   FileText,
   Clock3,
@@ -9,83 +8,90 @@ import {
   CheckCircle2,
   AlertTriangle,
   Receipt,
+  Send,
+  FilePlus2,
 } from "lucide-react";
 
 type Props = {
   totalInvoices: number;
-  unpaid: number;
-  partiallyPaid: number;
+  totalAmount: number;
   paid: number;
-  overdue: number;
   outstanding: number;
+  overdue: number;
+  draft: number;
+  sent: number;
+  partiallyPaid: number;
 };
 
 export default function InvoiceSummaryCards({
   totalInvoices,
-  unpaid,
-  partiallyPaid,
+  totalAmount,
   paid,
-  overdue,
   outstanding,
+  overdue,
+  draft,
+  sent,
+  partiallyPaid,
 }: Props) {
   return (
-    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-6">
-
+    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-4">
       <StatCard
         title="Invoices"
         value={totalInvoices}
         subtitle="Total invoices"
-        icon={
-          <FileText className="h-6 w-6 text-[#D4AF37]" />
-        }
+        icon={<FileText className="h-6 w-6 text-[#D4AF37]" />}
       />
 
       <StatCard
-        title="Unpaid"
-        value={unpaid}
-        subtitle="Awaiting payment"
-        icon={
-          <Clock3 className="h-6 w-6 text-amber-500" />
-        }
-      />
-
-      <StatCard
-        title="Partially Paid"
-        value={partiallyPaid}
-        subtitle="Partially settled"
-        icon={
-          <Wallet className="h-6 w-6 text-blue-600" />
-        }
+        title="Total Amount"
+        value={`KSh ${totalAmount.toLocaleString()}`}
+        subtitle="Issued value"
+        valueClassName="text-[#D4AF37]"
+        icon={<Receipt className="h-6 w-6 text-[#D4AF37]" />}
       />
 
       <StatCard
         title="Paid"
         value={paid}
         subtitle="Fully settled"
-        icon={
-          <CheckCircle2 className="h-6 w-6 text-green-600" />
-        }
+        icon={<CheckCircle2 className="h-6 w-6 text-green-600" />}
+      />
+
+      <StatCard
+        title="Outstanding"
+        value={`KSh ${outstanding.toLocaleString()}`}
+        subtitle="Current balance"
+        valueClassName="text-amber-500"
+        icon={<Clock3 className="h-6 w-6 text-amber-500" />}
       />
 
       <StatCard
         title="Overdue"
         value={overdue}
         subtitle="Past due date"
-        icon={
-          <AlertTriangle className="h-6 w-6 text-red-600" />
-        }
+        icon={<AlertTriangle className="h-6 w-6 text-red-600" />}
       />
 
       <StatCard
-        title="Outstanding"
-        value={`KES ${outstanding.toLocaleString()}`}
-        subtitle="Outstanding balance"
-        valueClassName="text-[#D4AF37]"
-        icon={
-          <Receipt className="h-6 w-6 text-[#D4AF37]" />
-        }
+        title="Draft"
+        value={draft}
+        subtitle="Not yet issued"
+        icon={<FilePlus2 className="h-6 w-6 text-gray-500" />}
       />
 
+      <StatCard
+        title="Sent"
+        value={sent}
+        subtitle="Issued and active"
+        icon={<Send className="h-6 w-6 text-blue-600" />}
+      />
+
+      <StatCard
+        title="Partially Paid"
+        value={partiallyPaid}
+        subtitle="Partially settled"
+        icon={<Wallet className="h-6 w-6 text-blue-600" />}
+      />
     </div>
   );
 }

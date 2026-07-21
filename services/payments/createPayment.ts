@@ -4,7 +4,7 @@ import { getProfile } from "@/services/auth/getProfile";
 
 import { createReceipt } from "@/services/receipts/createReceipt";
 
-import { updatePaymentAllocationTotals } from "@/services/payments/updatePaymentAllocationTotals";
+import { reconcilePayment } from "@/services/payments/reconcilePayment";
 
 type CreatePaymentInput = {
 
@@ -180,37 +180,13 @@ export async function createPayment(
 
   }
 
-  const {
-    error: allocationError,
-  } =
-    await supabase.rpc(
-      "allocate_payment_to_invoices",
-      {
-
-        p_workspace_id:
-          profile.workspace_id,
-
-        p_payment_id:
-          payment.id,
-
-        p_lease_id:
-          input.lease_id,
-
-        p_amount:
-          input.amount,
-
-      }
-    );
-
-  if (allocationError) {
-
-    throw allocationError;
-
-  }
-
-  await updatePaymentAllocationTotals(
-    payment.id
-  );
+  const reconciliation = await reconcilePayment({
+    paymentId: payment.id,
+    workspaceId: profile.workspace_id,
+    leaseId: input.lease_id,
+    amount: input.amount,
+    mode: "auto",
+  });
 
   const receipt =
     await createReceipt({
