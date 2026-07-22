@@ -96,7 +96,6 @@ export default function PaymentsPage() {
 
   }
 
-  const filteredPayments =
 const filteredPayments = payments;
 
   const expectedCollections =
