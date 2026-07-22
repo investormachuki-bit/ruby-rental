@@ -325,9 +325,9 @@ export default function PaymentsPage() {
 
             ) : (
 
-              <PaymentsList
-                payments={filteredPayments}
-              />
+              <pre className="overflow-auto rounded bg-gray-100 p-4 text-xs">
+  {JSON.stringify(filteredPayments, null, 2)}
+</pre>
 
             )}
 
