@@ -34,9 +34,14 @@ export default function Logo() {
 
       )}
 
-      <div>
-
-        <h1 className="text-lg font-bold tracking-wide text-white">
+      <div><h1
+  style={{
+    color: "#ffffff",
+    opacity: 1,
+    filter: "none",
+  }}
+  className="text-lg font-bold tracking-wide"
+>
 
           Ruby Rental
 
