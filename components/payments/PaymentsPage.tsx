@@ -97,52 +97,7 @@ export default function PaymentsPage() {
   }
 
   const filteredPayments =
-    useMemo(() => {
-
-      const keyword =
-        search.toLowerCase();
-
-      return payments.filter(
-        (payment) => {
-
-          const matchesSearch =
-
-            payment.occupant_name
-              .toLowerCase()
-              .includes(keyword) ||
-
-            payment.property_name
-              .toLowerCase()
-              .includes(keyword) ||
-
-            payment.unit_number
-              .toLowerCase()
-              .includes(keyword) ||
-
-            payment.lease_number
-              .toLowerCase()
-              .includes(keyword);
-
-          const matchesStatus =
-
-            status === "All" ||
-
-            payment.payment_status ===
-              status;
-
-          return (
-            matchesSearch &&
-            matchesStatus
-          );
-
-        }
-      );
-
-    }, [
-      payments,
-      search,
-      status,
-    ]);
+const filteredPayments = payments;
 
   const expectedCollections =
     filteredPayments.reduce(
