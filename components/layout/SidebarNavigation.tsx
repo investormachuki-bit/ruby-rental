@@ -80,7 +80,13 @@ export default function SidebarNavigation({
                   }
                 />
 
-                <span className="font-semibold tracking-wide">
+                <span
+  style={{
+    color: "#ffffff",
+    opacity: 1,
+    filter: "none",
+  }}
+>
 
                   {item.name}
 
