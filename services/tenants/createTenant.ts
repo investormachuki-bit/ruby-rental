@@ -86,7 +86,7 @@ export async function createTenant(
       employer:
         input.employer?.trim() || null,
 
-      status: "Prospective",
+      status: status: "Prospect",,
 
       notes:
         input.notes?.trim() || null,
