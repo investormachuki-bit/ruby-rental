@@ -9,12 +9,6 @@ export type UpdateUnitData = {
   size_sqm: number;
   monthly_rent: number;
   deposit: number;
-  garbage_fee: number;
-  security_fee: number;
-  sewer_fee: number;
-  parking_fee: number;
-  internet_fee: number;
-  service_charge: number;
   notes: string | null;
 };
 
@@ -33,12 +27,6 @@ export async function updateUnit(
       size_sqm: values.size_sqm,
       monthly_rent: values.monthly_rent,
       deposit: values.deposit,
-      garbage_fee: values.garbage_fee,
-      security_fee: values.security_fee,
-      sewer_fee: values.sewer_fee,
-      parking_fee: values.parking_fee,
-      internet_fee: values.internet_fee,
-      service_charge: values.service_charge,
       notes: values.notes,
       updated_at: new Date().toISOString(),
     })
