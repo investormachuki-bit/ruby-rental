@@ -13,12 +13,6 @@ export type CreateUnitInput = {
   sizeSqm: number;
   monthlyRent: number;
   deposit: number;
-  garbageFee: number;
-  parkingFee: number;
-  internetFee: number;
-  securityFee: number;
-  sewerFee: number;
-  serviceCharge: number;
   notes?: string | null;
 };
 
@@ -53,12 +47,6 @@ export async function createUnit(
       size_sqm: input.sizeSqm,
       monthly_rent: input.monthlyRent,
       deposit: input.deposit,
-      garbage_fee: input.garbageFee,
-      parking_fee: input.parkingFee,
-      internet_fee: input.internetFee,
-      security_fee: input.securityFee,
-      sewer_fee: input.sewerFee,
-      service_charge: input.serviceCharge,
       status: "Vacant",
       notes: input.notes ?? null,
     })
