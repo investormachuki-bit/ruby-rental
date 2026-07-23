@@ -27,9 +27,9 @@ export default function SidebarNavigation({
   }
 
   function getLinkClass(route: string) {
-    return `group flex items-center gap-3 rounded-2xl px-4 py-3 transition-all duration-200 ${
+    return `group flex items-center gap-3 rounded-2xl px-4 py-3 transition-all duration-300 ${
       isActive(route)
-        ? "bg-[#D4AF37] shadow-lg"
+        ? "bg-[#D4AF37] shadow-lg shadow-[#D4AF37]/20"
         : "hover:bg-white/5"
     }`;
   }
@@ -54,19 +54,19 @@ export default function SidebarNavigation({
               >
                 <Icon
                   size={20}
-                  className={
+                  className={`transition-colors duration-300 ${
                     isActive(item.route)
                       ? "text-[#0F0F10]"
-                      : "text-white transition-colors duration-200 group-hover:text-[#D4AF37]"
-                  }
+                      : "text-white group-hover:text-[#D4AF37]"
+                  }`}
                 />
 
                 <span
-                  className={
+                  className={`font-semibold tracking-wide transition-colors duration-300 ${
                     isActive(item.route)
-                      ? "font-semibold tracking-wide text-[#0F0F10]"
-                      : "font-semibold tracking-wide text-white transition-colors duration-200 group-hover:text-[#D4AF37]"
-                  }
+                      ? "text-[#0F0F10]"
+                      : "text-white group-hover:text-[#D4AF37]"
+                  }`}
                 >
                   {item.name}
                 </span>
