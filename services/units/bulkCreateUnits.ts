@@ -51,12 +51,6 @@ export async function bulkCreateUnits(
       size_sqm: input.sizeSqm,
       monthly_rent: input.monthlyRent,
       deposit: input.deposit,
-      garbage_fee: 0,
-      parking_fee: 0,
-      internet_fee: 0,
-      security_fee: 0,
-      sewer_fee: 0,
-      service_charge: 0,
       status: "Vacant",
       notes: null,
     });
