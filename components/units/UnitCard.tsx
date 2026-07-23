@@ -14,10 +14,12 @@ import { Unit } from "@/types/unit";
 
 type Props = {
   unit: Unit;
+  onAssign: () => void;
 };
 
 export default function UnitCard({
   unit,
+  onAssign,
 }: Props) {
 
   function getStatusColor(
@@ -162,19 +164,34 @@ export default function UnitCard({
 
       <div className="grid grid-cols-2 gap-3 p-6">
 
-        <button className="flex h-12 items-center justify-center gap-2 rounded-xl bg-black px-4 font-semibold text-white transition hover:bg-gray-800">
+        {unit.status === "Vacant" ? (
 
-          <User
-            size={18}
-          />
+          <button
+            onClick={onAssign}
+            className="flex h-12 items-center justify-center gap-2 rounded-xl bg-black px-4 font-semibold text-white transition hover:bg-gray-800"
+          >
 
-          <span>
+            <User
+              size={18}
+            />
 
-            Assign
+            <span>
 
-          </span>
+              Assign
 
-        </button>
+            </span>
+
+          </button>
+
+        ) : (
+
+          <div className="flex h-12 items-center justify-center rounded-xl bg-green-50 font-semibold text-green-700">
+
+            Occupied
+
+          </div>
+
+        )}
 
         <Link
           href={`/units/${unit.id}`}
