@@ -51,6 +51,12 @@ export default function UnitsPage() {
   setShowAddUnit,
 ] = useState(false);
 
+  const [selectedUnit, setSelectedUnit] =
+  useState<Unit | null>(null);
+
+const [showCreateLease, setShowCreateLease] =
+  useState(false);
+
   useEffect(() => {
 
     loadPage();
@@ -258,8 +264,12 @@ export default function UnitsPage() {
             ) : (
 
               <UnitsList
-                units={units}
-              />
+  units={units}
+  onAssign={(unit) => {
+    setSelectedUnit(unit);
+    setShowCreateLease(true);
+  }}
+/>
 
             )}
 
@@ -338,6 +348,27 @@ export default function UnitsPage() {
 
     }}
 
+  />
+
+)}
+        {showCreateLease && selectedUnit && (
+
+  <CreateLeaseModal
+    propertyId={selectedUnit.property_id}
+    unitId={selectedUnit.id}
+    onSuccess={() => {
+
+      setShowCreateLease(false);
+      setSelectedUnit(null);
+      loadPage();
+
+    }}
+    onCancel={() => {
+
+      setShowCreateLease(false);
+      setSelectedUnit(null);
+
+    }}
   />
 
 )}
