@@ -972,3 +972,26 @@ export default function UnitDetailsPage({
   );
 
 }
+type InfoRowProps = {
+  label: string;
+  value: React.ReactNode;
+};
+
+function InfoRow({
+  label,
+  value,
+}: InfoRowProps) {
+  return (
+    <div className="flex items-center justify-between px-6 py-4">
+
+      <span className="text-sm text-slate-500">
+        {label}
+      </span>
+
+      <span className="text-right font-medium text-slate-900">
+        {value}
+      </span>
+
+    </div>
+  );
+}
