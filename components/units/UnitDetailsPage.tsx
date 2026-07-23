@@ -923,44 +923,74 @@ export default function UnitDetailsPage({
   </div>
 
 )}
-
 {/* ==============================
     MODALS
 ============================== */}
 
-<CreateLeaseModal
-  open={showCreateLease}
-  onClose={() => setShowCreateLease(false)}
-  onSuccess={loadPage}
-/>
+{showCreateLease && (
 
-<CreateUtilityMeterModal
-  open={showCreateMeter}
-  workspaceId={unit.workspace_id}
-  propertyId={unit.property.id}
-  unitId={unit.id}
-  onClose={() => setShowCreateMeter(false)}
-  onCreated={loadPage}
-/>
-
-{selectedMeter && (
-
-  <SetupUtilityMeterModal
-    meter={selectedMeter}
-    open={showSetupMeter}
-    onClose={() => setShowSetupMeter(false)}
-    onSaved={loadPage}
+  <CreateLeaseModal
+    propertyId={unit.property.id}
+    unitId={unit.id}
+    onSuccess={() => {
+      setShowCreateLease(false);
+      loadPage();
+    }}
+    onCancel={() =>
+      setShowCreateLease(false)
+    }
   />
 
 )}
 
-{selectedMeter && (
+{showCreateMeter && (
+
+  <CreateUtilityMeterModal
+    workspaceId={unit.workspace_id}
+    propertyId={unit.property.id}
+    unitId={unit.id}
+    onClose={() =>
+      setShowCreateMeter(false)
+    }
+    onSaved={() => {
+      setShowCreateMeter(false);
+      loadPage();
+    }}
+  />
+
+)}
+
+{showSetupMeter && selectedMeter && (
+
+  <SetupUtilityMeterModal
+    meter={selectedMeter}
+    onClose={() =>
+      setShowSetupMeter(false)
+    }
+    onSaved={() => {
+      setShowSetupMeter(false);
+      loadPage();
+    }}
+  />
+
+)}
+
+{showReadingModal && selectedMeter && (
 
   <MeterReadingModal
     meter={selectedMeter}
-    open={showReadingModal}
-    onClose={() => setShowReadingModal(false)}
-    onSaved={loadPage}
+    workspaceId={unit.workspace_id}
+    propertyId={unit.property.id}
+    unitId={unit.id}
+    utilityType={selectedMeter.utility_type}
+    unitRate={Number(selectedMeter.unit_rate ?? 0)}
+    onClose={() =>
+      setShowReadingModal(false)
+    }
+    onSaved={() => {
+      setShowReadingModal(false);
+      loadPage();
+    }}
   />
 
 )}
