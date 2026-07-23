@@ -1,18 +1,11 @@
-"use client";
+import TenantEditPage from "@/components/tenants/TenantEditPage";
 
-import TenantEditPage
-from "@/components/tenants/TenantEditPage";
-
-export default function Page({
+export default async function Page({
   params,
 }: {
-  params: {
-    id: string;
-  };
+  params: Promise<{ id: string }>;
 }) {
-  return (
-    <TenantEditPage
-      tenantId={params.id}
-    />
-  );
+  const { id } = await params;
+
+  return <TenantEditPage tenantId={id} />;
 }
