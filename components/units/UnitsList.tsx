@@ -8,12 +8,14 @@ import { Unit } from "@/types/unit";
 
 type Props = {
   units: Unit[];
+  onAssign: (unit: Unit) => void;
 };
 
 export default function UnitsList({
   units,
+  onAssign,
 }: Props) {
-
+  
   const [search, setSearch] =
     useState("");
 
@@ -356,9 +358,10 @@ export default function UnitsList({
             (unit) => (
 
               <UnitCard
-                key={unit.id}
-                unit={unit}
-              />
+  key={unit.id}
+  unit={unit}
+  onAssign={() => onAssign(unit)}
+/>
 
             )
           )}
