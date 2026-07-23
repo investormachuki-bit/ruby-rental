@@ -37,18 +37,6 @@ export interface Unit {
 
   internet_account_number: string | null;
 
-  garbage_fee: number;
-
-  parking_fee: number;
-
-  internet_fee: number;
-
-  service_charge: number;
-
-  security_fee: number;
-
-  sewer_fee: number;
-
   status: UnitStatus;
 
   notes: string | null;
