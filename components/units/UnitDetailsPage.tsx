@@ -1,23 +1,26 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+
 import {
-  ArrowLeft,
   Building2,
+  ChevronRight,
   Coins,
-  Home,
+  MoreVertical,
   Pencil,
   Plus,
   User,
   Wrench,
 } from "lucide-react";
 
-import { useRouter } from "next/navigation";
+import AppShell from "@/components/layout/AppShell";
 
 import CreateLeaseModal from "@/components/leases/CreateLeaseModal";
+
 import CreateUtilityMeterModal from "@/components/utilities/CreateUtilityMeterModal";
-import MeterReadingModal from "@/components/utilities/MeterReadingModal";
 import SetupUtilityMeterModal from "@/components/utilities/SetupUtilityMeterModal";
+import MeterReadingModal from "@/components/utilities/MeterReadingModal";
 
 import { getUnitDetails } from "@/services/units/getUnitDetails";
 
@@ -31,11 +34,17 @@ export default function UnitDetailsPage({
 
   const router = useRouter();
 
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] =
+    useState(true);
 
-  const [unit, setUnit] = useState<any>(null);
+  const [unit, setUnit] =
+    useState<any>(null);
 
-  const [meters, setMeters] = useState<any[]>([]);
+  const [meters, setMeters] =
+    useState<any[]>([]);
+
+  const [activeTab, setActiveTab] =
+    useState("overview");
 
   const [showCreateLease, setShowCreateLease] =
     useState(false);
@@ -83,31 +92,19 @@ export default function UnitDetailsPage({
 
   }
 
-  function handleViewLease() {
-
-    if (!unit?.lease) {
-
-      alert("No active lease.");
-
-      return;
-
-    }
-
-    router.push(
-      `/leases/${unit.lease.id}`
-    );
-
-  }
-
   if (loading) {
 
     return (
 
-      <div className="flex h-96 items-center justify-center">
+      <AppShell>
 
-        Loading...
+        <div className="flex h-[70vh] items-center justify-center">
 
-      </div>
+          Loading...
+
+        </div>
+
+      </AppShell>
 
     );
 
@@ -117,11 +114,15 @@ export default function UnitDetailsPage({
 
     return (
 
-      <div className="flex h-96 items-center justify-center">
+      <AppShell>
 
-        Unit not found.
+        <div className="flex h-[70vh] items-center justify-center">
 
-      </div>
+          Unit not found.
+
+        </div>
+
+      </AppShell>
 
     );
 
@@ -129,501 +130,260 @@ export default function UnitDetailsPage({
 
   return (
 
-    <>
+    <AppShell>
 
-      <main className="space-y-8">
+      <div className="space-y-6">
 
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+        {/* Breadcrumbs */}
 
-          <div>
+        <nav className="flex flex-wrap items-center gap-2 text-sm">
 
-            <button
-              onClick={() => router.back()}
-              className="mb-4 flex items-center gap-2 text-gray-500 hover:text-black"
-            >
+          <button
+            onClick={() =>
+              router.push("/dashboard")
+            }
+            className="text-gray-500 transition hover:text-black"
+          >
 
-              <ArrowLeft className="h-5 w-5" />
+            Dashboard
 
-              Back
+          </button>
 
-            </button>
+          <ChevronRight className="h-4 w-4 text-gray-400" />
 
-            <h1 className="text-3xl font-bold">
+          <button
+            onClick={() =>
+              router.push("/properties")
+            }
+            className="text-gray-500 transition hover:text-black"
+          >
 
-              Unit {unit.unit_number}
+            Properties
 
-            </h1>
+          </button>
 
-            <p className="mt-2 text-gray-500">
+          <ChevronRight className="h-4 w-4 text-gray-400" />
 
-              {unit.property.name}
+          <button
+            onClick={() =>
+              router.push(
+                `/properties/${unit.property.id}`
+              )
+            }
+            className="text-gray-500 transition hover:text-black"
+          >
 
-            </p>
+            {unit.property.name}
 
-          </div>
+          </button>
 
-          <div className="flex flex-wrap gap-3">
+          <ChevronRight className="h-4 w-4 text-gray-400" />
 
-            {unit.status === "Vacant" && (
+          <span className="font-semibold text-black">
 
-              <button
-                onClick={() =>
-                  setShowCreateLease(true)
-                }
-                className="rounded-xl bg-black px-5 py-3 font-semibold text-white hover:bg-gray-800"
-              >
+            Unit {unit.unit_number}
 
-                <Plus className="mr-2 inline h-5 w-5" />
+          </span>
 
-                Create Lease
+        </nav>
 
-              </button>
+        {/* Header */}
 
-            )}
+        <div className="rounded-2xl border border-slate-200 bg-white shadow-sm">
 
-            {unit.status === "Occupied" &&
-              unit.lease && (
-
-              <button
-                onClick={handleViewLease}
-                className="rounded-xl border px-5 py-3 font-semibold hover:bg-gray-100"
-              >
-
-                View Lease
-
-              </button>
-
-            )}
-
-          </div>
-
-        </div>
-
-        {/* KPI Cards */}
-
-        <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
-
-          <div className="rounded-2xl border bg-white p-6 shadow-sm">
-
-            <p className="text-gray-500">
-
-              Monthly Rent
-
-            </p>
-
-            <h2 className="mt-2 text-3xl font-bold">
-
-              KSh{" "}
-              {Number(
-                unit.monthly_rent
-              ).toLocaleString()}
-
-            </h2>
-
-          </div>
-
-          <div className="rounded-2xl border bg-white p-6 shadow-sm">
-
-            <p className="text-gray-500">
-
-              Deposit
-
-            </p>
-
-            <h2 className="mt-2 text-3xl font-bold">
-
-              KSh{" "}
-              {Number(
-                unit.deposit
-              ).toLocaleString()}
-
-            </h2>
-
-          </div>
-
-          <div className="rounded-2xl border bg-white p-6 shadow-sm">
-
-            <p className="text-gray-500">
-
-              Status
-
-            </p>
-
-            <h2 className="mt-2 text-3xl font-bold">
-
-              {unit.status}
-
-            </h2>
-
-          </div>
-
-          <div className="rounded-2xl border bg-white p-6 shadow-sm">
-
-            <p className="text-gray-500">
-
-              Occupancy
-
-            </p>
-
-            <h2 className="mt-2 text-3xl font-bold">
-
-              {unit.occupant
-                ? unit.occupant.full_name
-                : "Vacant"}
-
-            </h2>
-
-          </div>
-
-        </div>
-
-        {/* Basic Information */}
-
-        <div className="rounded-2xl border bg-white p-6 shadow-sm">
-
-          <h2 className="mb-6 text-2xl font-bold">
-
-            Basic Information
-
-          </h2>
-
-          <div className="grid gap-6 md:grid-cols-2">
-
-            <Info
-              label="Property"
-              value={unit.property.name}
-            />
-
-            <Info
-              label="Unit Number"
-              value={unit.unit_number}
-            />
-
-            <Info
-              label="Unit Type"
-              value={unit.unit_type}
-            />
-
-            <Info
-              label="Floor"
-              value={
-                unit.floor ?? "-"
-              }
-            />
-
-          </div>
-
-        </div>
-                {/* Financial Information */}
-
-        <div className="rounded-2xl border bg-white p-6 shadow-sm">
-
-          <h2 className="mb-6 text-2xl font-bold">
-
-            Financial Information
-
-          </h2>
-
-          <div className="grid gap-6 md:grid-cols-2">
-
-            <Info
-              label="Monthly Rent"
-              value={`KSh ${Number(
-                unit.monthly_rent
-              ).toLocaleString()}`}
-            />
-
-            <Info
-              label="Deposit"
-              value={`KSh ${Number(
-                unit.deposit
-              ).toLocaleString()}`}
-            />
-
-            <Info
-              label="Status"
-              value={unit.status}
-            />
-
-            <Info
-              label="Occupancy"
-              value={
-                unit.occupant
-                  ? unit.occupant.full_name
-                  : "Vacant"
-              }
-            />
-
-          </div>
-
-        </div>
-
-        {/* Utility Meters */}
-
-        <div className="rounded-2xl border bg-white p-6 shadow-sm">
-
-          <div className="mb-6 flex items-center justify-between">
+          <div className="flex flex-col gap-6 p-6 lg:flex-row lg:items-center lg:justify-between">
 
             <div>
 
-              <h2 className="text-2xl font-bold">
+              <div className="flex flex-wrap items-center gap-3">
 
-                Utility Meters
+                <h1 className="text-3xl font-bold tracking-tight">
 
-              </h2>
+                  Unit {unit.unit_number}
 
-              <p className="mt-1 text-gray-500">
+                </h1>
 
-                Manage all utility meters assigned to this unit.
+                <span
+                  className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                    unit.status === "Occupied"
+                      ? "bg-green-100 text-green-700"
+                      : "bg-amber-100 text-amber-700"
+                  }`}
+                >
+
+                  {unit.status}
+
+                </span>
+
+              </div>
+
+              <p className="mt-2 text-gray-500">
+
+                {unit.property.name}
 
               </p>
 
             </div>
 
-            <button
-              onClick={() =>
-                setShowCreateMeter(true)
-              }
-              className="rounded-xl bg-black px-5 py-3 font-semibold text-white transition hover:bg-gray-800"
-            >
+            <div className="flex flex-wrap gap-3">
 
-              {meters.length === 0
-                ? "Setup Utility"
-                : "Add Utility"}
+              {unit.status === "Vacant" && (
 
-            </button>
+                <button
+                  onClick={() =>
+                    setShowCreateLease(true)
+                  }
+                  className="rounded-xl bg-black px-5 py-3 font-medium text-white transition hover:bg-gray-800"
+                >
 
-          </div>
+                  <Plus className="mr-2 inline h-4 w-4" />
 
-          {meters.length === 0 && (
+                  Create Lease
 
-            <div className="rounded-xl border border-dashed p-10 text-center">
+                </button>
 
-              <p className="mb-5 text-gray-500">
+              )}
 
-                No utility meters have been configured for this unit.
+              <button className="rounded-xl border border-slate-200 px-5 py-3 font-medium hover:bg-slate-50">
 
-              </p>
+                <Pencil className="mr-2 inline h-4 w-4" />
 
-              <button
-                onClick={() =>
-                  setShowCreateMeter(true)
-                }
-                className="rounded-xl bg-black px-5 py-3 font-semibold text-white transition hover:bg-gray-800"
-              >
+                Edit Unit
 
-                Setup First Utility Meter
+              </button>
+
+              <button className="rounded-xl border border-slate-200 p-3 hover:bg-slate-50">
+
+                <MoreVertical className="h-5 w-5" />
 
               </button>
 
             </div>
 
-          )}
+          </div>
 
-          {meters.length > 0 && (
+        </div>
+                {/* Summary Cards */}
 
-            <div className="space-y-6">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
 
-              {meters.map((meter) => (
+          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:shadow-md">
 
-                <div
-                  key={meter.id}
-                  className="rounded-2xl border bg-white p-5 shadow-sm"
-                >
+            <div className="flex items-center justify-between">
 
-                  <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+              <div>
 
-                    <div>
+                <p className="text-sm text-slate-500">
 
-                      <h3 className="text-xl font-bold">
+                  Monthly Rent
 
-                        {meter.utility_type} Meter
+                </p>
 
-                      </h3>
+                <h2 className="mt-2 text-2xl font-bold">
 
-                      <p className="mt-2 text-gray-500">
+                  KSh {Number(unit.monthly_rent ?? 0).toLocaleString()}
 
-                        Meter Number:
+                </h2>
 
-                        <strong className="ml-2 text-gray-900">
+              </div>
 
-                          {meter.meter_number ||
-                            "Not Assigned"}
+              <div className="rounded-xl bg-amber-50 p-3">
 
-                        </strong>
+                <Coins className="h-6 w-6 text-amber-600" />
 
-                      </p>
-
-                    </div>
-
-                    <div className="flex flex-wrap gap-3">
-
-                      <button
-                        onClick={() => {
-
-                          setSelectedMeter(meter);
-
-                          setShowSetupMeter(true);
-
-                        }}
-                        className="rounded-xl border px-5 py-3 font-semibold hover:bg-gray-100"
-                      >
-
-                        <Pencil className="mr-2 inline h-4 w-4" />
-
-                        Configure
-
-                      </button>
-
-                      <button
-                        onClick={() => {
-
-                          setSelectedMeter(meter);
-
-                          setShowReadingModal(true);
-
-                        }}
-                        className="rounded-xl bg-black px-5 py-3 font-semibold text-white hover:bg-gray-800"
-                      >
-
-                        Record Reading
-
-                      </button>
-
-                    </div>
-
-                  </div>
-
-                  <div className="mt-6 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-
-                    <Info
-                      label="Status"
-                      value={meter.status}
-                    />
-
-                    <Info
-                      label="Unit Rate"
-                      value={`KSh ${Number(
-                        meter.unit_rate
-                      ).toLocaleString()}`}
-                    />
-
-                    <Info
-                      label="Opening Reading"
-                      value={String(
-                        meter.opening_reading
-                      )}
-                    />
-
-                    <Info
-                      label="Current Reading"
-                      value={
-                        meter.latest_reading
-                          ? String(
-                              meter.latest_reading
-                                .current_reading
-                            )
-                          : "-"
-                      }
-                    />
-
-                    <Info
-                      label="Last Bill"
-                      value={
-                        meter.latest_reading
-                          ? `KSh ${Number(
-                              meter.latest_reading.amount
-                            ).toLocaleString()}`
-                          : "-"
-                      }
-                    />
-
-                    <Info
-                      label="Location"
-                      value={
-                        meter.meter_location ||
-                        "-"
-                      }
-                    />
-
-                  </div>
-
-                </div>
-
-              ))}
+              </div>
 
             </div>
 
-          )}
+          </div>
 
-        </div>
-                {/* Current Occupancy */}
+          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:shadow-md">
 
-        <div className="grid gap-6 lg:grid-cols-2">
+            <div className="flex items-center justify-between">
 
-          <div className="rounded-2xl border bg-white p-6 shadow-sm">
+              <div>
 
-            <h2 className="mb-6 flex items-center gap-2 text-2xl font-bold">
+                <p className="text-sm text-slate-500">
 
-              <User className="h-6 w-6 text-[#D4AF37]" />
+                  Deposit
 
-              Current Occupancy
+                </p>
 
-            </h2>
+                <h2 className="mt-2 text-2xl font-bold">
 
-            <div className="space-y-4">
+                  KSh {Number(unit.deposit ?? 0).toLocaleString()}
 
-              <Info
-                label="Occupant"
-                value={
-                  unit.occupant
+                </h2>
+
+              </div>
+
+              <div className="rounded-xl bg-blue-50 p-3">
+
+                <Building2 className="h-6 w-6 text-blue-600" />
+
+              </div>
+
+            </div>
+
+          </div>
+
+          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:shadow-md">
+
+            <div className="flex items-center justify-between">
+
+              <div>
+
+                <p className="text-sm text-slate-500">
+
+                  Occupancy
+
+                </p>
+
+                <h2 className="mt-2 text-xl font-semibold">
+
+                  {unit.occupant
                     ? unit.occupant.full_name
-                    : "Vacant"
-                }
-              />
+                    : "Vacant"}
 
-              <Info
-                label="Phone"
-                value={
-                  unit.occupant?.phone ??
-                  "-"
-                }
-              />
+                </h2>
 
-              <Info
-                label="Email"
-                value={
-                  unit.occupant?.email ??
-                  "-"
-                }
-              />
+              </div>
 
-              <Info
-                label="Lease Status"
-                value={
-                  unit.lease
-                    ? unit.lease.status
-                    : "No Active Lease"
-                }
-              />
+              <div className="rounded-xl bg-green-50 p-3">
+
+                <User className="h-6 w-6 text-green-600" />
+
+              </div>
 
             </div>
 
           </div>
 
-          <div className="rounded-2xl border bg-white p-6 shadow-sm">
+          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:shadow-md">
 
-            <h2 className="mb-6 flex items-center gap-2 text-2xl font-bold">
+            <div className="flex items-center justify-between">
 
-              <Wrench className="h-6 w-6 text-[#D4AF37]" />
+              <div>
 
-              Maintenance
+                <p className="text-sm text-slate-500">
 
-            </h2>
+                  Utility Meters
 
-            <div className="rounded-xl border border-dashed p-8 text-center text-gray-500">
+                </p>
 
-              No maintenance records available.
+                <h2 className="mt-2 text-2xl font-bold">
+
+                  {meters.length}
+
+                </h2>
+
+              </div>
+
+              <div className="rounded-xl bg-purple-50 p-3">
+
+                <Wrench className="h-6 w-6 text-purple-600" />
+
+              </div>
 
             </div>
 
@@ -631,167 +391,583 @@ export default function UnitDetailsPage({
 
         </div>
 
-        {/* Payment History */}
+        {/* Tabs */}
 
-        <div className="rounded-2xl border bg-white p-6 shadow-sm">
+        <div className="rounded-2xl border border-slate-200 bg-white p-2 shadow-sm">
 
-          <h2 className="mb-6 flex items-center gap-2 text-2xl font-bold">
+          <div className="flex min-w-max gap-2 overflow-x-auto">
 
-            <Coins className="h-6 w-6 text-[#D4AF37]" />
+            {[
+              {
+                id: "overview",
+                label: "Overview",
+              },
+              {
+                id: "utilities",
+                label: "Utilities",
+              },
+              {
+                id: "lease",
+                label: "Lease",
+              },
+              {
+                id: "payments",
+                label: "Payments",
+              },
+              {
+                id: "maintenance",
+                label: "Maintenance",
+              },
+            ].map((tab) => (
 
-            Payment History
+              <button
+                key={tab.id}
+                onClick={() =>
+                  setActiveTab(tab.id)
+                }
+                className={`rounded-xl px-5 py-3 text-sm font-medium transition-all ${
+                  activeTab === tab.id
+                    ? "bg-black text-white shadow"
+                    : "text-slate-600 hover:bg-slate-100"
+                }`}
+              >
 
-          </h2>
+                {tab.label}
 
-          <div className="rounded-xl border border-dashed p-10 text-center text-gray-500">
+              </button>
 
-            Payment history will appear here once rent payments are recorded.
+            ))}
 
           </div>
 
         </div>
 
-      </main>
+        {/* Tab Content */}
+                {activeTab === "overview" && (
 
-      {/* Create Lease */}
+          <div className="grid gap-6 lg:grid-cols-2">
 
-      {showCreateLease && (
+            {/* Basic Information */}
 
-        <CreateLeaseModal
-          propertyId={unit.property.id}
-          unitId={unit.id}
-          onCancel={() => {
+            <div className="rounded-2xl border border-slate-200 bg-white shadow-sm">
 
-            setShowCreateLease(false);
+              <div className="border-b border-slate-200 px-6 py-4">
 
-          }}
-          onSuccess={() => {
+                <h2 className="text-lg font-semibold">
 
-            setShowCreateLease(false);
+                  Basic Information
 
-            loadPage();
+                </h2>
 
-          }}
-        />
+                <p className="mt-1 text-sm text-slate-500">
 
-      )}
+                  General information about this rental unit.
 
-      {/* Create Utility Meter */}
+                </p>
 
-      {showCreateMeter && (
+              </div>
 
-        <CreateUtilityMeterModal
-          workspaceId={unit.workspace_id}
-          propertyId={unit.property.id}
-          unitId={unit.id}
-          onClose={() => {
+              <div className="divide-y divide-slate-100">
 
-            setShowCreateMeter(false);
+                <InfoRow
+                  label="Unit Number"
+                  value={unit.unit_number}
+                />
 
-          }}
-          onSaved={() => {
+                <InfoRow
+                  label="Property"
+                  value={unit.property?.name}
+                />
 
-            setShowCreateMeter(false);
+                <InfoRow
+                  label="Unit Type"
+                  value={unit.unit_type ?? "-"}
+                />
 
-            loadPage();
+                <InfoRow
+                  label="Bedrooms"
+                  value={unit.bedrooms ?? "-"}
+                />
 
-          }}
-        />
+                <InfoRow
+                  label="Bathrooms"
+                  value={unit.bathrooms ?? "-"}
+                />
 
-      )}
+                <InfoRow
+                  label="Floor"
+                  value={unit.floor ?? "-"}
+                />
 
-      {/* Configure Existing Utility Meter */}
+                <InfoRow
+                  label="Status"
+                  value={unit.status}
+                />
 
-      {showSetupMeter &&
-        selectedMeter && (
+              </div>
 
-        <SetupUtilityMeterModal
-          meter={selectedMeter}
-          onClose={() => {
+            </div>
 
-            setShowSetupMeter(false);
+            {/* Financial Information */}
 
-            setSelectedMeter(null);
+            <div className="rounded-2xl border border-slate-200 bg-white shadow-sm">
 
-          }}
-          onSaved={() => {
+              <div className="border-b border-slate-200 px-6 py-4">
 
-            setShowSetupMeter(false);
+                <h2 className="text-lg font-semibold">
 
-            setSelectedMeter(null);
+                  Financial Information
 
-            loadPage();
+                </h2>
 
-          }}
-        />
+                <p className="mt-1 text-sm text-slate-500">
 
-      )}
+                  Rent and occupancy summary.
 
-      {/* Record Meter Reading */}
+                </p>
 
-      {showReadingModal &&
-        selectedMeter && (
+              </div>
 
-        <MeterReadingModal
-          meter={selectedMeter}
-          workspaceId={selectedMeter.workspace_id}
-          propertyId={selectedMeter.property_id}
-          unitId={selectedMeter.unit_id}
-          utilityType={selectedMeter.utility_type}
-          unitRate={Number(
-            selectedMeter.unit_rate
-          )}
-          onClose={() => {
+              <div className="divide-y divide-slate-100">
 
-            setShowReadingModal(false);
+                <InfoRow
+                  label="Monthly Rent"
+                  value={`KSh ${Number(
+                    unit.monthly_rent ?? 0
+                  ).toLocaleString()}`}
+                />
 
-            setSelectedMeter(null);
+                <InfoRow
+                  label="Deposit"
+                  value={`KSh ${Number(
+                    unit.deposit ?? 0
+                  ).toLocaleString()}`}
+                />
 
-          }}
-          onSaved={() => {
+                <InfoRow
+                  label="Occupancy"
+                  value={
+                    unit.occupant
+                      ? "Occupied"
+                      : "Vacant"
+                  }
+                />
 
-            setShowReadingModal(false);
+                <InfoRow
+                  label="Current Tenant"
+                  value={
+                    unit.occupant?.full_name ??
+                    "No Active Tenant"
+                  }
+                />
 
-            setSelectedMeter(null);
+                <InfoRow
+                  label="Lease Status"
+                  value={
+                    unit.lease?.status ??
+                    "No Active Lease"
+                  }
+                />
 
-            loadPage();
+                <InfoRow
+                  label="Lease Ends"
+                  value={
+                    unit.lease?.end_date ?? "-"
+                  }
+                />
 
-          }}
-        />
+              </div>
 
-      )}
+            </div>
 
-    </>
+          </div>
 
-  );
+        )}
+        {activeTab === "utilities" && (
 
-}
+  <div className="space-y-6">
 
-function Info({
-  label,
-  value,
-}: {
-  label: string;
-  value: string;
-}) {
+    {/* Header */}
 
-  return (
+    <div className="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:flex-row sm:items-center sm:justify-between">
 
-    <div className="flex items-center justify-between border-b pb-3">
+      <div>
 
-      <span className="text-gray-500">
+        <h2 className="text-xl font-semibold">
 
-        {label}
+          Utility Meters
 
-      </span>
+        </h2>
 
-      <span className="font-semibold text-right">
+        <p className="mt-1 text-sm text-slate-500">
 
-        {value}
+          Manage water, electricity and other utility meters assigned to this unit.
 
-      </span>
+        </p>
+
+      </div>
+
+      <button
+        onClick={() => setShowCreateMeter(true)}
+        className="inline-flex items-center justify-center rounded-xl bg-black px-5 py-3 font-medium text-white hover:bg-gray-800"
+      >
+
+        <Plus className="mr-2 h-4 w-4" />
+
+        Add Utility
+
+      </button>
 
     </div>
+
+    {/* Empty State */}
+
+    {meters.length === 0 && (
+
+      <div className="rounded-2xl border border-dashed border-slate-300 bg-white py-16 text-center">
+
+        <Wrench className="mx-auto mb-4 h-10 w-10 text-slate-400" />
+
+        <h3 className="text-lg font-semibold">
+
+          No Utility Meters
+
+        </h3>
+
+        <p className="mt-2 text-slate-500">
+
+          Create the first utility meter for this unit.
+
+        </p>
+
+      </div>
+
+    )}
+
+    {/* Utility Cards */}
+
+    <div className="grid gap-5 lg:grid-cols-2">
+
+      {meters.map((meter) => {
+
+        const configured =
+          meter.status !== "Pending Setup";
+
+        return (
+
+          <div
+            key={meter.id}
+            className="rounded-2xl border border-slate-200 bg-white shadow-sm"
+          >
+
+            {/* Card Header */}
+
+            <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4">
+
+              <div>
+
+                <h3 className="font-semibold">
+
+                  {meter.utility_type}
+
+                </h3>
+
+                <p className="mt-1 text-sm text-slate-500">
+
+                  {meter.status}
+
+                </p>
+
+              </div>
+
+              <span
+                className={`rounded-full px-3 py-1 text-xs font-medium ${
+                  configured
+                    ? "bg-green-100 text-green-700"
+                    : "bg-amber-100 text-amber-700"
+                }`}
+              >
+
+                {configured
+                  ? "Active"
+                  : "Pending"}
+
+              </span>
+
+            </div>
+
+            {/* Card Body */}
+
+            <div className="space-y-4 p-6">
+
+              <InfoRow
+                label="Meter Number"
+                value={
+                  meter.meter_number ?? "-"
+                }
+              />
+
+              <InfoRow
+                label="Current Reading"
+                value={
+                  meter.current_reading ?? "-"
+                }
+              />
+
+              <InfoRow
+                label="Last Reading"
+                value={
+                  meter.last_reading_date ?? "-"
+                }
+              />
+
+            </div>
+
+            {/* Actions */}
+
+            <div className="flex gap-3 border-t border-slate-100 p-5">
+
+              {!configured ? (
+
+                <button
+                  onClick={() => {
+
+                    setSelectedMeter(meter);
+
+                    setShowSetupMeter(true);
+
+                  }}
+                  className="flex-1 rounded-xl bg-black px-4 py-3 font-medium text-white hover:bg-gray-800"
+                >
+
+                  Configure
+
+                </button>
+
+              ) : (
+
+                <>
+
+                  <button
+                    onClick={() => {
+
+                      setSelectedMeter(meter);
+
+                      setShowSetupMeter(true);
+
+                    }}
+                    className="flex-1 rounded-xl border border-slate-300 px-4 py-3 hover:bg-slate-50"
+                  >
+
+                    Edit
+
+                  </button>
+
+                  <button
+                    onClick={() => {
+
+                      setSelectedMeter(meter);
+
+                      setShowReadingModal(true);
+
+                    }}
+                    className="flex-1 rounded-xl bg-black px-4 py-3 font-medium text-white hover:bg-gray-800"
+                  >
+
+                    Record Reading
+
+                  </button>
+
+                </>
+
+              )}
+
+            </div>
+
+          </div>
+
+        );
+
+      })}
+
+    </div>
+
+  </div>
+
+)}
+        {/* ==============================
+    LEASE TAB
+============================== */}
+
+{activeTab === "lease" && (
+
+  <div className="rounded-2xl border border-slate-200 bg-white shadow-sm">
+
+    <div className="border-b border-slate-200 px-6 py-4">
+
+      <h2 className="text-lg font-semibold">
+
+        Lease Information
+
+      </h2>
+
+    </div>
+
+    {unit.lease ? (
+
+      <div className="divide-y divide-slate-100">
+
+        <InfoRow
+          label="Tenant"
+          value={unit.occupant?.full_name}
+        />
+
+        <InfoRow
+          label="Lease Start"
+          value={unit.lease.start_date}
+        />
+
+        <InfoRow
+          label="Lease End"
+          value={unit.lease.end_date}
+        />
+
+        <InfoRow
+          label="Status"
+          value={unit.lease.status}
+        />
+
+      </div>
+
+    ) : (
+
+      <div className="py-16 text-center">
+
+        <h3 className="text-lg font-semibold">
+
+          No Active Lease
+
+        </h3>
+
+        <p className="mt-2 text-slate-500">
+
+          This unit currently has no active lease.
+
+        </p>
+
+        <button
+          onClick={() => setShowCreateLease(true)}
+          className="mt-6 rounded-xl bg-black px-5 py-3 text-white"
+        >
+
+          Create Lease
+
+        </button>
+
+      </div>
+
+    )}
+
+  </div>
+
+)}
+
+{/* ==============================
+    PAYMENTS TAB
+============================== */}
+
+{activeTab === "payments" && (
+
+  <div className="rounded-2xl border border-slate-200 bg-white py-20 text-center shadow-sm">
+
+    <Coins className="mx-auto h-12 w-12 text-slate-300" />
+
+    <h2 className="mt-4 text-xl font-semibold">
+
+      Payments Module
+
+    </h2>
+
+    <p className="mt-2 text-slate-500">
+
+      Payment history, invoices and balances will appear here.
+
+    </p>
+
+  </div>
+
+)}
+
+{/* ==============================
+    MAINTENANCE TAB
+============================== */}
+
+{activeTab === "maintenance" && (
+
+  <div className="rounded-2xl border border-slate-200 bg-white py-20 text-center shadow-sm">
+
+    <Wrench className="mx-auto h-12 w-12 text-slate-300" />
+
+    <h2 className="mt-4 text-xl font-semibold">
+
+      Maintenance Module
+
+    </h2>
+
+    <p className="mt-2 text-slate-500">
+
+      Maintenance requests and history will appear here.
+
+    </p>
+
+  </div>
+
+)}
+
+{/* ==============================
+    MODALS
+============================== */}
+
+<CreateLeaseModal
+  open={showCreateLease}
+  onClose={() => setShowCreateLease(false)}
+  onSuccess={loadPage}
+/>
+
+<CreateUtilityMeterModal
+  open={showCreateMeter}
+  workspaceId={unit.workspace_id}
+  propertyId={unit.property.id}
+  unitId={unit.id}
+  onClose={() => setShowCreateMeter(false)}
+  onCreated={loadPage}
+/>
+
+{selectedMeter && (
+
+  <SetupUtilityMeterModal
+    meter={selectedMeter}
+    open={showSetupMeter}
+    onClose={() => setShowSetupMeter(false)}
+    onSaved={loadPage}
+  />
+
+)}
+
+{selectedMeter && (
+
+  <MeterReadingModal
+    meter={selectedMeter}
+    open={showReadingModal}
+    onClose={() => setShowReadingModal(false)}
+    onSaved={loadPage}
+  />
+
+)}
+
+      </div>
+
+    </AppShell>
 
   );
 
