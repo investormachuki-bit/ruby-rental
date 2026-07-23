@@ -30,6 +30,7 @@ import { getProperties } from "@/services/properties/getProperties";
 
 import { Unit } from "@/types/unit";
 import AddUnitModal from "@/components/units/AddUnitModal";
+import CreateLeaseModal from "@/components/leases/CreateLeaseModal";
 
 export default function UnitsPage() {
 
