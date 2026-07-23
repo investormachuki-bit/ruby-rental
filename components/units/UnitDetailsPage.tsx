@@ -243,14 +243,18 @@ export default function UnitDetailsPage({
                 </button>
 
               )}
+<button
+  onClick={() =>
+    router.push(`/units/${unit.id}/edit`)
+  }
+  className="rounded-xl border border-slate-200 px-5 py-3 font-medium hover:bg-slate-50"
+>
 
-              <button className="rounded-xl border border-slate-200 px-5 py-3 font-medium hover:bg-slate-50">
+  <Pencil className="mr-2 inline h-4 w-4" />
 
-                <Pencil className="mr-2 inline h-4 w-4" />
+  Edit Unit
 
-                Edit Unit
-
-              </button>
+</button>
 
               <button className="rounded-xl border border-slate-200 p-3 hover:bg-slate-50">
 
