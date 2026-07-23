@@ -1,29 +1,25 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import {
+  ArrowLeft,
+  Building2,
+  Coins,
+  Home,
+  Pencil,
+  Plus,
+  User,
+  Wrench,
+} from "lucide-react";
+
 import { useRouter } from "next/navigation";
 
-import Breadcrumb from "@/components/common/Breadcrumb";
-
 import CreateLeaseModal from "@/components/leases/CreateLeaseModal";
-
+import CreateUtilityMeterModal from "@/components/utilities/CreateUtilityMeterModal";
 import MeterReadingModal from "@/components/utilities/MeterReadingModal";
 import SetupUtilityMeterModal from "@/components/utilities/SetupUtilityMeterModal";
 
-import {
-  Home,
-  Coins,
-  BedDouble,
-  Bath,
-  Pencil,
-  UserPlus,
-  Wrench,
-  FileText,
-} from "lucide-react";
-
-import { getUnit } from "@/services/units/getUnit";
-import { getUtilityMeters } from "@/services/utilities/getUtilityMeters";
-import { getUnitActiveLease } from "@/services/leases/getUnitActiveLease";
+import { getUnitDetails } from "@/services/units/getUnitDetails";
 
 type Props = {
   unitId: string;
@@ -35,35 +31,31 @@ export default function UnitDetailsPage({
 
   const router = useRouter();
 
-  const [loading, setLoading] =
-    useState(true);
+  const [loading, setLoading] = useState(true);
 
-  const [unit, setUnit] =
-    useState<any>(null);
+  const [unit, setUnit] = useState<any>(null);
 
-  const [meters, setMeters] =
-    useState<any[]>([]);
+  const [meters, setMeters] = useState<any[]>([]);
+
+  const [showCreateLease, setShowCreateLease] =
+    useState(false);
+
+  const [showCreateMeter, setShowCreateMeter] =
+    useState(false);
+
+  const [showSetupMeter, setShowSetupMeter] =
+    useState(false);
+
+  const [showReadingModal, setShowReadingModal] =
+    useState(false);
 
   const [selectedMeter, setSelectedMeter] =
     useState<any>(null);
 
-  const [
-    showCreateLease,
-    setShowCreateLease,
-  ] = useState(false);
-
-  const [
-    showSetupMeter,
-    setShowSetupMeter,
-  ] = useState(false);
-
-  const [
-    showReadingModal,
-    setShowReadingModal,
-  ] = useState(false);
-
   useEffect(() => {
+
     loadPage();
+
   }, []);
 
   async function loadPage() {
@@ -72,20 +64,16 @@ export default function UnitDetailsPage({
 
       setLoading(true);
 
-      const [
-        unitData,
-        utilityMeters,
-      ] = await Promise.all([
-        getUnit(unitId),
-        getUtilityMeters(unitId),
-      ]);
+      const result =
+        await getUnitDetails(unitId);
 
-      setUnit(unitData);
-      setMeters(utilityMeters);
+      setUnit(result.unit);
 
-    } catch (error) {
+      setMeters(result.meters ?? []);
 
-      console.error(error);
+    } catch (error: any) {
+
+      alert(error.message);
 
     } finally {
 
@@ -95,47 +83,32 @@ export default function UnitDetailsPage({
 
   }
 
-  async function handleViewLease() {
+  function handleViewLease() {
 
-    try {
+    if (!unit?.lease) {
 
-      const lease =
-        await getUnitActiveLease(
-          unit.id
-        );
+      alert("No active lease.");
 
-      if (!lease) {
-
-        alert(
-          "This unit has no active lease."
-        );
-
-        return;
-
-      }
-
-      router.push(
-        `/leases/${lease.id}`
-      );
-
-    } catch (error) {
-
-      console.error(error);
-
-      alert(
-        "Unable to open lease."
-      );
+      return;
 
     }
+
+    router.push(
+      `/leases/${unit.lease.id}`
+    );
 
   }
 
   if (loading) {
 
     return (
-      <div className="p-8">
-        Loading unit...
+
+      <div className="flex h-96 items-center justify-center">
+
+        Loading...
+
       </div>
+
     );
 
   }
@@ -143,9 +116,13 @@ export default function UnitDetailsPage({
   if (!unit) {
 
     return (
-      <div className="p-8">
+
+      <div className="flex h-96 items-center justify-center">
+
         Unit not found.
+
       </div>
+
     );
 
   }
@@ -154,89 +131,63 @@ export default function UnitDetailsPage({
 
     <>
 
-      <main className="mx-auto w-full max-w-7xl space-y-8 p-4 sm:p-6">
+      <main className="space-y-8">
 
-        <Breadcrumb
-          items={[
-            {
-              label: "Dashboard",
-              href: "/",
-            },
-            {
-              label: "Properties",
-              href: "/properties",
-            },
-            {
-              label: unit.property.name,
-              href: `/properties/${unit.property.id}`,
-            },
-            {
-              label: unit.unit_number,
-            },
-          ]}
-        />
-
-        {/* Header */}
-
-        <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
 
           <div>
 
-            <div className="flex items-center gap-3">
+            <button
+              onClick={() => router.back()}
+              className="mb-4 flex items-center gap-2 text-gray-500 hover:text-black"
+            >
 
-              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#D4AF37]/10">
+              <ArrowLeft className="h-5 w-5" />
 
-                <Home className="h-7 w-7 text-[#D4AF37]" />
+              Back
 
-              </div>
+            </button>
 
-              <div>
+            <h1 className="text-3xl font-bold">
 
-                <h1 className="text-4xl font-bold">
-                  {unit.unit_number}
-                </h1>
+              Unit {unit.unit_number}
 
-                <p className="mt-1 text-gray-500">
+            </h1>
 
-                  {unit.unit_type ?? "Rental Unit"}
+            <p className="mt-2 text-gray-500">
 
-                  {unit.floor_number !== null &&
-                    unit.floor_number !== undefined &&
-                    ` • Floor ${unit.floor_number}`}
+              {unit.property.name}
 
-                </p>
-
-              </div>
-
-            </div>
+            </p>
 
           </div>
 
-          <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
+          <div className="flex flex-wrap gap-3">
 
-            {unit.status === "Vacant" ? (
+            {unit.status === "Vacant" && (
 
               <button
                 onClick={() =>
                   setShowCreateLease(true)
                 }
-                className="flex items-center gap-2 rounded-xl bg-black px-5 py-3 font-semibold text-white transition hover:bg-gray-800"
+                className="rounded-xl bg-black px-5 py-3 font-semibold text-white hover:bg-gray-800"
               >
 
-                <UserPlus size={18} />
+                <Plus className="mr-2 inline h-5 w-5" />
 
                 Create Lease
 
               </button>
 
-            ) : (
+            )}
+
+            {unit.status === "Occupied" &&
+              unit.lease && (
 
               <button
                 onClick={handleViewLease}
-                className="flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-3 font-semibold text-white transition hover:bg-blue-700"
+                className="rounded-xl border px-5 py-3 font-semibold hover:bg-gray-100"
               >
-
-                <FileText size={18} />
 
                 View Lease
 
@@ -244,97 +195,82 @@ export default function UnitDetailsPage({
 
             )}
 
-            <button
-              onClick={() =>
-                router.push(
-                  `/units/${unit.id}/edit`
-                )
-              }
-              className="flex items-center gap-2 rounded-xl border px-5 py-3 font-semibold transition hover:bg-gray-100"
-            >
-
-              <Pencil size={18} />
-
-              Edit Unit
-
-            </button>
-
           </div>
 
         </div>
 
         {/* KPI Cards */}
 
-        <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
+        <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
 
           <div className="rounded-2xl border bg-white p-6 shadow-sm">
 
-            <div className="mb-4 flex items-center justify-between">
+            <p className="text-gray-500">
 
-              <span className="text-gray-500">
-                Monthly Rent
-              </span>
+              Monthly Rent
 
-              <Coins className="text-[#D4AF37]" />
+            </p>
 
-            </div>
+            <h2 className="mt-2 text-3xl font-bold">
 
-            <h2 className="text-3xl font-bold">
-              KSh {Number(unit.monthly_rent).toLocaleString()}
+              KSh{" "}
+              {Number(
+                unit.monthly_rent
+              ).toLocaleString()}
+
             </h2>
 
           </div>
 
           <div className="rounded-2xl border bg-white p-6 shadow-sm">
 
-            <div className="mb-4 flex items-center justify-between">
+            <p className="text-gray-500">
 
-              <span className="text-gray-500">
-                Deposit
-              </span>
+              Deposit
 
-              <Coins className="text-[#D4AF37]" />
+            </p>
 
-            </div>
+            <h2 className="mt-2 text-3xl font-bold">
 
-            <h2 className="text-3xl font-bold">
-              KSh {Number(unit.deposit).toLocaleString()}
+              KSh{" "}
+              {Number(
+                unit.deposit
+              ).toLocaleString()}
+
             </h2>
 
           </div>
 
           <div className="rounded-2xl border bg-white p-6 shadow-sm">
 
-            <div className="mb-4 flex items-center justify-between">
+            <p className="text-gray-500">
 
-              <span className="text-gray-500">
-                Bedrooms
-              </span>
+              Status
 
-              <BedDouble className="text-[#D4AF37]" />
+            </p>
 
-            </div>
+            <h2 className="mt-2 text-3xl font-bold">
 
-            <h2 className="text-3xl font-bold">
-              {unit.bedrooms}
+              {unit.status}
+
             </h2>
 
           </div>
 
           <div className="rounded-2xl border bg-white p-6 shadow-sm">
 
-            <div className="mb-4 flex items-center justify-between">
+            <p className="text-gray-500">
 
-              <span className="text-gray-500">
-                Bathrooms
-              </span>
+              Occupancy
 
-              <Bath className="text-[#D4AF37]" />
+            </p>
 
-            </div>
+            <h2 className="mt-2 text-3xl font-bold">
 
-            <h2 className="text-3xl font-bold">
-              {unit.bathrooms}
+              {unit.occupant
+                ? unit.occupant.full_name
+                : "Vacant"}
+
             </h2>
 
           </div>
@@ -346,7 +282,9 @@ export default function UnitDetailsPage({
         <div className="rounded-2xl border bg-white p-6 shadow-sm">
 
           <h2 className="mb-6 text-2xl font-bold">
+
             Basic Information
+
           </h2>
 
           <div className="grid gap-6 md:grid-cols-2">
@@ -363,36 +301,14 @@ export default function UnitDetailsPage({
 
             <Info
               label="Unit Type"
-              value={unit.unit_type ?? "-"}
+              value={unit.unit_type}
             />
 
             <Info
-              label="Floor Number"
+              label="Floor"
               value={
-                unit.floor_number != null
-                  ? String(unit.floor_number)
-                  : "-"
+                unit.floor ?? "-"
               }
-            />
-
-            <Info
-              label="Bedrooms"
-              value={String(unit.bedrooms)}
-            />
-
-            <Info
-              label="Bathrooms"
-              value={String(unit.bathrooms)}
-            />
-
-            <Info
-              label="Size"
-              value={`${unit.size_sqm} Sq. M`}
-            />
-
-            <Info
-              label="Status"
-              value={unit.status}
             />
 
           </div>
@@ -403,7 +319,9 @@ export default function UnitDetailsPage({
         <div className="rounded-2xl border bg-white p-6 shadow-sm">
 
           <h2 className="mb-6 text-2xl font-bold">
+
             Financial Information
+
           </h2>
 
           <div className="grid gap-6 md:grid-cols-2">
@@ -430,8 +348,9 @@ export default function UnitDetailsPage({
             <Info
               label="Occupancy"
               value={
-                unit.occupant?.full_name ??
-                "Vacant"
+                unit.occupant
+                  ? unit.occupant.full_name
+                  : "Vacant"
               }
             />
 
@@ -462,13 +381,9 @@ export default function UnitDetailsPage({
             </div>
 
             <button
-              onClick={() => {
-
-                setSelectedMeter(null);
-
-                setShowSetupMeter(true);
-
-              }}
+              onClick={() =>
+                setShowCreateMeter(true)
+              }
               className="rounded-xl bg-black px-5 py-3 font-semibold text-white transition hover:bg-gray-800"
             >
 
@@ -491,13 +406,9 @@ export default function UnitDetailsPage({
               </p>
 
               <button
-                onClick={() => {
-
-                  setSelectedMeter(null);
-
-                  setShowSetupMeter(true);
-
-                }}
+                onClick={() =>
+                  setShowCreateMeter(true)
+                }
                 className="rounded-xl bg-black px-5 py-3 font-semibold text-white transition hover:bg-gray-800"
               >
 
@@ -517,22 +428,16 @@ export default function UnitDetailsPage({
 
                 <div
                   key={meter.id}
-                  className="w-full rounded-2xl border bg-white p-4 shadow-sm sm:p-6"
+                  className="rounded-2xl border bg-white p-5 shadow-sm"
                 >
 
-                  <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                  <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
 
                     <div>
 
                       <h3 className="text-xl font-bold">
 
-                        {meter.utility_type === "Water"
-                          ? "🚰 Water Meter"
-                          : meter.utility_type === "Electricity"
-                          ? "⚡ Electricity Meter"
-                          : meter.utility_type === "Gas"
-                          ? "🔥 Gas Meter"
-                          : "🌐 Internet"}
+                        {meter.utility_type} Meter
 
                       </h3>
 
@@ -553,47 +458,35 @@ export default function UnitDetailsPage({
 
                     <div className="flex flex-wrap gap-3">
 
-                      {meter.status === "Pending Setup" ? (
-
-                        <button
-                          onClick={() => {
-
-                            setSelectedMeter(meter);
-
-                            setShowSetupMeter(true);
-
-                          }}
-                          className="w-full rounded-xl bg-black px-5 py-3 font-semibold text-white transition hover:bg-gray-800 sm:w-auto"
-                        >
-
-                          Setup Meter
-
-                        </button>
-
-                      ) : (
-
-                        <button
-                          onClick={() => {
-
-                            setSelectedMeter(meter);
-
-                            setShowReadingModal(true);
-
-                          }}
-                          className="w-full rounded-xl bg-black px-5 py-3 font-semibold text-white transition hover:bg-gray-800 sm:w-auto"
-                        >
-
-                          Record Reading
-
-                        </button>
-
-                      )}
-
                       <button
-                        className="w-full rounded-xl border px-5 py-3 font-semibold transition hover:bg-gray-100 sm:w-auto"
+                        onClick={() => {
+
+                          setSelectedMeter(meter);
+
+                          setShowSetupMeter(true);
+
+                        }}
+                        className="rounded-xl border px-5 py-3 font-semibold hover:bg-gray-100"
                       >
 
-                        History
+                        <Pencil className="mr-2 inline h-4 w-4" />
+
+                        Configure
+
+                      </button>
+
+                      <button
+                        onClick={() => {
+
+                          setSelectedMeter(meter);
+
+                          setShowReadingModal(true);
+
+                        }}
+                        className="rounded-xl bg-black px-5 py-3 font-semibold text-white hover:bg-gray-800"
+                      >
+
+                        Record Reading
 
                       </button>
 
@@ -601,7 +494,7 @@ export default function UnitDetailsPage({
 
                   </div>
 
-                  <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                  <div className="mt-6 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
 
                     <Info
                       label="Status"
@@ -609,7 +502,7 @@ export default function UnitDetailsPage({
                     />
 
                     <Info
-                      label="Rate"
+                      label="Unit Rate"
                       value={`KSh ${Number(
                         meter.unit_rate
                       ).toLocaleString()}`}
@@ -618,9 +511,7 @@ export default function UnitDetailsPage({
                     <Info
                       label="Opening Reading"
                       value={String(
-                        Number(
-                          meter.opening_reading
-                        )
+                        meter.opening_reading
                       )}
                     />
 
@@ -629,7 +520,8 @@ export default function UnitDetailsPage({
                       value={
                         meter.latest_reading
                           ? String(
-                              meter.latest_reading.current_reading
+                              meter.latest_reading
+                                .current_reading
                             )
                           : "-"
                       }
@@ -673,33 +565,45 @@ export default function UnitDetailsPage({
 
             <h2 className="mb-6 flex items-center gap-2 text-2xl font-bold">
 
-              <Home className="h-6 w-6 text-[#D4AF37]" />
+              <User className="h-6 w-6 text-[#D4AF37]" />
 
-              Occupancy
+              Current Occupancy
 
             </h2>
 
             <div className="space-y-4">
 
               <Info
-                label="Current Status"
-                value={unit.status}
-              />
-
-              <Info
-                label="Current Occupant"
+                label="Occupant"
                 value={
-                  unit.occupant?.full_name ??
-                  "No Occupant"
+                  unit.occupant
+                    ? unit.occupant.full_name
+                    : "Vacant"
                 }
               />
 
               <Info
-                label="Active Lease"
+                label="Phone"
                 value={
-                  unit.status === "Occupied"
-                    ? "Available"
-                    : "None"
+                  unit.occupant?.phone ??
+                  "-"
+                }
+              />
+
+              <Info
+                label="Email"
+                value={
+                  unit.occupant?.email ??
+                  "-"
+                }
+              />
+
+              <Info
+                label="Lease Status"
+                value={
+                  unit.lease
+                    ? unit.lease.status
+                    : "No Active Lease"
                 }
               />
 
@@ -719,7 +623,7 @@ export default function UnitDetailsPage({
 
             <div className="rounded-xl border border-dashed p-8 text-center text-gray-500">
 
-              Maintenance history will appear here.
+              No maintenance records available.
 
             </div>
 
@@ -741,7 +645,7 @@ export default function UnitDetailsPage({
 
           <div className="rounded-xl border border-dashed p-10 text-center text-gray-500">
 
-            Rent payments will appear here.
+            Payment history will appear here once rent payments are recorded.
 
           </div>
 
@@ -756,9 +660,11 @@ export default function UnitDetailsPage({
         <CreateLeaseModal
           propertyId={unit.property.id}
           unitId={unit.id}
-          onCancel={() =>
-            setShowCreateLease(false)
-          }
+          onCancel={() => {
+
+            setShowCreateLease(false);
+
+          }}
           onSuccess={() => {
 
             setShowCreateLease(false);
@@ -770,14 +676,37 @@ export default function UnitDetailsPage({
 
       )}
 
-      {/* Setup Utility */}
+      {/* Create Utility Meter */}
 
-      {showSetupMeter && (
+      {showCreateMeter && (
+
+        <CreateUtilityMeterModal
+          workspaceId={unit.workspace_id}
+          propertyId={unit.property.id}
+          unitId={unit.id}
+          onClose={() => {
+
+            setShowCreateMeter(false);
+
+          }}
+          onSaved={() => {
+
+            setShowCreateMeter(false);
+
+            loadPage();
+
+          }}
+        />
+
+      )}
+
+      {/* Configure Existing Utility Meter */}
+
+      {showSetupMeter &&
+        selectedMeter && (
 
         <SetupUtilityMeterModal
           meter={selectedMeter}
-          unitId={unit.id}
-          propertyId={unit.property.id}
           onClose={() => {
 
             setShowSetupMeter(false);
@@ -798,25 +727,17 @@ export default function UnitDetailsPage({
 
       )}
 
-      {/* Record Reading */}
+      {/* Record Meter Reading */}
 
       {showReadingModal &&
         selectedMeter && (
 
         <MeterReadingModal
           meter={selectedMeter}
-          workspaceId={
-            selectedMeter.workspace_id
-          }
-          propertyId={
-            selectedMeter.property_id
-          }
-          unitId={
-            selectedMeter.unit_id
-          }
-          utilityType={
-            selectedMeter.utility_type
-          }
+          workspaceId={selectedMeter.workspace_id}
+          propertyId={selectedMeter.property_id}
+          unitId={selectedMeter.unit_id}
+          utilityType={selectedMeter.utility_type}
           unitRate={Number(
             selectedMeter.unit_rate
           )}
@@ -856,7 +777,7 @@ function Info({
 
   return (
 
-    <div className="flex flex-wrap items-center justify-between gap-2 border-b pb-3">
+    <div className="flex items-center justify-between border-b pb-3">
 
       <span className="text-gray-500">
 
@@ -864,11 +785,11 @@ function Info({
 
       </span>
 
-      <strong className="max-w-[60%] break-words text-right">
+      <span className="font-semibold text-right">
 
         {value}
 
-      </strong>
+      </span>
 
     </div>
 
