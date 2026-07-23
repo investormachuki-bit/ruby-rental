@@ -139,12 +139,13 @@ setPayments(tenantPayments);
 
         </div>
 
-        <button
-          className="inline-flex items-center gap-2 rounded-lg bg-[#D4AF37] px-5 py-3 font-medium text-white shadow"
-        >
-          <Edit size={18} />
-          Edit Tenant
-        </button>
+        <Link
+  href={`/tenants/${tenant.id}/edit`}
+  className="inline-flex items-center gap-2 rounded-lg bg-[#D4AF37] px-5 py-3 font-medium text-white shadow hover:opacity-90"
+>
+  <Edit size={18} />
+  Edit Tenant
+</Link>
 
       </div>
 
