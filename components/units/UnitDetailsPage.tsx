@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-
 import { useRouter } from "next/navigation";
 
 import Breadcrumb from "@/components/common/Breadcrumb";
@@ -14,7 +13,6 @@ import SetupUtilityMeterModal from "@/components/utilities/SetupUtilityMeterModa
 import {
   Home,
   Coins,
-  Ruler,
   BedDouble,
   Bath,
   Pencil,
@@ -65,9 +63,7 @@ export default function UnitDetailsPage({
   ] = useState(false);
 
   useEffect(() => {
-
     loadPage();
-
   }, []);
 
   async function loadPage() {
@@ -80,15 +76,11 @@ export default function UnitDetailsPage({
         unitData,
         utilityMeters,
       ] = await Promise.all([
-
         getUnit(unitId),
-
         getUtilityMeters(unitId),
-
       ]);
 
       setUnit(unitData);
-
       setMeters(utilityMeters);
 
     } catch (error) {
@@ -141,13 +133,9 @@ export default function UnitDetailsPage({
   if (loading) {
 
     return (
-
       <div className="p-8">
-
         Loading unit...
-
       </div>
-
     );
 
   }
@@ -155,13 +143,9 @@ export default function UnitDetailsPage({
   if (!unit) {
 
     return (
-
       <div className="p-8">
-
         Unit not found.
-
       </div>
-
     );
 
   }
@@ -191,7 +175,8 @@ export default function UnitDetailsPage({
             },
           ]}
         />
-                {/* Header */}
+
+        {/* Header */}
 
         <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
 
@@ -208,9 +193,7 @@ export default function UnitDetailsPage({
               <div>
 
                 <h1 className="text-4xl font-bold">
-
                   {unit.unit_number}
-
                 </h1>
 
                 <p className="mt-1 text-gray-500">
@@ -289,9 +272,7 @@ export default function UnitDetailsPage({
             <div className="mb-4 flex items-center justify-between">
 
               <span className="text-gray-500">
-
                 Monthly Rent
-
               </span>
 
               <Coins className="text-[#D4AF37]" />
@@ -299,13 +280,7 @@ export default function UnitDetailsPage({
             </div>
 
             <h2 className="text-3xl font-bold">
-
-              KSh{" "}
-
-              {Number(
-                unit.monthly_rent
-              ).toLocaleString()}
-
+              KSh {Number(unit.monthly_rent).toLocaleString()}
             </h2>
 
           </div>
@@ -315,9 +290,7 @@ export default function UnitDetailsPage({
             <div className="mb-4 flex items-center justify-between">
 
               <span className="text-gray-500">
-
                 Deposit
-
               </span>
 
               <Coins className="text-[#D4AF37]" />
@@ -325,13 +298,7 @@ export default function UnitDetailsPage({
             </div>
 
             <h2 className="text-3xl font-bold">
-
-              KSh{" "}
-
-              {Number(
-                unit.deposit
-              ).toLocaleString()}
-
+              KSh {Number(unit.deposit).toLocaleString()}
             </h2>
 
           </div>
@@ -341,9 +308,7 @@ export default function UnitDetailsPage({
             <div className="mb-4 flex items-center justify-between">
 
               <span className="text-gray-500">
-
                 Bedrooms
-
               </span>
 
               <BedDouble className="text-[#D4AF37]" />
@@ -351,9 +316,7 @@ export default function UnitDetailsPage({
             </div>
 
             <h2 className="text-3xl font-bold">
-
               {unit.bedrooms}
-
             </h2>
 
           </div>
@@ -363,9 +326,7 @@ export default function UnitDetailsPage({
             <div className="mb-4 flex items-center justify-between">
 
               <span className="text-gray-500">
-
                 Bathrooms
-
               </span>
 
               <Bath className="text-[#D4AF37]" />
@@ -373,9 +334,7 @@ export default function UnitDetailsPage({
             </div>
 
             <h2 className="text-3xl font-bold">
-
               {unit.bathrooms}
-
             </h2>
 
           </div>
@@ -387,9 +346,7 @@ export default function UnitDetailsPage({
         <div className="rounded-2xl border bg-white p-6 shadow-sm">
 
           <h2 className="mb-6 text-2xl font-bold">
-
             Basic Information
-
           </h2>
 
           <div className="grid gap-6 md:grid-cols-2">
@@ -406,10 +363,7 @@ export default function UnitDetailsPage({
 
             <Info
               label="Unit Type"
-              value={
-                unit.unit_type ??
-                "-"
-              }
+              value={unit.unit_type ?? "-"}
             />
 
             <Info
@@ -446,37 +400,40 @@ export default function UnitDetailsPage({
         </div>
                 {/* Financial Information */}
 
-        <div className="grid gap-6 lg:grid-cols-2">
+        <div className="rounded-2xl border bg-white p-6 shadow-sm">
 
-          <div className="rounded-2xl border bg-white p-6 shadow-sm lg:col-span-2">
+          <h2 className="mb-6 text-2xl font-bold">
+            Financial Information
+          </h2>
 
-            <h2 className="mb-6 text-2xl font-bold">
-              Financial Information
-            </h2>
+          <div className="grid gap-6 md:grid-cols-2">
 
-            <div className="grid gap-6 md:grid-cols-2">
+            <Info
+              label="Monthly Rent"
+              value={`KSh ${Number(
+                unit.monthly_rent
+              ).toLocaleString()}`}
+            />
 
-              <Info
-                label="Monthly Rent"
-                value={`KSh ${Number(unit.monthly_rent).toLocaleString()}`}
-              />
+            <Info
+              label="Deposit"
+              value={`KSh ${Number(
+                unit.deposit
+              ).toLocaleString()}`}
+            />
 
-              <Info
-                label="Deposit"
-                value={`KSh ${Number(unit.deposit).toLocaleString()}`}
-              />
+            <Info
+              label="Status"
+              value={unit.status}
+            />
 
-              <Info
-                label="Status"
-                value={unit.status}
-              />
-
-              <Info
-                label="Occupancy"
-                value={unit.occupant?.full_name ?? "Vacant"}
-              />
-
-            </div>
+            <Info
+              label="Occupancy"
+              value={
+                unit.occupant?.full_name ??
+                "Vacant"
+              }
+            />
 
           </div>
 
@@ -504,177 +461,208 @@ export default function UnitDetailsPage({
 
             </div>
 
+            <button
+              onClick={() => {
+
+                setSelectedMeter(null);
+
+                setShowSetupMeter(true);
+
+              }}
+              className="rounded-xl bg-black px-5 py-3 font-semibold text-white transition hover:bg-gray-800"
+            >
+
+              {meters.length === 0
+                ? "Setup Utility"
+                : "Add Utility"}
+
+            </button>
+
           </div>
 
           {meters.length === 0 && (
 
-            <div className="rounded-xl border border-dashed p-8 text-center text-gray-500">
+            <div className="rounded-xl border border-dashed p-10 text-center">
 
-              No utility meters have been configured for this unit.
+              <p className="mb-5 text-gray-500">
+
+                No utility meters have been configured for this unit.
+
+              </p>
+
+              <button
+                onClick={() => {
+
+                  setSelectedMeter(null);
+
+                  setShowSetupMeter(true);
+
+                }}
+                className="rounded-xl bg-black px-5 py-3 font-semibold text-white transition hover:bg-gray-800"
+              >
+
+                Setup First Utility Meter
+
+              </button>
 
             </div>
 
           )}
 
-          <div className="space-y-6">
+          {meters.length > 0 && (
 
-            {meters.map((meter) => (
+            <div className="space-y-6">
 
-              <div
-                key={meter.id}
-                className="w-full rounded-2xl border bg-white p-4 shadow-sm sm:p-6"
-              >
+              {meters.map((meter) => (
 
-                <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                <div
+                  key={meter.id}
+                  className="w-full rounded-2xl border bg-white p-4 shadow-sm sm:p-6"
+                >
 
-                  <div>
+                  <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
 
-                    <h3 className="text-xl font-bold">
+                    <div>
 
-                      {meter.utility_type === "Water"
-                        ? "🚰 Water Meter"
-                        : meter.utility_type ===
-                          "Electricity"
-                        ? "⚡ Electricity Meter"
-                        : meter.utility_type ===
-                          "Gas"
-                        ? "🔥 Gas Meter"
-                        : "🌐 Internet"}
+                      <h3 className="text-xl font-bold">
 
-                    </h3>
+                        {meter.utility_type === "Water"
+                          ? "🚰 Water Meter"
+                          : meter.utility_type === "Electricity"
+                          ? "⚡ Electricity Meter"
+                          : meter.utility_type === "Gas"
+                          ? "🔥 Gas Meter"
+                          : "🌐 Internet"}
 
-                    <p className="mt-2 text-gray-500">
+                      </h3>
 
-                      Meter Number:
+                      <p className="mt-2 text-gray-500">
 
-                      <strong className="ml-2 text-gray-900">
+                        Meter Number:
 
-                        {meter.meter_number ||
-                          "Not Assigned"}
+                        <strong className="ml-2 text-gray-900">
 
-                      </strong>
+                          {meter.meter_number ||
+                            "Not Assigned"}
 
-                    </p>
+                        </strong>
+
+                      </p>
+
+                    </div>
+
+                    <div className="flex flex-wrap gap-3">
+
+                      {meter.status === "Pending Setup" ? (
+
+                        <button
+                          onClick={() => {
+
+                            setSelectedMeter(meter);
+
+                            setShowSetupMeter(true);
+
+                          }}
+                          className="w-full rounded-xl bg-black px-5 py-3 font-semibold text-white transition hover:bg-gray-800 sm:w-auto"
+                        >
+
+                          Setup Meter
+
+                        </button>
+
+                      ) : (
+
+                        <button
+                          onClick={() => {
+
+                            setSelectedMeter(meter);
+
+                            setShowReadingModal(true);
+
+                          }}
+                          className="w-full rounded-xl bg-black px-5 py-3 font-semibold text-white transition hover:bg-gray-800 sm:w-auto"
+                        >
+
+                          Record Reading
+
+                        </button>
+
+                      )}
+
+                      <button
+                        className="w-full rounded-xl border px-5 py-3 font-semibold transition hover:bg-gray-100 sm:w-auto"
+                      >
+
+                        History
+
+                      </button>
+
+                    </div>
 
                   </div>
 
-                  <div className="flex flex-wrap gap-3">
+                  <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
 
-                    {meter.status ===
-                    "Pending Setup" ? (
+                    <Info
+                      label="Status"
+                      value={meter.status}
+                    />
 
-                      <button
-                        onClick={() => {
+                    <Info
+                      label="Rate"
+                      value={`KSh ${Number(
+                        meter.unit_rate
+                      ).toLocaleString()}`}
+                    />
 
-                          setSelectedMeter(
-                            meter
-                          );
+                    <Info
+                      label="Opening Reading"
+                      value={String(
+                        Number(
+                          meter.opening_reading
+                        )
+                      )}
+                    />
 
-                          setShowSetupMeter(
-                            true
-                          );
+                    <Info
+                      label="Current Reading"
+                      value={
+                        meter.latest_reading
+                          ? String(
+                              meter.latest_reading.current_reading
+                            )
+                          : "-"
+                      }
+                    />
 
-                        }}
-                        className="w-full rounded-xl bg-black px-5 py-3 font-semibold text-white transition hover:bg-gray-800 sm:w-auto"
-                      >
+                    <Info
+                      label="Last Bill"
+                      value={
+                        meter.latest_reading
+                          ? `KSh ${Number(
+                              meter.latest_reading.amount
+                            ).toLocaleString()}`
+                          : "-"
+                      }
+                    />
 
-                        Setup Meter
-
-                      </button>
-
-                    ) : (
-
-                      <button
-                        onClick={() => {
-
-                          setSelectedMeter(
-                            meter
-                          );
-
-                          setShowReadingModal(
-                            true
-                          );
-
-                        }}
-                        className="w-full rounded-xl bg-black px-5 py-3 font-semibold text-white transition hover:bg-gray-800 sm:w-auto"
-                      >
-
-                        Record Reading
-
-                      </button>
-
-                    )}
-
-                    <button className="w-full rounded-xl border px-5 py-3 font-semibold transition hover:bg-gray-100 sm:w-auto">
-
-                      History
-
-                    </button>
+                    <Info
+                      label="Location"
+                      value={
+                        meter.meter_location ||
+                        "-"
+                      }
+                    />
 
                   </div>
 
                 </div>
 
-                <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+              ))}
 
-                  <Info
-                    label="Status"
-                    value={meter.status}
-                  />
+            </div>
 
-                  <Info
-                    label="Rate"
-                    value={`KSh ${Number(
-                      meter.unit_rate
-                    ).toLocaleString()}`}
-                  />
-
-                  <Info
-                    label="Opening Reading"
-                    value={String(
-                      Number(
-                        meter.opening_reading
-                      )
-                    )}
-                  />
-
-                  <Info
-                    label="Current Reading"
-                    value={
-                      meter.latest_reading
-                        ? String(
-                            meter.latest_reading.current_reading
-                          )
-                        : "-"
-                    }
-                  />
-
-                  <Info
-                    label="Last Bill"
-                    value={
-                      meter.latest_reading
-                        ? `KSh ${Number(
-                            meter.latest_reading.amount
-                          ).toLocaleString()}`
-                        : "-"
-                    }
-                  />
-
-                  <Info
-                    label="Location"
-                    value={
-                      meter.meter_location ||
-                      "-"
-                    }
-                  />
-
-                </div>
-
-              </div>
-
-            ))}
-
-          </div>
+          )}
 
         </div>
                 {/* Current Occupancy */}
@@ -782,13 +770,14 @@ export default function UnitDetailsPage({
 
       )}
 
-      {/* Setup Meter */}
+      {/* Setup Utility */}
 
-      {showSetupMeter &&
-        selectedMeter && (
+      {showSetupMeter && (
 
         <SetupUtilityMeterModal
           meter={selectedMeter}
+          unitId={unit.id}
+          propertyId={unit.property.id}
           onClose={() => {
 
             setShowSetupMeter(false);
