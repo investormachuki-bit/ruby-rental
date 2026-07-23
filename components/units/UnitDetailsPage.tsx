@@ -448,84 +448,32 @@ export default function UnitDetailsPage({
 
         <div className="grid gap-6 lg:grid-cols-2">
 
-          <div className="rounded-2xl border bg-white p-6 shadow-sm">
+          <div className="rounded-2xl border bg-white p-6 shadow-sm lg:col-span-2">
 
             <h2 className="mb-6 text-2xl font-bold">
-
               Financial Information
-
             </h2>
 
-            <div className="space-y-4">
+            <div className="grid gap-6 md:grid-cols-2">
 
               <Info
                 label="Monthly Rent"
-                value={`KSh ${Number(
-                  unit.monthly_rent
-                ).toLocaleString()}`}
+                value={`KSh ${Number(unit.monthly_rent).toLocaleString()}`}
               />
 
               <Info
                 label="Deposit"
-                value={`KSh ${Number(
-                  unit.deposit
-                ).toLocaleString()}`}
-              />
-
-            </div>
-
-          </div>
-
-          <div className="rounded-2xl border bg-white p-6 shadow-sm">
-
-            <h2 className="mb-6 text-2xl font-bold">
-
-              Recurring Charges
-
-            </h2>
-
-            <div className="space-y-4">
-
-              <Info
-                label="Garbage Fee"
-                value={`KSh ${Number(
-                  unit.garbage_fee
-                ).toLocaleString()}`}
+                value={`KSh ${Number(unit.deposit).toLocaleString()}`}
               />
 
               <Info
-                label="Security Fee"
-                value={`KSh ${Number(
-                  unit.security_fee
-                ).toLocaleString()}`}
+                label="Status"
+                value={unit.status}
               />
 
               <Info
-                label="Sewer Fee"
-                value={`KSh ${Number(
-                  unit.sewer_fee
-                ).toLocaleString()}`}
-              />
-
-              <Info
-                label="Parking Fee"
-                value={`KSh ${Number(
-                  unit.parking_fee
-                ).toLocaleString()}`}
-              />
-
-              <Info
-                label="Internet Fee"
-                value={`KSh ${Number(
-                  unit.internet_fee
-                ).toLocaleString()}`}
-              />
-
-              <Info
-                label="Service Charge"
-                value={`KSh ${Number(
-                  unit.service_charge
-                ).toLocaleString()}`}
+                label="Occupancy"
+                value={unit.occupant?.full_name ?? "Vacant"}
               />
 
             </div>
