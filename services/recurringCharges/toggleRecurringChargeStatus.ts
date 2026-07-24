@@ -1,5 +1,5 @@
 import { supabase } from "@/lib/supabase";
-import { TABLES } from "@/lib/constants";
+import { TABLES } from "@/constants/tables";
 
 export async function toggleRecurringChargeStatus(
   id: string,
