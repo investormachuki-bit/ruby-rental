@@ -20,6 +20,7 @@ export async function getRecurringCharge(id: string) {
       )
     `)
     .eq("id", id)
+    .is("deleted_at", null)
     .single();
 
   if (error) {
