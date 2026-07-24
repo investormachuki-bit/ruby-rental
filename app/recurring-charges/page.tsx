@@ -4,10 +4,12 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 
 import { getRecurringCharges } from "@/services/recurringCharges/getRecurringCharges";
+import { RecurringCharge } from "@/types/recurringCharge";
+
 
 export default function RecurringChargesPage() {
   const [loading, setLoading] = useState(true);
-  const [charges, setCharges] = useState<any[]>([]);
+  const [charges, setCharges] = useState<RecurringCharge[]>([]);
 
   async function loadCharges() {
     try {
