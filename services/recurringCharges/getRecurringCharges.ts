@@ -37,11 +37,12 @@ export async function getRecurringCharges() {
       )
     `)
     .eq("workspace_id", profile.workspace_id)
+    .is("deleted_at", null)
     .order("created_at", { ascending: false });
 
   if (error) {
     throw error;
   }
 
-  return data;
+  return data ?? [];
 }
