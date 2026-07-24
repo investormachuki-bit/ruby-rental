@@ -5,7 +5,7 @@ export async function deleteRecurringCharge(id: string) {
   const { data, error } = await supabase
     .from(TABLES.RECURRING_CHARGES)
     .update({
-      is_active: false,
+      deleted_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     })
     .eq("id", id)
