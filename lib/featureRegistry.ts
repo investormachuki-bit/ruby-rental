@@ -11,6 +11,7 @@ import {
   BarChart3,
   Settings,
   Shield,
+  Repeat,
   LucideIcon,
 } from "lucide-react";
 
@@ -121,6 +122,21 @@ export const FEATURE_REGISTRY: Feature[] = [
     icon: FileText,
     category: "Core",
     permission: "leases.view",
+    minimumPlan: "starter",
+    sidebar: true,
+    searchable: true,
+    aiEnabled: true,
+    core: true,
+  },
+
+  {
+    moduleKey: "recurringCharges",
+    name: "Recurring Charges",
+    description: "Manage recurring rent and utility charges.",
+    route: "/recurring-charges",
+    icon: Repeat,
+    category: "Finance",
+    permission: "recurringCharges.view",
     minimumPlan: "starter",
     sidebar: true,
     searchable: true,
