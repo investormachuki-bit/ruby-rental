@@ -1,23 +1,54 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 
+import RecurringChargeFilters from "@/components/recurringCharges/RecurringChargeFilters";
+import RecurringChargeTable from "@/components/recurringCharges/RecurringChargeTable";
+
 import { getRecurringCharges } from "@/services/recurringCharges/getRecurringCharges";
+import { getPropertyOptions } from "@/services/properties/getPropertyOptions";
+
 import { RecurringCharge } from "@/types/recurringCharge";
 
+type FilterValues = {
+  search: string;
+  propertyId: string;
+  frequency: string;
+  status: string;
+};
+
+type PropertyOption = {
+  id: string;
+  name: string;
+};
 
 export default function RecurringChargesPage() {
   const [loading, setLoading] = useState(true);
+
   const [charges, setCharges] = useState<RecurringCharge[]>([]);
 
-  async function loadCharges() {
+  const [properties, setProperties] = useState<PropertyOption[]>([]);
+
+  const [filters, setFilters] = useState<FilterValues>({
+    search: "",
+    propertyId: "",
+    frequency: "",
+    status: "",
+  });
+
+  async function loadData() {
     try {
       setLoading(true);
 
-      const data = await getRecurringCharges();
+      const [chargeData, propertyData] =
+        await Promise.all([
+          getRecurringCharges(),
+          getPropertyOptions(),
+        ]);
 
-      setCharges(data);
+      setCharges(chargeData);
+      setProperties(propertyData);
     } catch (error) {
       console.error(error);
     } finally {
@@ -26,14 +57,57 @@ export default function RecurringChargesPage() {
   }
 
   useEffect(() => {
-    loadCharges();
+    loadData();
   }, []);
 
-  const activeCharges = charges.filter(
+  const filteredCharges = useMemo(() => {
+    return charges.filter((charge) => {
+      if (
+        filters.search &&
+        !charge.charge_name
+          .toLowerCase()
+          .includes(filters.search.toLowerCase())
+      ) {
+        return false;
+      }
+
+      if (
+        filters.propertyId &&
+        charge.property_id !== filters.propertyId
+      ) {
+        return false;
+      }
+
+      if (
+        filters.frequency &&
+        charge.billing_frequency !== filters.frequency
+      ) {
+        return false;
+      }
+
+      if (
+        filters.status === "active" &&
+        !charge.is_active
+      ) {
+        return false;
+      }
+
+      if (
+        filters.status === "inactive" &&
+        charge.is_active
+      ) {
+        return false;
+      }
+
+      return true;
+    });
+  }, [charges, filters]);
+
+  const activeCharges = filteredCharges.filter(
     (charge) => charge.is_active
   );
 
-  const mandatoryCharges = charges.filter(
+  const mandatoryCharges = filteredCharges.filter(
     (charge) => charge.is_mandatory
   );
 
@@ -44,7 +118,6 @@ export default function RecurringChargesPage() {
 
   return (
     <div className="space-y-6">
-
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">
@@ -64,15 +137,20 @@ export default function RecurringChargesPage() {
         </Link>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-4">
+      <RecurringChargeFilters
+        values={filters}
+        properties={properties}
+        onChange={setFilters}
+      />
 
+      <div className="grid gap-4 md:grid-cols-4">
         <div className="rounded-xl border bg-white p-5">
           <p className="text-sm text-gray-500">
             Total Charges
           </p>
 
           <h2 className="mt-2 text-3xl font-bold">
-            {charges.length}
+            {filteredCharges.length}
           </h2>
         </div>
 
@@ -98,133 +176,19 @@ export default function RecurringChargesPage() {
 
         <div className="rounded-xl border bg-white p-5">
           <p className="text-sm text-gray-500">
-            Monthly Value
+            Total Active Value
           </p>
 
           <h2 className="mt-2 text-3xl font-bold">
             KES {monthlyValue.toLocaleString()}
           </h2>
         </div>
-
       </div>
 
-      <div className="overflow-hidden rounded-xl border bg-white">
-
-        <table className="min-w-full">
-
-          <thead className="bg-gray-100">
-
-            <tr>
-
-              <th className="px-4 py-3 text-left">
-                Charge
-              </th>
-
-              <th className="px-4 py-3 text-left">
-                Amount
-              </th>
-
-              <th className="px-4 py-3 text-left">
-                Frequency
-              </th>
-
-              <th className="px-4 py-3 text-left">
-                Mandatory
-              </th>
-
-              <th className="px-4 py-3 text-left">
-                Status
-              </th>
-
-              <th className="px-4 py-3 text-right">
-                Actions
-              </th>
-
-            </tr>
-
-          </thead>
-
-          <tbody>
-
-            {loading && (
-              <tr>
-                <td
-                  colSpan={6}
-                  className="p-8 text-center"
-                >
-                  Loading...
-                </td>
-              </tr>
-            )}
-
-            {!loading &&
-              charges.length === 0 && (
-                <tr>
-                  <td
-                    colSpan={6}
-                    className="p-8 text-center text-gray-500"
-                  >
-                    No recurring charges found.
-                  </td>
-                </tr>
-              )}
-
-            {!loading &&
-              charges.map((charge) => (
-                <tr
-                  key={charge.id}
-                  className="border-t"
-                >
-                  <td className="px-4 py-3">
-                    <div className="font-medium">
-                      {charge.charge_name}
-                    </div>
-
-                    <div className="text-sm text-gray-500">
-                      {charge.description}
-                    </div>
-                  </td>
-
-                  <td className="px-4 py-3">
-                    KES {Number(charge.amount).toLocaleString()}
-                  </td>
-
-                  <td className="px-4 py-3">
-                    {charge.billing_frequency}
-                  </td>
-
-                  <td className="px-4 py-3">
-                    {charge.is_mandatory
-                      ? "Yes"
-                      : "No"}
-                  </td>
-
-                  <td className="px-4 py-3">
-                    {charge.is_active
-                      ? "Active"
-                      : "Inactive"}
-                  </td>
-
-                  <td className="px-4 py-3 text-right">
-
-                    <Link
-                      href={`/recurring-charges/${charge.id}`}
-                      className="text-blue-600 hover:underline"
-                    >
-                      View
-                    </Link>
-
-                  </td>
-
-                </tr>
-              ))}
-
-          </tbody>
-
-        </table>
-
-      </div>
-
+      <RecurringChargeTable
+        loading={loading}
+        charges={filteredCharges}
+      />
     </div>
   );
 }
