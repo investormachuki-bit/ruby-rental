@@ -1,10 +1,11 @@
 "use client";
 
 import Link from "next/link";
+import { RecurringCharge } from "@/types/recurringCharge";
 
 type Props = {
   loading: boolean;
-  charges: any[];
+  charges: RecurringCharge[];
 };
 
 export default function RecurringChargeTable({
