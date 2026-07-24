@@ -1,5 +1,5 @@
 import { supabase } from "@/lib/supabase";
-import { TABLES } from "@/lib/constants";
+import { TABLES } from "@/constants/tables";
 
 import { RecurringCharge } from "@/types/recurringCharge";
 
@@ -10,6 +10,7 @@ export async function getRecurringChargeById(
     .from(TABLES.RECURRING_CHARGES)
     .select("*")
     .eq("id", id)
+    .is("deleted_at", null)
     .single();
 
   if (error) {
