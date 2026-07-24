@@ -5,4 +5,5 @@ export const TABLES = {
   INVOICES: "invoices",
   PROPERTIES: "properties",
   UNITS: "units",
+  RECURRING_CHARGES: "recurring_charges",
 } as const;
