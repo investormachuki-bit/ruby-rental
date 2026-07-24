@@ -2,8 +2,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 
-import { getProperties } from "@/services/properties";
-import { getUnits } from "@/services/units";
+import { getProperties } from "@/services/property/getProperties";
+import { getUnits } from "@/services/unit/getUnits";
 import { getActiveLeases } from "@/services/leases/getActiveLeases";
 
 export type ChargeScope = "property" | "unit";
