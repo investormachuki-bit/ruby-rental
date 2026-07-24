@@ -1,6 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+
+import { getProperties } from "@/services/properties";
+import { getUnits } from "@/services/units";
+import { getActiveLeases } from "@/services/leases/getActiveLeases";
 
 export type ChargeScope = "property" | "unit";
 
@@ -29,12 +33,37 @@ export type RecurringChargeFormValues = {
 
 type Props = {
   initialValues?: Partial<RecurringChargeFormValues>;
-
   loading?: boolean;
 
   onSubmit: (
     values: RecurringChargeFormValues
   ) => Promise<void>;
+};
+
+type Property = {
+  id: string;
+  name: string;
+};
+
+type Unit = {
+  id: string;
+  property_id: string;
+  unit_number: string;
+};
+
+type ActiveLease = {
+  id: string;
+  lease_number: string;
+
+  property_id: string;
+  unit_id: string;
+
+  tenant?: {
+    id: string;
+    full_name?: string;
+    first_name?: string;
+    last_name?: string;
+  };
 };
 
 const BILLING_FREQUENCIES = [
@@ -65,6 +94,22 @@ export default function RecurringChargeForm({
   loading = false,
   onSubmit,
 }: Props) {
+
+  const [properties, setProperties] =
+    useState<Property[]>([]);
+
+  const [units, setUnits] =
+    useState<Unit[]>([]);
+
+  const [leases, setLeases] =
+    useState<ActiveLease[]>([]);
+
+  const [selectedTenant, setSelectedTenant] =
+    useState("");
+
+  const [selectedLease, setSelectedLease] =
+    useState("");
+
   const [values, setValues] =
     useState<RecurringChargeFormValues>({
       propertyId:
@@ -125,29 +170,124 @@ export default function RecurringChargeForm({
     }));
   }
 
-  async function handleSubmit(
-    e: React.FormEvent
-  ) {
-    e.preventDefault();
+  useEffect(() => {
 
-    await onSubmit({
-      ...values,
+    async function loadData() {
 
-      chargeName:
-        values.chargeName === "Other"
-          ? values.customChargeName ?? ""
-          : values.chargeName,
+      try {
 
-      amount: Number(values.amount),
-    });
-  }
+        const [
+          propertyData,
+          unitData,
+          leaseData,
+        ] = await Promise.all([
+          getProperties(),
+          getUnits(),
+          getActiveLeases(),
+        ]);
 
-  return (
-    <form
-      onSubmit={handleSubmit}
-      className="space-y-8"
-    >
-      {/* PROPERTY ASSIGNMENT */}
+        setProperties(
+          propertyData.map((p: any) => ({
+            id: p.id,
+            name: p.name,
+          }))
+        );
+
+        setUnits(unitData);
+
+        setLeases(leaseData);
+
+      } catch (err) {
+
+        console.error(err);
+
+      }
+
+    }
+
+    loadData();
+
+  }, []);
+
+  const filteredUnits =
+    useMemo(() => {
+
+      return units.filter(
+        (unit) =>
+          unit.property_id ===
+          values.propertyId
+      );
+
+    }, [
+      units,
+      values.propertyId,
+    ]);
+
+  useEffect(() => {
+
+    if (
+      values.scope !== "unit"
+    ) {
+
+      setSelectedTenant("");
+      setSelectedLease("");
+
+      return;
+
+    }
+
+    if (!values.unitId) {
+
+      setSelectedTenant("");
+      setSelectedLease("");
+
+      update("leaseId", "");
+
+      return;
+
+    }
+
+    const lease =
+      leases.find(
+        (l) =>
+          l.unit_id ===
+          values.unitId
+      );
+
+    if (!lease) {
+
+      setSelectedTenant("");
+      setSelectedLease("");
+
+      update("leaseId", "");
+
+      return;
+
+    }
+
+    update(
+      "leaseId",
+      lease.id
+    );
+
+    setSelectedLease(
+      lease.lease_number
+    );
+
+    const tenantName =
+      lease.tenant?.full_name ||
+      `${lease.tenant?.first_name ?? ""} ${lease.tenant?.last_name ?? ""}`;
+
+    setSelectedTenant(
+      tenantName.trim()
+    );
+
+  }, [
+    values.scope,
+    values.unitId,
+    leases,
+  ]);
+        {/* PROPERTY ASSIGNMENT */}
 
       <div className="rounded-xl border bg-white p-6 shadow-sm">
         <h2 className="mb-5 text-lg font-semibold">
@@ -164,17 +304,35 @@ export default function RecurringChargeForm({
             <select
               className="w-full rounded-lg border p-3"
               value={values.propertyId}
-              onChange={(e) =>
+              onChange={(e) => {
+
                 update(
                   "propertyId",
                   e.target.value
-                )
-              }
+                );
+
+                update("unitId", "");
+                update("leaseId", "");
+
+                setSelectedTenant("");
+                setSelectedLease("");
+
+              }}
               required
             >
               <option value="">
                 Select Property
               </option>
+
+              {properties.map((property) => (
+                <option
+                  key={property.id}
+                  value={property.id}
+                >
+                  {property.name}
+                </option>
+              ))}
+
             </select>
           </div>
 
@@ -193,12 +351,27 @@ export default function RecurringChargeForm({
                     values.scope ===
                     "property"
                   }
-                  onChange={() =>
+                  onChange={() => {
+
                     update(
                       "scope",
                       "property"
-                    )
-                  }
+                    );
+
+                    update(
+                      "unitId",
+                      ""
+                    );
+
+                    update(
+                      "leaseId",
+                      ""
+                    );
+
+                    setSelectedTenant("");
+                    setSelectedLease("");
+
+                  }}
                 />
 
                 <span>
@@ -234,6 +407,7 @@ export default function RecurringChargeForm({
 
           {values.scope === "unit" && (
             <>
+
               <div>
                 <label className="mb-2 block text-sm font-medium">
                   Unit *
@@ -241,18 +415,34 @@ export default function RecurringChargeForm({
 
                 <select
                   className="w-full rounded-lg border p-3"
-                  value={values.unitId}
+                  value={
+                    values.unitId
+                  }
                   onChange={(e) =>
                     update(
                       "unitId",
                       e.target.value
                     )
                   }
+                  required
                 >
                   <option value="">
                     Select Unit
                   </option>
+
+                  {filteredUnits.map(
+                    (unit) => (
+                      <option
+                        key={unit.id}
+                        value={unit.id}
+                      >
+                        {unit.unit_number}
+                      </option>
+                    )
+                  )}
+
                 </select>
+
               </div>
 
               <div>
@@ -262,26 +452,58 @@ export default function RecurringChargeForm({
 
                 <input
                   className="w-full rounded-lg border bg-gray-100 p-3"
-                  value="Will auto-fill"
+                  value={
+                    selectedTenant
+                  }
+                  placeholder="No active tenant"
                   readOnly
                 />
               </div>
 
               <div>
                 <label className="mb-2 block text-sm font-medium">
-                  Lease Status
+                  Active Lease
                 </label>
 
                 <input
                   className="w-full rounded-lg border bg-gray-100 p-3"
-                  value="Will auto-fill"
+                  value={
+                    selectedLease
+                  }
+                  placeholder="No active lease"
                   readOnly
                 />
               </div>
+
             </>
           )}
+
         </div>
       </div>
+    async function handleSubmit(
+    e: React.FormEvent
+  ) {
+    e.preventDefault();
+
+    await onSubmit({
+      ...values,
+
+      chargeName:
+        values.chargeName === "Other"
+          ? values.customChargeName ?? ""
+          : values.chargeName,
+
+      amount: Number(values.amount),
+    });
+  }
+
+  return (
+    <form
+      onSubmit={handleSubmit}
+      className="space-y-8"
+    >
+
+      {/* Paste the Property Assignment section from Part 2 here */}
 
       {/* CHARGE DETAILS */}
 
@@ -324,14 +546,11 @@ export default function RecurringChargeForm({
               )}
             </select>
 
-            {values.chargeName ===
-              "Other" && (
+            {values.chargeName === "Other" && (
               <input
                 className="mt-3 w-full rounded-lg border p-3"
                 placeholder="Enter custom charge name"
-                value={
-                  values.customChargeName
-                }
+                value={values.customChargeName}
                 onChange={(e) =>
                   update(
                     "customChargeName",
@@ -342,7 +561,8 @@ export default function RecurringChargeForm({
               />
             )}
           </div>
-                    <div>
+
+          <div>
             <label className="mb-2 block text-sm font-medium">
               Amount (KES) *
             </label>
@@ -512,7 +732,8 @@ export default function RecurringChargeForm({
 
         </div>
       </div>
-            <div className="flex items-center justify-end gap-3 pt-2">
+
+      <div className="flex items-center justify-end gap-3 pt-2">
 
         <button
           type="button"
