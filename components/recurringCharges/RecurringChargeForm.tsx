@@ -2,10 +2,9 @@
 
 import { useEffect, useMemo, useState } from "react";
 
-import { getProperties } from "@/services/property/getProperties";
-import { getUnits } from "@/services/unit/getUnits";
+import { getProperties } from "@/services/properties/getProperties";
+import { getUnits } from "@/services/units/getUnits";
 import { getActiveLeases } from "@/services/leases/getActiveLeases";
-
 export type ChargeScope = "property" | "unit";
 
 export type RecurringChargeFormValues = {
