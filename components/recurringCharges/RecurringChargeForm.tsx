@@ -62,7 +62,7 @@ type ActiveLease = {
     full_name?: string;
     first_name?: string;
     last_name?: string;
-  };
+  }[];
 };
 
 const BILLING_FREQUENCIES = [
@@ -273,9 +273,11 @@ export default function RecurringChargeForm({
       lease.lease_number
     );
 
-    const tenantName =
-      lease.tenant?.full_name ||
-      `${lease.tenant?.first_name ?? ""} ${lease.tenant?.last_name ?? ""}`;
+   const tenant = lease.tenant?.[0];
+
+const tenantName =
+  tenant?.full_name ||
+  `${tenant?.first_name ?? ""} ${tenant?.last_name ?? ""}`;
 
     setSelectedTenant(
       tenantName.trim()
