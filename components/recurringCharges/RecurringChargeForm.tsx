@@ -5,10 +5,15 @@ import { useEffect, useMemo, useState } from "react";
 import { getProperties } from "@/services/properties/getProperties";
 import { getUnits } from "@/services/units/getUnits";
 import { getActiveLeases } from "@/services/leases/getActiveLeases";
-export type ChargeScope = "property" | "unit";
+
+export type ChargeScope =
+  | "property"
+  | "unit"
+  | "lease";
 
 export type RecurringChargeFormValues = {
   propertyId: string;
+
   scope: ChargeScope;
 
   unitId?: string;
@@ -32,6 +37,7 @@ export type RecurringChargeFormValues = {
 
 type Props = {
   initialValues?: Partial<RecurringChargeFormValues>;
+
   loading?: boolean;
 
   onSubmit: (
@@ -46,21 +52,28 @@ type Property = {
 
 type Unit = {
   id: string;
+
   property_id: string;
+
   unit_number: string;
 };
 
 type ActiveLease = {
   id: string;
+
   lease_number: string;
 
   property_id: string;
+
   unit_id: string;
 
   tenant?: {
     id: string;
+
     full_name?: string;
+
     first_name?: string;
+
     last_name?: string;
   }[];
 };
@@ -186,9 +199,9 @@ export default function RecurringChargeForm({
         ]);
 
         setProperties(
-          propertyData.map((p: any) => ({
-            id: p.id,
-            name: p.name,
+          propertyData.map((property: any) => ({
+            id: property.id,
+            name: property.name,
           }))
         );
 
@@ -196,9 +209,9 @@ export default function RecurringChargeForm({
 
         setLeases(leaseData);
 
-      } catch (err) {
+      } catch (error) {
 
-        console.error(err);
+        console.error(error);
 
       }
 
@@ -222,11 +235,18 @@ export default function RecurringChargeForm({
       values.propertyId,
     ]);
 
-  useEffect(() => {
+  const selectedProperty =
+    properties.find(
+      (property) =>
+        property.id ===
+        values.propertyId
+    );
 
-    if (
-      values.scope !== "unit"
-    ) {
+  const propertyUnitCount =
+    filteredUnits.length;
+    useEffect(() => {
+
+    if (values.scope !== "unit") {
 
       setSelectedTenant("");
       setSelectedLease("");
@@ -237,47 +257,43 @@ export default function RecurringChargeForm({
 
     if (!values.unitId) {
 
+      update("leaseId", "");
+
       setSelectedTenant("");
       setSelectedLease("");
-
-      update("leaseId", "");
 
       return;
 
     }
 
-    const lease =
-      leases.find(
-        (l) =>
-          l.unit_id ===
-          values.unitId
-      );
+    const lease = leases.find(
+      (lease) =>
+        lease.unit_id === values.unitId
+    );
 
     if (!lease) {
 
+      update("leaseId", "");
+
       setSelectedTenant("");
       setSelectedLease("");
-
-      update("leaseId", "");
 
       return;
 
     }
 
-    update(
-      "leaseId",
-      lease.id
-    );
+    update("leaseId", lease.id);
 
     setSelectedLease(
       lease.lease_number
     );
 
-   const tenant = lease.tenant?.[0];
+    const tenant =
+      lease.tenant?.[0];
 
-const tenantName =
-  tenant?.full_name ||
-  `${tenant?.first_name ?? ""} ${tenant?.last_name ?? ""}`;
+    const tenantName =
+      tenant?.full_name ||
+      `${tenant?.first_name ?? ""} ${tenant?.last_name ?? ""}`;
 
     setSelectedTenant(
       tenantName.trim()
@@ -288,9 +304,39 @@ const tenantName =
     values.unitId,
     leases,
   ]);
-        {/* PROPERTY ASSIGNMENT */}
+
+  async function handleSubmit(
+    e: React.FormEvent
+  ) {
+
+    e.preventDefault();
+
+    await onSubmit({
+
+      ...values,
+
+      chargeName:
+        values.chargeName === "Other"
+          ? values.customChargeName ?? ""
+          : values.chargeName,
+
+      amount: Number(values.amount),
+
+    });
+
+  }
+
+  return (
+
+    <form
+      onSubmit={handleSubmit}
+      className="space-y-8"
+    >
+
+      {/* PROPERTY ASSIGNMENT */}
 
       <div className="rounded-xl border bg-white p-6 shadow-sm">
+
         <h2 className="mb-5 text-lg font-semibold">
           Property Assignment
         </h2>
@@ -298,6 +344,7 @@ const tenantName =
         <div className="grid gap-5 md:grid-cols-2">
 
           <div>
+
             <label className="mb-2 block text-sm font-medium">
               Property *
             </label>
@@ -321,23 +368,28 @@ const tenantName =
               }}
               required
             >
+
               <option value="">
                 Select Property
               </option>
 
               {properties.map((property) => (
+
                 <option
                   key={property.id}
                   value={property.id}
                 >
                   {property.name}
                 </option>
+
               ))}
 
             </select>
+
           </div>
 
           <div>
+
             <label className="mb-2 block text-sm font-medium">
               Applies To *
             </label>
@@ -376,7 +428,12 @@ const tenantName =
                 />
 
                 <span>
-                  Entire Property (All Units)
+
+                  Entire Property
+
+                  {values.propertyId &&
+                    ` (${propertyUnitCount} Units)`}
+
                 </span>
 
               </label>
@@ -404,111 +461,121 @@ const tenantName =
               </label>
 
             </div>
+
           </div>
 
-          {values.scope === "unit" && (
-            <>
-
-              <div>
-                <label className="mb-2 block text-sm font-medium">
-                  Unit *
-                </label>
-
-                <select
-                  className="w-full rounded-lg border p-3"
-                  value={
-                    values.unitId
-                  }
-                  onChange={(e) =>
-                    update(
-                      "unitId",
-                      e.target.value
-                    )
-                  }
-                  required
-                >
-                  <option value="">
-                    Select Unit
-                  </option>
-
-                  {filteredUnits.map(
-                    (unit) => (
-                      <option
-                        key={unit.id}
-                        value={unit.id}
-                      >
-                        {unit.unit_number}
-                      </option>
-                    )
-                  )}
-
-                </select>
-
-              </div>
-
-              <div>
-                <label className="mb-2 block text-sm font-medium">
-                  Tenant
-                </label>
-
-                <input
-                  className="w-full rounded-lg border bg-gray-100 p-3"
-                  value={
-                    selectedTenant
-                  }
-                  placeholder="No active tenant"
-                  readOnly
-                />
-              </div>
-
-              <div>
-                <label className="mb-2 block text-sm font-medium">
-                  Active Lease
-                </label>
-
-                <input
-                  className="w-full rounded-lg border bg-gray-100 p-3"
-                  value={
-                    selectedLease
-                  }
-                  placeholder="No active lease"
-                  readOnly
-                />
-              </div>
-
-            </>
-          )}
-
         </div>
-      </div>
-    async function handleSubmit(
-    e: React.FormEvent
-  ) {
-    e.preventDefault();
 
-    await onSubmit({
-      ...values,
+        {values.scope === "property" &&
+          values.propertyId && (
 
-      chargeName:
-        values.chargeName === "Other"
-          ? values.customChargeName ?? ""
-          : values.chargeName,
+            <div className="mt-5 rounded-lg border border-yellow-300 bg-yellow-50 p-4">
 
-      amount: Number(values.amount),
-    });
-  }
+              <p className="text-sm text-yellow-900">
 
-  return (
-    <form
-      onSubmit={handleSubmit}
-      className="space-y-8"
-    >
+                <strong>Important:</strong>
 
-      {/* Paste the Property Assignment section from Part 2 here */}
+                {" "}
+                This recurring charge will
+                automatically be added to
+                invoices for every applicable
+                unit in{" "}
+                <strong>
+                  {selectedProperty?.name}
+                </strong>
+                .
 
-      {/* CHARGE DETAILS */}
+              </p>
+
+            </div>
+
+        )}
+
+        {values.scope === "unit" && (
+
+          <div className="mt-6 grid gap-5 md:grid-cols-2">
+
+            <div>
+
+              <label className="mb-2 block text-sm font-medium">
+                Unit *
+              </label>
+
+              <select
+                className="w-full rounded-lg border p-3"
+                disabled={!values.propertyId}
+                value={values.unitId}
+                onChange={(e) =>
+                  update(
+                    "unitId",
+                    e.target.value
+                  )
+                }
+                required
+              >
+
+                <option value="">
+
+                  {values.propertyId
+                    ? "Select Unit"
+                    : "Select Property First"}
+
+                </option>
+
+                {filteredUnits.map(
+                  (unit) => (
+
+                    <option
+                      key={unit.id}
+                      value={unit.id}
+                    >
+                      {unit.unit_number}
+                    </option>
+
+                  )
+                )}
+
+              </select>
+
+            </div>
+
+            <div>
+
+              <label className="mb-2 block text-sm font-medium">
+                Tenant
+              </label>
+
+              <input
+                readOnly
+                className="w-full rounded-lg border bg-gray-100 p-3"
+                value={selectedTenant}
+                placeholder="No active tenant"
+              />
+
+            </div>
+
+            <div>
+
+              <label className="mb-2 block text-sm font-medium">
+                Active Lease
+              </label>
+
+              <input
+                readOnly
+                className="w-full rounded-lg border bg-gray-100 p-3"
+                value={selectedLease}
+                placeholder="No active lease"
+              />
+
+            </div>
+
+          </div>
+
+        )}
+           {/* CHARGE DETAILS */}
 
       <div className="rounded-xl border bg-white p-6 shadow-sm">
+
         <h2 className="mb-5 text-lg font-semibold">
           Charge Details
         </h2>
@@ -516,6 +583,7 @@ const tenantName =
         <div className="grid gap-5 md:grid-cols-2">
 
           <div>
+
             <label className="mb-2 block text-sm font-medium">
               Charge Name *
             </label>
@@ -531,27 +599,34 @@ const tenantName =
               }
               required
             >
+
               <option value="">
                 Select Charge
               </option>
 
               {COMMON_CHARGES.map(
                 (charge) => (
+
                   <option
                     key={charge}
                     value={charge}
                   >
                     {charge}
                   </option>
+
                 )
               )}
+
             </select>
 
             {values.chargeName === "Other" && (
+
               <input
                 className="mt-3 w-full rounded-lg border p-3"
                 placeholder="Enter custom charge name"
-                value={values.customChargeName}
+                value={
+                  values.customChargeName
+                }
                 onChange={(e) =>
                   update(
                     "customChargeName",
@@ -560,10 +635,13 @@ const tenantName =
                 }
                 required
               />
+
             )}
+
           </div>
 
           <div>
+
             <label className="mb-2 block text-sm font-medium">
               Amount (KES) *
             </label>
@@ -583,16 +661,20 @@ const tenantName =
               }
               required
             />
+
           </div>
 
           <div>
+
             <label className="mb-2 block text-sm font-medium">
               Billing Frequency *
             </label>
 
             <select
               className="w-full rounded-lg border p-3"
-              value={values.billingFrequency}
+              value={
+                values.billingFrequency
+              }
               onChange={(e) =>
                 update(
                   "billingFrequency",
@@ -600,53 +682,28 @@ const tenantName =
                 )
               }
             >
+
               {BILLING_FREQUENCIES.map(
                 (frequency) => (
+
                   <option
                     key={frequency}
                     value={frequency}
                   >
                     {frequency}
                   </option>
+
                 )
               )}
+
             </select>
+
           </div>
-
-          <div className="md:col-span-2">
-            <label className="mb-2 block text-sm font-medium">
-              Description
-            </label>
-
-            <textarea
-              rows={4}
-              className="w-full rounded-lg border p-3"
-              placeholder="Optional description..."
-              value={values.description}
-              onChange={(e) =>
-                update(
-                  "description",
-                  e.target.value
-                )
-              }
-            />
-          </div>
-
-        </div>
-      </div>
-
-      {/* BILLING SCHEDULE */}
-
-      <div className="rounded-xl border bg-white p-6 shadow-sm">
-        <h2 className="mb-5 text-lg font-semibold">
-          Billing Schedule
-        </h2>
-
-        <div className="grid gap-5 md:grid-cols-2">
 
           <div>
+
             <label className="mb-2 block text-sm font-medium">
-              Starts On *
+              Effective From *
             </label>
 
             <input
@@ -661,9 +718,11 @@ const tenantName =
               }
               required
             />
+
           </div>
 
           <div>
+
             <label className="mb-2 block text-sm font-medium">
               Ends On
             </label>
@@ -679,16 +738,42 @@ const tenantName =
                 )
               }
             />
+
+          </div>
+
+          <div className="md:col-span-2">
+
+            <label className="mb-2 block text-sm font-medium">
+              Description
+            </label>
+
+            <textarea
+              rows={4}
+              className="w-full rounded-lg border p-3"
+              placeholder="Optional notes about this recurring charge..."
+              value={
+                values.description
+              }
+              onChange={(e) =>
+                update(
+                  "description",
+                  e.target.value
+                )
+              }
+            />
+
           </div>
 
         </div>
+
       </div>
 
-      {/* SETTINGS */}
+      {/* CHARGE SETTINGS */}
 
       <div className="rounded-xl border bg-white p-6 shadow-sm">
+
         <h2 className="mb-5 text-lg font-semibold">
-          Settings
+          Charge Behaviour
         </h2>
 
         <div className="space-y-4">
@@ -707,7 +792,7 @@ const tenantName =
             />
 
             <span>
-              Mandatory Charge
+              Mandatory charge for applicable tenants
             </span>
 
           </label>
@@ -726,35 +811,67 @@ const tenantName =
             />
 
             <span>
-              Active
+              Charge is active and should be included during invoice generation
             </span>
 
           </label>
 
         </div>
-      </div>
 
-      <div className="flex items-center justify-end gap-3 pt-2">
+      </div>   
+              {/* ACTION BUTTONS */}
 
-        <button
-          type="button"
-          className="rounded-lg border border-gray-300 px-6 py-3 font-medium transition hover:bg-gray-100"
-        >
-          Cancel
-        </button>
+      <div className="flex items-center justify-between rounded-xl border bg-white p-6 shadow-sm">
 
-        <button
-          type="submit"
-          disabled={loading}
-          className="rounded-lg bg-black px-6 py-3 font-medium text-white transition hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          {loading
-            ? "Saving..."
-            : "Save Recurring Charge"}
-        </button>
+        <div>
+
+          <p className="font-medium">
+            Ready to save?
+          </p>
+
+          <p className="text-sm text-gray-500">
+
+            {values.scope === "property"
+              ? "This charge will be available for invoice generation across the selected property."
+              : "This charge will only apply to the selected unit."}
+
+          </p>
+
+        </div>
+
+        <div className="flex items-center gap-3">
+
+          <button
+            type="reset"
+            onClick={() => window.history.back()}
+            className="rounded-lg border border-gray-300 px-6 py-3 font-medium transition hover:bg-gray-100"
+          >
+            Cancel
+          </button>
+
+          <button
+            type="submit"
+            disabled={
+              loading ||
+              !values.propertyId ||
+              !values.chargeName ||
+              (values.scope === "unit" &&
+                !values.unitId)
+            }
+            className="rounded-lg bg-black px-6 py-3 font-medium text-white transition hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {loading
+              ? "Saving..."
+              : "Save Recurring Charge"}
+          </button>
+
+        </div>
 
       </div>
 
     </form>
+
   );
+
 }
+  
