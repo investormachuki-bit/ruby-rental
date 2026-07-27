@@ -24,11 +24,18 @@ export async function getTenants() {
       leases(
         id,
         lease_number,
-        property_id,
-        unit_id,
         status,
+        rent_amount,
         start_date,
-        end_date
+        end_date,
+        property:properties(
+          id,
+          name
+        ),
+        unit:units(
+          id,
+          unit_number
+        )
       )
     `)
     .eq("workspace_id", profile.workspace_id)
@@ -44,11 +51,26 @@ export async function getTenants() {
     data?.map((tenant: any) => {
       const leases = tenant.leases ?? [];
 
-      const activeLease = leases.find(
-        (lease: any) => lease.status === "Active"
-      );
+      const activeLease =
+        leases.find(
+          (lease: any) =>
+            lease.status === "Active"
+        ) ?? null;
 
-      let current_status = "Unassigned";
+      const latestLease =
+        activeLease ??
+        leases.sort(
+          (a: any, b: any) =>
+            new Date(b.start_date).getTime() -
+            new Date(a.start_date).getTime()
+        )[0] ??
+        null;
+
+      let current_status:
+        | "Current"
+        | "Former"
+        | "Unassigned" =
+        "Unassigned";
 
       if (activeLease) {
         current_status = "Current";
@@ -58,9 +80,30 @@ export async function getTenants() {
 
       return {
         ...tenant,
-        leases,
-        active_lease: activeLease ?? null,
+
         current_status,
+
+        property_name:
+          latestLease?.property?.name ??
+          null,
+
+        unit_number:
+          latestLease?.unit?.unit_number ??
+          null,
+
+        move_in_date:
+          latestLease?.start_date ??
+          null,
+
+        monthly_rent:
+          latestLease?.rent_amount ??
+          0,
+
+        active_lease:
+          activeLease,
+
+        lease_history:
+          leases,
       };
     }) ?? []
   );
