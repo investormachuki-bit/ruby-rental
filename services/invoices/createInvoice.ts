@@ -31,7 +31,6 @@ type CreateInvoiceInput = {
 export async function createInvoice(
   input: CreateInvoiceInput
 ) {
-
   const {
     data: { session },
   } = await supabase.auth.getSession();
@@ -101,8 +100,7 @@ export async function createInvoice(
         unit_id:
           input.unit_id,
 
-        // Legacy database column
-        occupant_id:
+        tenant_id:
           input.tenant_id,
 
         invoice_number:
@@ -141,5 +139,4 @@ export async function createInvoice(
   }
 
   return data;
-
 }
