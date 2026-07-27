@@ -137,7 +137,14 @@ export default function InvoicesPage() {
         <PageHeader title="Invoices" description="Manage tenant billing, invoice generation, collections and statements.">
           <div className="flex gap-3">
             <Button variant="secondary" onClick={() => setShowBillingModal(true)}>Generate Monthly</Button>
-            <Button variant="primary">Generate Invoice</Button>
+            <Button
+  variant="primary"
+  onClick={() =>
+    router.push("/invoices/new")
+  }
+>
+  Generate Invoice
+</Button>
           </div>
         </PageHeader>
 
