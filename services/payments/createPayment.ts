@@ -7,7 +7,6 @@ import { createReceipt } from "@/services/receipts/createReceipt";
 import { reconcilePayment } from "@/services/payments/reconcilePayment";
 
 type CreatePaymentInput = {
-
   lease_id: string;
 
   property_id: string;
@@ -38,23 +37,19 @@ type CreatePaymentInput = {
   reference_number?: string;
 
   notes?: string;
-
 };
 
 export async function createPayment(
   input: CreatePaymentInput
 ) {
-
   const {
     data: { session },
   } = await supabase.auth.getSession();
 
   if (!session) {
-
     throw new Error(
       "You are not logged in."
     );
-
   }
 
   const profile =
@@ -63,11 +58,9 @@ export async function createPayment(
     );
 
   if (!profile) {
-
     throw new Error(
       "Profile not found."
     );
-
   }
 
   // Temporary receipt number.
@@ -93,11 +86,8 @@ export async function createPayment(
     await supabase
       .from("payments")
       .select("*", {
-
         count: "exact",
-
         head: true,
-
       })
       .eq(
         "workspace_id",
@@ -132,8 +122,7 @@ export async function createPayment(
         unit_id:
           input.unit_id,
 
-        // Legacy database column
-        occupant_id:
+        tenant_id:
           input.tenant_id,
 
         receipt_number:
@@ -175,18 +164,26 @@ export async function createPayment(
       .single();
 
   if (error) {
-
     throw error;
-
   }
 
-  const reconciliation = await reconcilePayment({
-    paymentId: payment.id,
-    workspaceId: profile.workspace_id,
-    leaseId: input.lease_id,
-    amount: input.amount,
-    mode: "auto",
-  });
+  const reconciliation =
+    await reconcilePayment({
+      paymentId:
+        payment.id,
+
+      workspaceId:
+        profile.workspace_id,
+
+      leaseId:
+        input.lease_id,
+
+      amount:
+        input.amount,
+
+      mode:
+        "auto",
+    });
 
   const receipt =
     await createReceipt({
@@ -206,11 +203,8 @@ export async function createPayment(
     });
 
   return {
-
     payment,
-
     receipt,
-
+    reconciliation,
   };
-
 }
