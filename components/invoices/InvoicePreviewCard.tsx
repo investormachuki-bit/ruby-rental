@@ -1,6 +1,7 @@
 "use client";
 
 import Card from "@/components/ui/Card";
+import Button from "@/components/ui/Button";
 
 import type {
   InvoiceBuildResult,
@@ -8,10 +9,14 @@ import type {
 
 type Props = {
   invoice: InvoiceBuildResult | null;
+  onGenerate?: () => void;
+  generating?: boolean;
 };
 
 export default function InvoicePreviewCard({
   invoice,
+  onGenerate,
+  generating = false,
 }: Props) {
 
   if (!invoice) {
@@ -109,6 +114,23 @@ export default function InvoicePreviewCard({
           </span>
 
         </div>
+
+      </div>
+
+      <div className="mt-8 flex justify-end gap-3">
+
+        <Button
+          variant="primary"
+          disabled={
+            !onGenerate ||
+            generating
+          }
+          onClick={onGenerate}
+        >
+          {generating
+            ? "Generating..."
+            : "Generate Invoice"}
+        </Button>
 
       </div>
 
