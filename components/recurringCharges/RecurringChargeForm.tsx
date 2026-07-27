@@ -570,8 +570,10 @@ export default function RecurringChargeForm({
             </div>
 
           </div>
-
+      
         )}
+        </div>
+        
            {/* CHARGE DETAILS */}
 
       <div className="rounded-xl border bg-white p-6 shadow-sm">
