@@ -22,23 +22,22 @@ export type CreateRecurringChargeInput = {
 export async function createRecurringCharge(
   input: CreateRecurringChargeInput
 ) {
-  // Get logged in user
   const {
     data: { session },
   } = await supabase.auth.getSession();
 
   if (!session) {
+    alert("You are not logged in.");
     throw new Error("You are not logged in.");
   }
 
-  // Get user profile
   const profile = await getProfile(session.user.id);
 
   if (!profile) {
+    alert("Profile not found.");
     throw new Error("Profile not found.");
   }
 
-  // Create recurring charge
   const { data, error } = await supabase
     .from(TABLES.RECURRING_CHARGES)
     .insert({
@@ -66,8 +65,18 @@ export async function createRecurringCharge(
     .single();
 
   if (error) {
+    alert(
+      "SUPABASE ERROR\n\n" +
+        JSON.stringify(error, null, 2)
+    );
+
     throw error;
   }
+
+  alert(
+    "Recurring charge created successfully!\n\n" +
+      JSON.stringify(data, null, 2)
+  );
 
   return data;
 }
