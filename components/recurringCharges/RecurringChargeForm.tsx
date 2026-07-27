@@ -185,8 +185,6 @@ export default function RecurringChargeForm({
   useEffect(() => {
 
     async function loadData() {
-async function loadData() {
-
   try {
     const propertyData = await getProperties();
 
