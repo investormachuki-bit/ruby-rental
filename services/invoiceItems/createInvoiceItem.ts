@@ -2,70 +2,58 @@ import { supabase } from "@/lib/supabase";
 import { getProfile } from "@/services/auth/getProfile";
 
 type CreateInvoiceItemInput = {
-
   invoice_id: string;
 
   item_type:
-  | "Rent"
-  | "Water"
-  | "Electricity"
-  | "Garbage"
-  | "Service Charge"
-  | "Parking"
-  | "Penalty"
-  | "Previous Balance"
-  | "Deposit"
-  | "Other";
+    | "Rent"
+    | "Water"
+    | "Electricity"
+    | "Garbage"
+    | "Service Charge"
+    | "Parking"
+    | "Penalty"
+    | "Previous Balance"
+    | "Deposit"
+    | "Other";
 
   description: string;
 
   quantity?: number;
 
   unit_price: number;
-
 };
 
 export async function createInvoiceItem(
   input: CreateInvoiceItemInput
 ) {
+  try {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
 
-  const {
-    data: { session },
-  } =
-    await supabase.auth.getSession();
+    if (!session) {
+      throw new Error("You are not logged in.");
+    }
 
-  if (!session) {
+    const profile =
+      await getProfile(session.user.id);
 
-    throw new Error(
-      "You are not logged in."
-    );
+    if (!profile) {
+      throw new Error("Profile not found.");
+    }
 
-  }
+    const quantity =
+      input.quantity ?? 1;
 
-  const profile =
-    await getProfile(
-      session.user.id
-    );
+    const amount =
+      quantity * input.unit_price;
 
-  if (!profile) {
-
-    throw new Error(
-      "Profile not found."
-    );
-
-  }
-
-  const quantity =
-    input.quantity ?? 1;
-
-  const amount =
-    quantity *
-    input.unit_price;
-    const { data, error } =
-    await supabase
+    const {
+      data,
+      error,
+    } = await supabase
       .from("invoice_items")
       .insert({
-
         invoice_id:
           input.invoice_id,
 
@@ -84,88 +72,145 @@ export async function createInvoiceItem(
           input.unit_price,
 
         amount,
-
       })
       .select()
       .single();
 
-  if (error) {
+    if (error) {
+      console.error(
+        "CREATE INVOICE ITEM ERROR",
+        error
+      );
+
+      alert(
+        JSON.stringify(
+          error,
+          null,
+          2
+        )
+      );
+
+      throw error;
+    }
+
+    const {
+      data: items,
+      error: totalError,
+    } = await supabase
+      .from("invoice_items")
+      .select("amount")
+      .eq(
+        "invoice_id",
+        input.invoice_id
+      );
+
+    if (totalError) {
+      console.error(
+        "LOAD INVOICE ITEMS ERROR",
+        totalError
+      );
+
+      alert(
+        JSON.stringify(
+          totalError,
+          null,
+          2
+        )
+      );
+
+      throw totalError;
+    }
+
+    const total =
+      (items ?? []).reduce(
+        (sum, item) =>
+          sum + Number(item.amount),
+        0
+      );
+
+    const {
+      data: invoice,
+      error: invoiceError,
+    } = await supabase
+      .from("invoices")
+      .select("amount_paid")
+      .eq(
+        "id",
+        input.invoice_id
+      )
+      .single();
+
+    if (invoiceError) {
+      console.error(
+        "LOAD INVOICE ERROR",
+        invoiceError
+      );
+
+      alert(
+        JSON.stringify(
+          invoiceError,
+          null,
+          2
+        )
+      );
+
+      throw invoiceError;
+    }
+
+    const amountPaid =
+      Number(
+        invoice.amount_paid ?? 0
+      );
+
+    const balance =
+      total - amountPaid;
+
+    const {
+      error: updateError,
+    } = await supabase
+      .from("invoices")
+      .update({
+        amount: total,
+        balance,
+      })
+      .eq(
+        "id",
+        input.invoice_id
+      );
+
+    if (updateError) {
+      console.error(
+        "UPDATE INVOICE TOTAL ERROR",
+        updateError
+      );
+
+      alert(
+        JSON.stringify(
+          updateError,
+          null,
+          2
+        )
+      );
+
+      throw updateError;
+    }
+
+    return data;
+
+  } catch (error: any) {
+    console.error(
+      "createInvoiceItem() failed",
+      error
+    );
+
+    alert(
+      JSON.stringify(
+        error,
+        null,
+        2
+      )
+    );
 
     throw error;
-
   }
-
-  const {
-    data: items,
-    error: totalError,
-  } = await supabase
-    .from("invoice_items")
-    .select("amount")
-    .eq(
-      "invoice_id",
-      input.invoice_id
-    );
-
-  if (totalError) {
-
-    throw totalError;
-
-  }
-
-  const total =
-    (items ?? []).reduce(
-      (sum, item) =>
-        sum + Number(item.amount),
-      0
-    );
-
-const {
-  data: invoice,
-  error: invoiceError,
-} = await supabase
-  .from("invoices")
-  .select("amount_paid")
-  .eq(
-    "id",
-    input.invoice_id
-  )
-  .single();
-
-if (invoiceError) {
-
-  throw invoiceError;
-
-}
-
-const amountPaid =
-  Number(
-    invoice.amount_paid ?? 0
-  );
-
-const balance =
-  total - amountPaid;
-
-const { error: updateError } =
-  await supabase
-    .from("invoices")
-    .update({
-
-      amount: total,
-
-      balance,
-
-    })
-    .eq(
-      "id",
-      input.invoice_id
-    );
-
-  if (updateError) {
-
-    throw updateError;
-
-  }
-
-  return data;
-
 }
