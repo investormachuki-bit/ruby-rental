@@ -12,9 +12,15 @@ import InvoicePreviewCard from "./InvoicePreviewCard";
 import { getProperties } from "@/services/properties/getProperties";
 import { getUnits } from "@/services/units/getUnits";
 import { getActiveLeases } from "@/services/leases/getActiveLeases";
+
 import { buildInvoice } from "@/services/billing/buildInvoice";
 
-import type { InvoiceBuildResult } from "@/services/billing/types";
+import { createInvoice } from "@/services/invoices/createInvoice";
+import { createInvoiceItem } from "@/services/invoiceItems/createInvoiceItem";
+
+import type {
+  InvoiceBuildResult,
+} from "@/services/billing/types";
 
 type Property = {
   id: string;
@@ -30,8 +36,12 @@ type Unit = {
 type Lease = {
   id: string;
   lease_number: string;
+
   property_id: string;
+
   unit_id: string;
+
+  tenant_id: string;
 
   tenant?: {
     id: string;
@@ -42,6 +52,7 @@ type Lease = {
 };
 
 export default function ManualInvoicePage() {
+
   const router = useRouter();
 
   const [properties, setProperties] =
@@ -52,6 +63,9 @@ export default function ManualInvoicePage() {
 
   const [leases, setLeases] =
     useState<Lease[]>([]);
+
+  const [selectedLease, setSelectedLease] =
+    useState<Lease | null>(null);
 
   const [propertyId, setPropertyId] =
     useState("");
@@ -76,83 +90,234 @@ export default function ManualInvoicePage() {
   const [loadingPreview, setLoadingPreview] =
     useState(false);
 
-  useEffect(() => {
-    async function load() {
-      const [
-        propertyData,
-        unitData,
-        leaseData,
-      ] = await Promise.all([
-        getProperties(),
-        getUnits(),
-        getActiveLeases(),
-      ]);
+  const [generating, setGenerating] =
+    useState(false);
+    useEffect(() => {
 
-      setProperties(propertyData);
-      setUnits(unitData);
-      setLeases(leaseData);
+    async function load() {
+
+      try {
+
+        const [
+          propertyData,
+          unitData,
+          leaseData,
+        ] = await Promise.all([
+
+          getProperties(),
+
+          getUnits(),
+
+          getActiveLeases(),
+
+        ]);
+
+        setProperties(propertyData);
+
+        setUnits(unitData);
+
+        setLeases(leaseData);
+
+      } catch (error) {
+
+        console.error(error);
+
+        alert(
+          "Unable to load invoice data."
+        );
+
+      }
+
     }
 
     load();
+
   }, []);
 
   const filteredUnits = useMemo(
     () =>
       units.filter(
-        (u) =>
-          u.property_id === propertyId
+        (unit) =>
+          unit.property_id === propertyId
       ),
     [units, propertyId]
   );
 
   useEffect(() => {
+
     const lease = leases.find(
       (l) => l.unit_id === unitId
     );
 
     if (!lease) {
+
+      setSelectedLease(null);
+
       setLeaseId("");
+
       setLeaseNumber("");
+
       setTenantName("");
+
       setPreview(null);
+
       return;
+
     }
 
-    setLeaseId(lease.id);
-    setLeaseNumber(lease.lease_number);
+    setSelectedLease(lease);
 
-    const tenant = lease.tenant?.[0];
+    setLeaseId(lease.id);
+
+    setLeaseNumber(
+      lease.lease_number
+    );
+
+    const tenant =
+      lease.tenant?.[0];
 
     setTenantName(
+
       tenant?.full_name ??
-        `${tenant?.first_name ?? ""} ${tenant?.last_name ?? ""}`.trim()
+
+      `${tenant?.first_name ?? ""} ${tenant?.last_name ?? ""}`.trim()
+
     );
 
     setPreview(null);
+
   }, [unitId, leases]);
 
   async function previewInvoice() {
-    if (!leaseId) return;
+
+    if (!selectedLease) {
+      return;
+    }
 
     try {
+
       setLoadingPreview(true);
 
       const invoice =
-        await buildInvoice(leaseId);
+        await buildInvoice(
+          selectedLease.id
+        );
 
       setPreview(invoice);
+
     } catch (error) {
+
       console.error(error);
 
       alert(
         "Unable to build invoice."
       );
+
     } finally {
+
       setLoadingPreview(false);
+
     }
+
   }
 
-  return (
+  async function generateInvoice() {
+
+    if (
+      !selectedLease ||
+      !preview
+    ) {
+      return;
+    }
+
+    try {
+
+      setGenerating(true);
+
+      const today =
+        new Date()
+          .toISOString()
+          .split("T")[0];
+
+      const invoice =
+        await createInvoice({
+
+          lease_id:
+            selectedLease.id,
+
+          property_id:
+            selectedLease.property_id,
+
+          unit_id:
+            selectedLease.unit_id,
+
+          tenant_id:
+            selectedLease.tenant_id,
+
+          invoice_type:
+            "Rent",
+
+          billing_period:
+            preview.billing_period,
+
+          invoice_date:
+            today,
+
+          due_date:
+            today,
+
+          notes:
+            "Generated manually",
+
+        });
+
+      for (const item of preview.items) {
+
+        await createInvoiceItem({
+
+          invoice_id:
+            invoice.id,
+
+          item_type:
+            item.item_type as any,
+
+          description:
+            item.description,
+
+          quantity:
+            item.quantity,
+
+          unit_price:
+            item.unit_price,
+
+        });
+
+      }
+
+      alert(
+        "Invoice generated successfully."
+      );
+
+      router.push(
+        `/invoices/${invoice.id}`
+      );
+
+    } catch (error) {
+
+      console.error(error);
+
+      alert(
+        "Unable to generate invoice."
+      );
+
+    } finally {
+
+      setGenerating(false);
+
+    }
+
+  }
+   return (
     <Section>
 
       <Card>
@@ -168,9 +333,7 @@ export default function ManualInvoicePage() {
               className="w-full rounded-lg border p-3"
               value={propertyId}
               onChange={(e) => {
-                setPropertyId(
-                  e.target.value
-                );
+                setPropertyId(e.target.value);
                 setUnitId("");
               }}
             >
@@ -178,18 +341,20 @@ export default function ManualInvoicePage() {
                 Select Property
               </option>
 
-              {properties.map((p) => (
+              {properties.map((property) => (
                 <option
-                  key={p.id}
-                  value={p.id}
+                  key={property.id}
+                  value={property.id}
                 >
-                  {p.name}
+                  {property.name}
                 </option>
               ))}
+
             </select>
           </div>
 
           <div>
+
             <label className="mb-2 block text-sm font-medium">
               Unit
             </label>
@@ -198,29 +363,31 @@ export default function ManualInvoicePage() {
               className="w-full rounded-lg border p-3"
               value={unitId}
               onChange={(e) =>
-                setUnitId(
-                  e.target.value
-                )
+                setUnitId(e.target.value)
               }
             >
+
               <option value="">
                 Select Unit
               </option>
 
-              {filteredUnits.map(
-                (unit) => (
-                  <option
-                    key={unit.id}
-                    value={unit.id}
-                  >
-                    {unit.unit_number}
-                  </option>
-                )
-              )}
+              {filteredUnits.map((unit) => (
+
+                <option
+                  key={unit.id}
+                  value={unit.id}
+                >
+                  {unit.unit_number}
+                </option>
+
+              ))}
+
             </select>
+
           </div>
 
           <div>
+
             <label className="mb-2 block text-sm font-medium">
               Tenant
             </label>
@@ -230,9 +397,11 @@ export default function ManualInvoicePage() {
               value={tenantName}
               className="w-full rounded-lg border bg-gray-100 p-3"
             />
+
           </div>
 
           <div>
+
             <label className="mb-2 block text-sm font-medium">
               Lease Number
             </label>
@@ -242,6 +411,7 @@ export default function ManualInvoicePage() {
               value={leaseNumber}
               className="w-full rounded-lg border bg-gray-100 p-3"
             />
+
           </div>
 
         </div>
@@ -260,7 +430,7 @@ export default function ManualInvoicePage() {
           <Button
             variant="primary"
             disabled={
-              !leaseId ||
+              !selectedLease ||
               loadingPreview
             }
             onClick={previewInvoice}
@@ -280,6 +450,12 @@ export default function ManualInvoicePage() {
 
           <InvoicePreviewCard
             invoice={preview}
+            onGenerate={
+              generateInvoice
+            }
+            generating={
+              generating
+            }
           />
 
         </div>
@@ -288,4 +464,5 @@ export default function ManualInvoicePage() {
 
     </Section>
   );
-}
+
+} 
