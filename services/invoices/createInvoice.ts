@@ -31,60 +31,62 @@ type CreateInvoiceInput = {
 export async function createInvoice(
   input: CreateInvoiceInput
 ) {
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
+  try {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
 
-  if (!session) {
-    throw new Error("You are not logged in.");
-  }
+    if (!session) {
+      throw new Error("You are not logged in.");
+    }
 
-  const profile =
-    await getProfile(session.user.id);
+    const profile =
+      await getProfile(session.user.id);
 
-  if (!profile) {
-    throw new Error("Profile not found.");
-  }
+    if (!profile) {
+      throw new Error("Profile not found.");
+    }
 
-  // Generate Invoice Number
+    // Generate invoice number
 
-  const today = new Date();
+    const today = new Date();
 
-  const yyyy =
-    today.getFullYear();
+    const yyyy = today.getFullYear();
 
-  const mm = String(
-    today.getMonth() + 1
-  ).padStart(2, "0");
+    const mm = String(
+      today.getMonth() + 1
+    ).padStart(2, "0");
 
-  const dd = String(
-    today.getDate()
-  ).padStart(2, "0");
+    const dd = String(
+      today.getDate()
+    ).padStart(2, "0");
 
-  const prefix =
-    `INV-${yyyy}${mm}${dd}`;
+    const prefix =
+      `INV-${yyyy}${mm}${dd}`;
 
-  const { count } =
-    await supabase
-      .from("invoices")
-      .select("*", {
-        count: "exact",
-        head: true,
-      })
-      .eq(
-        "workspace_id",
-        profile.workspace_id
-      );
+    const { count } =
+      await supabase
+        .from("invoices")
+        .select("*", {
+          count: "exact",
+          head: true,
+        })
+        .eq(
+          "workspace_id",
+          profile.workspace_id
+        );
 
-  const sequence = String(
-    (count ?? 0) + 1
-  ).padStart(6, "0");
+    const sequence = String(
+      (count ?? 0) + 1
+    ).padStart(6, "0");
 
-  const invoiceNumber =
-    `${prefix}-${sequence}`;
+    const invoiceNumber =
+      `${prefix}-${sequence}`;
 
-  const { data, error } =
-    await supabase
+    const {
+      data,
+      error,
+    } = await supabase
       .from("invoices")
       .insert({
 
@@ -124,8 +126,7 @@ export async function createInvoice(
 
         balance: 0,
 
-        status:
-          "Unpaid",
+        status: "Unpaid",
 
         notes:
           input.notes ?? null,
@@ -134,9 +135,43 @@ export async function createInvoice(
       .select()
       .single();
 
-  if (error) {
-    throw error;
-  }
+    if (error) {
 
-  return data;
+      console.error(
+        "Create Invoice Error:",
+        error
+      );
+
+      alert(
+        JSON.stringify(
+          error,
+          null,
+          2
+        )
+      );
+
+      throw error;
+
+    }
+
+    return data;
+
+  } catch (error: any) {
+
+    console.error(
+      "createInvoice() failed:",
+      error
+    );
+
+    alert(
+      JSON.stringify(
+        error,
+        null,
+        2
+      )
+    );
+
+    throw error;
+
+  }
 }
