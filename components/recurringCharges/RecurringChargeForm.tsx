@@ -68,7 +68,7 @@ type ActiveLease = {
     full_name?: string;
     first_name?: string;
     last_name?: string;
-  };
+  }[];
 };
 
 const BILLING_FREQUENCIES = [
@@ -295,7 +295,10 @@ loadData();
     setSelectedLease(
       lease.lease_number
     );
-const tenant = lease.tenant;
+const tenant =
+  Array.isArray(lease.tenant)
+    ? lease.tenant[0]
+    : lease.tenant;
 
 const tenantName =
   tenant?.full_name ??
