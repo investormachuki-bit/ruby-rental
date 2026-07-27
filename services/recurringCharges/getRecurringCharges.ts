@@ -18,27 +18,23 @@ export async function getRecurringCharges() {
   if (!profile) {
     throw new Error("Profile not found.");
   }
+const { data, error } = await supabase
+  .from(TABLES.RECURRING_CHARGES)
+  .select("*")
+  .eq("workspace_id", profile.workspace_id)
+  .order("created_at", { ascending: false });
 
-  const { data, error } = await supabase
-    .from(TABLES.RECURRING_CHARGES)
-    .select(`
-      *,
-      properties (
-        id,
-        name
-      ),
-      units (
-        id,
-        unit_number
-      ),
-      leases (
-        id,
-        lease_number
-      )
-    `)
-    .eq("workspace_id", profile.workspace_id)
-    .is("deleted_at", null)
-    .order("created_at", { ascending: false });
+alert(
+  JSON.stringify(
+    {
+      workspace: profile.workspace_id,
+      rows: data,
+      error,
+    },
+    null,
+    2
+  )
+);
 
   if (error) {
     throw error;
