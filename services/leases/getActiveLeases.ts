@@ -24,7 +24,6 @@ export async function getActiveLeases() {
       property_id,
       unit_id,
       tenant_id,
-      occupant_id,
       rent_amount,
       billing_day,
       rent_due_day,
