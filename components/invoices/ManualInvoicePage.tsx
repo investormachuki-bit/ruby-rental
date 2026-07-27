@@ -7,9 +7,14 @@ import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
 import Section from "@/components/ui/Section";
 
+import InvoicePreviewCard from "./InvoicePreviewCard";
+
 import { getProperties } from "@/services/properties/getProperties";
 import { getUnits } from "@/services/units/getUnits";
 import { getActiveLeases } from "@/services/leases/getActiveLeases";
+import { buildInvoice } from "@/services/billing/buildInvoice";
+
+import type { InvoiceBuildResult } from "@/services/billing/types";
 
 type Property = {
   id: string;
@@ -29,6 +34,7 @@ type Lease = {
   unit_id: string;
 
   tenant?: {
+    id: string;
     full_name?: string;
     first_name?: string;
     last_name?: string;
@@ -56,8 +62,19 @@ export default function ManualInvoicePage() {
   const [leaseId, setLeaseId] =
     useState("");
 
+  const [leaseNumber, setLeaseNumber] =
+    useState("");
+
   const [tenantName, setTenantName] =
     useState("");
+
+  const [preview, setPreview] =
+    useState<InvoiceBuildResult | null>(
+      null
+    );
+
+  const [loadingPreview, setLoadingPreview] =
+    useState(false);
 
   useEffect(() => {
     async function load() {
@@ -79,15 +96,14 @@ export default function ManualInvoicePage() {
     load();
   }, []);
 
-  const filteredUnits =
-    useMemo(
-      () =>
-        units.filter(
-          (u) =>
-            u.property_id === propertyId
-        ),
-      [units, propertyId]
-    );
+  const filteredUnits = useMemo(
+    () =>
+      units.filter(
+        (u) =>
+          u.property_id === propertyId
+      ),
+    [units, propertyId]
+  );
 
   useEffect(() => {
     const lease = leases.find(
@@ -96,23 +112,49 @@ export default function ManualInvoicePage() {
 
     if (!lease) {
       setLeaseId("");
+      setLeaseNumber("");
       setTenantName("");
+      setPreview(null);
       return;
     }
 
     setLeaseId(lease.id);
+    setLeaseNumber(lease.lease_number);
 
-    const tenant =
-      lease.tenant?.[0];
+    const tenant = lease.tenant?.[0];
 
     setTenantName(
       tenant?.full_name ??
         `${tenant?.first_name ?? ""} ${tenant?.last_name ?? ""}`.trim()
     );
+
+    setPreview(null);
   }, [unitId, leases]);
+
+  async function previewInvoice() {
+    if (!leaseId) return;
+
+    try {
+      setLoadingPreview(true);
+
+      const invoice =
+        await buildInvoice(leaseId);
+
+      setPreview(invoice);
+    } catch (error) {
+      console.error(error);
+
+      alert(
+        "Unable to build invoice."
+      );
+    } finally {
+      setLoadingPreview(false);
+    }
+  }
 
   return (
     <Section>
+
       <Card>
 
         <div className="grid gap-5 md:grid-cols-2">
@@ -192,12 +234,12 @@ export default function ManualInvoicePage() {
 
           <div>
             <label className="mb-2 block text-sm font-medium">
-              Active Lease
+              Lease Number
             </label>
 
             <input
               readOnly
-              value={leaseId}
+              value={leaseNumber}
               className="w-full rounded-lg border bg-gray-100 p-3"
             />
           </div>
@@ -217,19 +259,33 @@ export default function ManualInvoicePage() {
 
           <Button
             variant="primary"
-            disabled={!leaseId}
-            onClick={() =>
-              router.push(
-                `/invoices/${leaseId}`
-              )
+            disabled={
+              !leaseId ||
+              loadingPreview
             }
+            onClick={previewInvoice}
           >
-            Preview Invoice
+            {loadingPreview
+              ? "Building..."
+              : "Preview Invoice"}
           </Button>
 
         </div>
 
       </Card>
+
+      {preview && (
+
+        <div className="mt-8">
+
+          <InvoicePreviewCard
+            invoice={preview}
+          />
+
+        </div>
+
+      )}
+
     </Section>
   );
 }
