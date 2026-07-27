@@ -27,17 +27,25 @@ import CreateTenantModal from "@/components/tenants/CreateTenantModal";
 import TenantsList from "@/components/tenants/TenantsList";
 
 import { getTenants } from "@/services/tenants/getTenants";
-
 type Tenant = {
   id: string;
   tenant_code: string;
   full_name: string;
   phone: string;
+
   property_name?: string | null;
   unit_number?: string | null;
   move_in_date?: string | null;
-  status: string;
+
+  current_status:
+    | "Current"
+    | "Former"
+    | "Unassigned";
+
   monthly_rent?: number;
+
+  active_lease?: any;
+  lease_history?: any[];
 };
 
 export default function TenantsPage() {
@@ -99,8 +107,8 @@ export default function TenantsPage() {
           .includes(keyword);
 
       const matchesStatus =
-        status === "All" ||
-        tenant.status === status;
+  status === "All" ||
+  tenant.current_status === status;
 
       return (
         matchesSearch &&
@@ -114,22 +122,25 @@ export default function TenantsPage() {
   ]);
 
   const currentTenants =
-    tenants.filter(
-      (tenant) =>
-        tenant.status === "Active"
-    ).length;
+  tenants.filter(
+    (tenant) =>
+      tenant.current_status ===
+      "Current"
+  ).length;
 
-  const formerTenants =
-    tenants.filter(
-      (tenant) =>
-        tenant.status !== "Active"
-    ).length;
+const formerTenants =
+  tenants.filter(
+    (tenant) =>
+      tenant.current_status ===
+      "Former"
+  ).length;
 
-  const unassignedTenants =
-    tenants.filter(
-      (tenant) =>
-        !tenant.unit_number
-    ).length;
+const unassignedTenants =
+  tenants.filter(
+    (tenant) =>
+      tenant.current_status ===
+      "Unassigned"
+  ).length;
 
   return (
     <AppShell>
@@ -253,17 +264,17 @@ export default function TenantsPage() {
                   }
                   className="rounded-xl border border-gray-300 bg-white px-4 py-3 focus:border-[#D4AF37] focus:outline-none"
                 >
-                  <option value="All">
-                    All Tenants
-                  </option>
+                  <option value="Current">
+  Current
+</option>
 
-                  <option value="Active">
-                    Current
-                  </option>
+<option value="Former">
+  Former
+</option>
 
-                  <option value="Inactive">
-                    Former
-                  </option>
+<option value="Unassigned">
+  Unassigned
+</option>
                 </select>
               </div>
             </div>
