@@ -40,8 +40,7 @@ export async function createInvoice(
       throw new Error("You are not logged in.");
     }
 
-    const profile =
-      await getProfile(session.user.id);
+    const profile = await getProfile(session.user.id);
 
     if (!profile) {
       throw new Error("Profile not found.");
@@ -61,10 +60,9 @@ export async function createInvoice(
       today.getDate()
     ).padStart(2, "0");
 
-    const prefix =
-      `INV-${yyyy}${mm}${dd}`;
+    const prefix = `INV-${yyyy}${mm}${dd}`;
 
-    const { count } =
+    const { count, error: countError } =
       await supabase
         .from("invoices")
         .select("*", {
@@ -75,6 +73,10 @@ export async function createInvoice(
           "workspace_id",
           profile.workspace_id
         );
+
+    if (countError) {
+      throw countError;
+    }
 
     const sequence = String(
       (count ?? 0) + 1
@@ -126,7 +128,7 @@ export async function createInvoice(
 
         balance: 0,
 
-        status: "Unpaid",
+        status: "Issued",
 
         notes:
           input.notes ?? null,
@@ -138,7 +140,7 @@ export async function createInvoice(
     if (error) {
 
       console.error(
-        "Create Invoice Error:",
+        "SUPABASE CREATE INVOICE ERROR",
         error
       );
 
@@ -151,7 +153,6 @@ export async function createInvoice(
       );
 
       throw error;
-
     }
 
     return data;
@@ -159,7 +160,7 @@ export async function createInvoice(
   } catch (error: any) {
 
     console.error(
-      "createInvoice() failed:",
+      "createInvoice() failed",
       error
     );
 
@@ -172,6 +173,5 @@ export async function createInvoice(
     );
 
     throw error;
-
   }
 }
