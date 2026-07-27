@@ -1,5 +1,7 @@
 import { getLeaseById } from "@/services/leases/getLeaseById";
 
+import { getApplicableRecurringCharges } from "./getApplicableRecurringCharges";
+
 import type {
   InvoiceBuildResult,
   InvoiceLineItem,
@@ -31,6 +33,10 @@ export async function buildInvoice(
 
   const items: InvoiceLineItem[] = [];
 
+  /*
+   * Rent
+   */
+
   items.push({
 
     item_type: "Rent",
@@ -45,29 +51,37 @@ export async function buildInvoice(
     ),
 
   });
-    /*
-   * Future billing modules will add items here.
-   *
-   * Example:
+
+  /*
+   * Recurring Charges
+   */
+
+  const recurringCharges =
+    await getApplicableRecurringCharges(
+      lease
+    );
+
+  items.push(
+    ...recurringCharges
+  );
+
+  /*
+   * Future Billing Modules
    *
    * items.push(
-   *   ...(await getRecurringCharges(lease))
+   *   ...(await getUtilityCharges(lease))
    * );
    *
    * items.push(
-   *   ...(await getWaterCharge(lease))
+   *   ...(await getPreviousBalances(lease))
    * );
    *
    * items.push(
-   *   ...(await getParkingCharge(lease))
+   *   ...(await getLatePenalties(lease))
    * );
    *
    * items.push(
-   *   ...(await getInternetCharge(lease))
-   * );
-   *
-   * items.push(
-   *   ...(await getPreviousBalance(lease))
+   *   ...(await getDiscounts(lease))
    * );
    */
 
@@ -89,71 +103,77 @@ export async function buildInvoice(
 
   const total = subtotal;
 
-const rentTotal = items
-  .filter(
-    (item) => item.item_type === "Rent"
-  )
-  .reduce(
-    (sum, item) =>
-      sum +
-      item.quantity *
-      item.unit_price,
-    0
-  );
+  const rentTotal = items
+    .filter(
+      (item) =>
+        item.item_type === "Rent"
+    )
+    .reduce(
+      (sum, item) =>
+        sum +
+        item.quantity *
+        item.unit_price,
+      0
+    );
 
-const utilityCharges = items
-  .filter((item) =>
-    [
-      "Water",
-      "Electricity",
-      "Garbage",
-      "Service Charge",
-      "Parking",
-    ].includes(item.item_type)
-  )
-  .reduce(
-    (sum, item) =>
-      sum +
-      item.quantity *
-      item.unit_price,
-    0
-  );
+  const utilityCharges = items
+    .filter((item) =>
+      [
+        "Water",
+        "Electricity",
+        "Garbage",
+        "Service Charge",
+        "Parking",
+        "Security",
+        "Internet",
+        "Cleaning",
+        "Sewer",
+        "Maintenance Fee",
+      ].includes(item.item_type)
+    )
+    .reduce(
+      (sum, item) =>
+        sum +
+        item.quantity *
+        item.unit_price,
+      0
+    );
 
-const previousBalances = items
-  .filter(
-    (item) =>
-      item.item_type ===
-      "Previous Balance"
-  )
-  .reduce(
-    (sum, item) =>
-      sum +
-      item.quantity *
-      item.unit_price,
-    0
-  );
+  const previousBalances = items
+    .filter(
+      (item) =>
+        item.item_type ===
+        "Previous Balance"
+    )
+    .reduce(
+      (sum, item) =>
+        sum +
+        item.quantity *
+        item.unit_price,
+      0
+    );
 
-const invoice: InvoiceBuildResult = {
+  const invoice: InvoiceBuildResult = {
 
-  billing_period:
-    billingPeriod,
+    billing_period:
+      billingPeriod,
 
-  items,
+    items,
 
-  subtotal,
+    subtotal,
 
-  total,
+    total,
 
-  rent_total:
-    rentTotal,
+    rent_total:
+      rentTotal,
 
-  utility_charges:
-    utilityCharges,
+    utility_charges:
+      utilityCharges,
 
-  previous_balances:
-    previousBalances,
+    previous_balances:
+      previousBalances,
 
-};
+  };
 
-return invoice;
-}
+  return invoice;
+} 
