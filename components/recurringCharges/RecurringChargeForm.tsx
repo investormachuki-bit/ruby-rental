@@ -57,25 +57,18 @@ type Unit = {
 
   unit_number: string;
 };
-
 type ActiveLease = {
   id: string;
-
   lease_number: string;
-
   property_id: string;
-
   unit_id: string;
 
   tenant?: {
     id: string;
-
     full_name?: string;
-
     first_name?: string;
-
     last_name?: string;
-  }[];
+  };
 };
 
 const BILLING_FREQUENCIES = [
@@ -302,17 +295,13 @@ loadData();
     setSelectedLease(
       lease.lease_number
     );
+const tenant = lease.tenant;
 
-    const tenant =
-      lease.tenant?.[0];
+const tenantName =
+  tenant?.full_name ??
+  `${tenant?.first_name ?? ""} ${tenant?.last_name ?? ""}`.trim();
 
-    const tenantName =
-      tenant?.full_name ||
-      `${tenant?.first_name ?? ""} ${tenant?.last_name ?? ""}`;
-
-    setSelectedTenant(
-      tenantName.trim()
-    );
+setSelectedTenant(tenantName);
 
   }, [
     values.scope,
