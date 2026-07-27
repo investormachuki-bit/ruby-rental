@@ -210,7 +210,8 @@ export default function RecurringChargeForm({
     console.error("❌ getUnits", error);
   }
 
-  try {try {
+try {
+
   alert("Before getActiveLeases");
 
   const leaseData = await getActiveLeases();
@@ -220,11 +221,14 @@ export default function RecurringChargeForm({
   alert(JSON.stringify(leaseData, null, 2));
 
   setLeases(leaseData);
+
 } catch (error: any) {
+
   alert(
     "ERROR:\n\n" +
     (error?.message || JSON.stringify(error))
   );
+
 }
 
 }
