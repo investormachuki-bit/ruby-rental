@@ -210,17 +210,22 @@ export default function RecurringChargeForm({
     console.error("❌ getUnits", error);
   }
 
-  try {
-    const leaseData = await getActiveLeases();
+  try {try {
+  alert("Before getActiveLeases");
 
-alert(
-  JSON.stringify(leaseData, null, 2)
-);
+  const leaseData = await getActiveLeases();
 
-setLeases(leaseData);
-  } catch (error) {
-    console.error("❌ getActiveLeases", error);
-  }
+  alert("After getActiveLeases");
+
+  alert(JSON.stringify(leaseData, null, 2));
+
+  setLeases(leaseData);
+} catch (error: any) {
+  alert(
+    "ERROR:\n\n" +
+    (error?.message || JSON.stringify(error))
+  );
+}
 
 }
 
