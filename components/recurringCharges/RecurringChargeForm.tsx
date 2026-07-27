@@ -185,40 +185,46 @@ export default function RecurringChargeForm({
   useEffect(() => {
 
     async function loadData() {
+async function loadData() {
 
-      try {
+  try {
+    const propertyData = await getProperties();
 
-        const [
-          propertyData,
-          unitData,
-          leaseData,
-        ] = await Promise.all([
-          getProperties(),
-          getUnits(),
-          getActiveLeases(),
-        ]);
+    console.log("✅ Properties:", propertyData);
 
-        setProperties(
-          propertyData.map((property: any) => ({
-            id: property.id,
-            name: property.name,
-          }))
-        );
+    setProperties(
+      propertyData.map((property: any) => ({
+        id: property.id,
+        name: property.name,
+      }))
+    );
+  } catch (error) {
+    console.error("❌ getProperties", error);
+  }
 
-        setUnits(unitData);
+  try {
+    const unitData = await getUnits();
 
-        setLeases(leaseData);
+    console.log("✅ Units:", unitData);
 
-      } catch (error) {
+    setUnits(unitData);
+  } catch (error) {
+    console.error("❌ getUnits", error);
+  }
 
-        console.error(error);
+  try {
+    const leaseData = await getActiveLeases();
 
-      }
+    console.log("✅ Active Leases:", leaseData);
 
-    }
+    setLeases(leaseData);
+  } catch (error) {
+    console.error("❌ getActiveLeases", error);
+  }
 
-    loadData();
+}
 
+loadData();
   }, []);
 
   const filteredUnits =
