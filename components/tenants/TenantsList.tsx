@@ -7,11 +7,20 @@ type Tenant = {
   tenant_code: string;
   full_name: string;
   phone: string;
+
   property_name?: string | null;
   unit_number?: string | null;
   move_in_date?: string | null;
-  status: string;
+
+  current_status:
+    | "Current"
+    | "Former"
+    | "Unassigned";
+
   monthly_rent?: number;
+
+  active_lease?: any;
+  lease_history?: any[];
 };
 
 type Props = {
