@@ -213,9 +213,11 @@ export default function RecurringChargeForm({
   try {
     const leaseData = await getActiveLeases();
 
-    console.log("✅ Active Leases:", leaseData);
+alert(
+  JSON.stringify(leaseData, null, 2)
+);
 
-    setLeases(leaseData);
+setLeases(leaseData);
   } catch (error) {
     console.error("❌ getActiveLeases", error);
   }
