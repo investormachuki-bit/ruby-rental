@@ -29,27 +29,16 @@ export type Plan =
 
 export type Feature = {
   moduleKey: string;
-
   name: string;
-
   description: string;
-
   route: string;
-
   icon: LucideIcon;
-
   category: FeatureCategory;
-
   permission: string;
-
   minimumPlan: Plan;
-
   sidebar: boolean;
-
   searchable: boolean;
-
   aiEnabled: boolean;
-
   core: boolean;
 };
 
@@ -220,6 +209,36 @@ export const FEATURE_REGISTRY: Feature[] = [
   },
 
   {
+    moduleKey: "employees",
+    name: "Employees",
+    description: "Manage staff and assign operational roles.",
+    route: "/settings/employees",
+    icon: Users,
+    category: "Administration",
+    permission: "employees.view",
+    minimumPlan: "professional",
+    sidebar: true,
+    searchable: true,
+    aiEnabled: false,
+    core: false,
+  },
+
+  {
+    moduleKey: "roles",
+    name: "Roles & Permissions",
+    description: "Manage employee roles and permissions.",
+    route: "/settings/roles",
+    icon: Shield,
+    category: "Administration",
+    permission: "roles.view",
+    minimumPlan: "professional",
+    sidebar: true,
+    searchable: true,
+    aiEnabled: false,
+    core: false,
+  },
+
+  {
     moduleKey: "settings",
     name: "Settings",
     description: "Configure your workspace.",
@@ -232,20 +251,5 @@ export const FEATURE_REGISTRY: Feature[] = [
     searchable: false,
     aiEnabled: false,
     core: true,
-  },
-
-  {
-    moduleKey: "users",
-    name: "Users",
-    description: "Manage workspace users and roles.",
-    route: "/users",
-    icon: Shield,
-    category: "Administration",
-    permission: "users.view",
-    minimumPlan: "professional",
-    sidebar: true,
-    searchable: true,
-    aiEnabled: false,
-    core: false,
   },
 ];
