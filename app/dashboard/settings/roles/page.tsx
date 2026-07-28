@@ -2,9 +2,6 @@
 
 import { useEffect, useState } from "react";
 
-import PageContainer from "@/components/layout/PageContainer";
-import PageHeader from "@/components/layout/PageHeader";
-
 import Button from "@/components/ui/Button";
 import Modal from "@/components/ui/Modal";
 
@@ -14,12 +11,12 @@ import RolePermissions from "@/components/roles/RolePermissions";
 
 import {
   getRoles,
-  getPermissions,
-  getRolePermissions,
-  saveRolePermissions,
   createRole,
   updateRole,
   deleteRole,
+  getPermissions,
+  getRolePermissions,
+  saveRolePermissions,
 } from "@/services/roles";
 
 import { Role, Permission } from "@/types/roles";
@@ -41,7 +38,8 @@ export default function RolesPage() {
     setLoading(true);
 
     try {
-      setRoles(await getRoles());
+      const data = await getRoles();
+      setRoles(data);
     } finally {
       setLoading(false);
     }
@@ -64,22 +62,32 @@ export default function RolesPage() {
   }
 
   return (
-    <PageContainer>
+    <div className="space-y-6">
 
-      <PageHeader
-        title="Roles & Permissions"
-        description="Manage employee roles and permissions."
-        actions={
-          <Button
-            onClick={() => {
-              setSelectedRole(null);
-              setDialogOpen(true);
-            }}
-          >
-            New Role
-          </Button>
-        }
-      />
+      <div className="flex items-center justify-between">
+
+        <div>
+
+          <h1 className="text-3xl font-bold">
+            Roles & Permissions
+          </h1>
+
+          <p className="mt-1 text-gray-500">
+            Manage employee roles and access rights.
+          </p>
+
+        </div>
+
+        <Button
+          onClick={() => {
+            setSelectedRole(null);
+            setDialogOpen(true);
+          }}
+        >
+          New Role
+        </Button>
+
+      </div>
 
       <RoleTable
         roles={roles}
@@ -93,8 +101,7 @@ export default function RolesPage() {
           if (!window.confirm(`Delete ${role.name}?`)) return;
 
           await deleteRole(role.id);
-
-          loadRoles();
+          await loadRoles();
         }}
       />
 
@@ -103,6 +110,7 @@ export default function RolesPage() {
         role={selectedRole}
         onClose={() => setDialogOpen(false)}
         onSave={async (values) => {
+
           if (selectedRole) {
             await updateRole(selectedRole.id, values);
           } else {
@@ -110,13 +118,14 @@ export default function RolesPage() {
           }
 
           await loadRoles();
+
         }}
       />
 
       <Modal
         open={permissionsOpen}
         title={`Permissions - ${selectedRole?.name ?? ""}`}
-        description="Configure access rights."
+        description="Select the permissions assigned to this role."
         onClose={() => setPermissionsOpen(false)}
         size="xl"
       >
@@ -125,24 +134,30 @@ export default function RolesPage() {
           selected={selectedPermissions}
           saving={savingPermissions}
           onSave={async (ids) => {
+
             if (!selectedRole) return;
 
             setSavingPermissions(true);
 
             try {
+
               await saveRolePermissions(
                 selectedRole.id,
                 ids
               );
 
               setPermissionsOpen(false);
+
             } finally {
+
               setSavingPermissions(false);
+
             }
+
           }}
         />
       </Modal>
 
-    </PageContainer>
+    </div>
   );
 }
