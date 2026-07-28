@@ -25,13 +25,12 @@ export interface EmployeeInput {
 export async function getEmployees() {
   const { data, error } = await supabase.rpc(
     "get_employees",
-    {},
-    { schema: "app" }
+    {}
   );
 
   if (error) throw error;
 
-  return data as Employee[];
+  return (data ?? []) as Employee[];
 }
 
 export async function createEmployee(
@@ -46,9 +45,6 @@ export async function createEmployee(
       p_designation: payload.designation ?? "",
       p_role_id: payload.role_id,
       p_notes: payload.notes ?? "",
-    },
-    {
-      schema: "app",
     }
   );
 
@@ -71,9 +67,6 @@ export async function updateEmployee(
       p_designation: payload.designation ?? "",
       p_role_id: payload.role_id,
       p_notes: payload.notes ?? "",
-    },
-    {
-      schema: "app",
     }
   );
 
@@ -87,9 +80,6 @@ export async function deactivateEmployee(
     "deactivate_employee",
     {
       p_employee_id: employeeId,
-    },
-    {
-      schema: "app",
     }
   );
 
