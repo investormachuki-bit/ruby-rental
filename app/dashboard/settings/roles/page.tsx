@@ -1,9 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Plus } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
+import PageContainer from "@/components/layout/PageContainer";
+import PageHeader from "@/components/layout/PageHeader";
+
+import Button from "@/components/ui/Button";
+import Modal from "@/components/ui/Modal";
 
 import RoleTable from "@/components/roles/RoleTable";
 import RoleDialog from "@/components/roles/RoleDialog";
@@ -11,12 +14,12 @@ import RolePermissions from "@/components/roles/RolePermissions";
 
 import {
   getRoles,
-  createRole,
-  updateRole,
-  deleteRole,
   getPermissions,
   getRolePermissions,
   saveRolePermissions,
+  createRole,
+  updateRole,
+  deleteRole,
 } from "@/services/roles";
 
 import { Role, Permission } from "@/types/roles";
@@ -30,7 +33,7 @@ export default function RolesPage() {
   const [savingPermissions, setSavingPermissions] = useState(false);
 
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [permissionOpen, setPermissionOpen] = useState(false);
+  const [permissionsOpen, setPermissionsOpen] = useState(false);
 
   const [selectedRole, setSelectedRole] = useState<Role | null>(null);
 
@@ -38,8 +41,7 @@ export default function RolesPage() {
     setLoading(true);
 
     try {
-      const data = await getRoles();
-      setRoles(data);
+      setRoles(await getRoles());
     } finally {
       setLoading(false);
     }
@@ -58,37 +60,26 @@ export default function RolesPage() {
     setPermissions(perms);
     setSelectedPermissions(selected);
 
-    setPermissionOpen(true);
+    setPermissionsOpen(true);
   }
 
   return (
-    <div className="space-y-6">
+    <PageContainer>
 
-      <div className="flex items-center justify-between">
-
-        <div>
-
-          <h1 className="text-2xl font-bold">
-            Roles & Permissions
-          </h1>
-
-          <p className="text-muted-foreground">
-            Manage employee roles and access rights.
-          </p>
-
-        </div>
-
-        <Button
-          onClick={() => {
-            setSelectedRole(null);
-            setDialogOpen(true);
-          }}
-        >
-          <Plus className="mr-2 h-4 w-4" />
-          New Role
-        </Button>
-
-      </div>
+      <PageHeader
+        title="Roles & Permissions"
+        description="Manage employee roles and permissions."
+        actions={
+          <Button
+            onClick={() => {
+              setSelectedRole(null);
+              setDialogOpen(true);
+            }}
+          >
+            New Role
+          </Button>
+        }
+      />
 
       <RoleTable
         roles={roles}
@@ -99,10 +90,11 @@ export default function RolesPage() {
         }}
         onPermissions={openPermissions}
         onDelete={async (role) => {
-          if (!confirm(`Delete ${role.name}?`)) return;
+          if (!window.confirm(`Delete ${role.name}?`)) return;
 
           await deleteRole(role.id);
-          await loadRoles();
+
+          loadRoles();
         }}
       />
 
@@ -111,50 +103,46 @@ export default function RolesPage() {
         role={selectedRole}
         onClose={() => setDialogOpen(false)}
         onSave={async (values) => {
-
           if (selectedRole) {
-
             await updateRole(selectedRole.id, values);
-
           } else {
-
             await createRole(values);
-
           }
 
           await loadRoles();
         }}
       />
 
-      {permissionOpen && selectedRole && (
-
+      <Modal
+        open={permissionsOpen}
+        title={`Permissions - ${selectedRole?.name ?? ""}`}
+        description="Configure access rights."
+        onClose={() => setPermissionsOpen(false)}
+        size="xl"
+      >
         <RolePermissions
           permissions={permissions}
           selected={selectedPermissions}
           saving={savingPermissions}
-          onSave={async (permissionIds) => {
+          onSave={async (ids) => {
+            if (!selectedRole) return;
 
             setSavingPermissions(true);
 
             try {
-
               await saveRolePermissions(
                 selectedRole.id,
-                permissionIds
+                ids
               );
 
-              setPermissionOpen(false);
-
+              setPermissionsOpen(false);
             } finally {
-
               setSavingPermissions(false);
-
             }
           }}
         />
+      </Modal>
 
-      )}
-
-    </div>
+    </PageContainer>
   );
 }
