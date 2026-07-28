@@ -16,8 +16,7 @@ import {
 } from "@/services/maintenance";
 
 import { getEmployees } from "@/services/employees";
-import { getProperties } from "@/services/properties";
-import { getUnits } from "@/services/units";
+import { getPropertyOptions } from "@/services/properties/getPropertyOptions";
 
 import {
   MaintenanceRequest,
