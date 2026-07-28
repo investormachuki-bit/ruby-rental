@@ -1,14 +1,16 @@
 "use client";
 
-import { Edit, Shield, Trash2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import Button from "@/components/ui/Button";
+import Card from "@/components/ui/Card";
+import Badge from "@/components/ui/Badge";
+import DataTable from "@/components/ui/DataTable";
+
+import { Edit2, Shield, Trash2 } from "lucide-react";
 import { Role } from "@/types/roles";
 
-interface RoleTableProps {
+interface Props {
   roles: Role[];
-  loading?: boolean;
+  loading: boolean;
   onEdit: (role: Role) => void;
   onPermissions: (role: Role) => void;
   onDelete: (role: Role) => void;
@@ -16,98 +18,80 @@ interface RoleTableProps {
 
 export default function RoleTable({
   roles,
-  loading = false,
+  loading,
   onEdit,
   onPermissions,
   onDelete,
-}: RoleTableProps) {
-  if (loading) {
-    return (
-      <Card className="p-8 text-center">
-        Loading roles...
-      </Card>
-    );
-  }
+}: Props) {
+  const columns = [
+    {
+      key: "name",
+      header: "Role",
+      render: (role: Role) => (
+        <span className="font-medium">{role.name}</span>
+      ),
+    },
+    {
+      key: "description",
+      header: "Description",
+      render: (role: Role) => role.description || "-",
+    },
+    {
+      key: "status",
+      header: "Status",
+      render: (role: Role) => (
+        <Badge
+          variant={role.is_active ? "success" : "secondary"}
+        >
+          {role.is_active ? "Active" : "Inactive"}
+        </Badge>
+      ),
+    },
+    {
+      key: "actions",
+      header: "",
+      render: (role: Role) => (
+        <div className="flex justify-end gap-2">
 
-  if (roles.length === 0) {
-    return (
-      <Card className="p-8 text-center text-muted-foreground">
-        No roles found.
-      </Card>
-    );
-  }
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => onPermissions(role)}
+          >
+            <Shield size={16} />
+          </Button>
+
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => onEdit(role)}
+          >
+            <Edit2 size={16} />
+          </Button>
+
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => onDelete(role)}
+          >
+            <Trash2 size={16} />
+          </Button>
+
+        </div>
+      ),
+    },
+  ];
 
   return (
-    <Card className="overflow-hidden">
-      <table className="w-full">
-        <thead className="border-b bg-muted/40">
-          <tr>
-            <th className="px-4 py-3 text-left">Role</th>
-            <th className="px-4 py-3 text-left">Description</th>
-            <th className="px-4 py-3 text-center">Status</th>
-            <th className="px-4 py-3 text-right">Actions</th>
-          </tr>
-        </thead>
+    <Card>
 
-        <tbody>
-          {roles.map((role) => (
-            <tr
-              key={role.id}
-              className="border-b last:border-0 hover:bg-muted/20"
-            >
-              <td className="px-4 py-4 font-medium">
-                {role.name}
-              </td>
+      <DataTable
+        columns={columns}
+        data={roles}
+        loading={loading}
+        emptyMessage="No roles found."
+      />
 
-              <td className="px-4 py-4 text-muted-foreground">
-                {role.description || "-"}
-              </td>
-
-              <td className="px-4 py-4 text-center">
-                <Badge
-                  variant={
-                    role.is_active
-                      ? "default"
-                      : "secondary"
-                  }
-                >
-                  {role.is_active ? "Active" : "Inactive"}
-                </Badge>
-              </td>
-
-              <td className="px-4 py-4">
-                <div className="flex justify-end gap-2">
-
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={() => onPermissions(role)}
-                  >
-                    <Shield className="h-4 w-4" />
-                  </Button>
-
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={() => onEdit(role)}
-                  >
-                    <Edit className="h-4 w-4" />
-                  </Button>
-
-                  <Button
-                    variant="destructive"
-                    size="icon"
-                    onClick={() => onDelete(role)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-
-                </div>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
     </Card>
   );
 }
