@@ -11,15 +11,16 @@ import Textarea from "@/components/ui/Textarea";
 import {
   MaintenanceRequest,
   PropertyOption,
-  UnitOption,
 } from "@/types/maintenance";
+
+import { getUnitsForSelect } from "@/services/units/getUnitsForSelect";
 
 interface Props {
   open: boolean;
+
   request?: MaintenanceRequest | null;
 
   properties: PropertyOption[];
-  units: UnitOption[];
 
   onClose: () => void;
 
@@ -34,15 +35,15 @@ interface Props {
 }
 
 const categories = [
+  "General",
   "Plumbing",
   "Electrical",
   "Painting",
   "Cleaning",
-  "Security",
   "Roof",
+  "Security",
   "Doors",
   "Windows",
-  "General",
 ];
 
 const priorities = [
@@ -56,17 +57,29 @@ export default function MaintenanceDialog({
   open,
   request,
   properties,
-  units,
   onClose,
   onSave,
 }: Props) {
   const [propertyId, setPropertyId] = useState("");
   const [unitId, setUnitId] = useState("");
+
+  const [units, setUnits] = useState<
+    { label: string; value: string }[]
+  >([]);
+
   const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [category, setCategory] = useState("General");
-  const [priority, setPriority] = useState("Medium");
-  const [saving, setSaving] = useState(false);
+
+  const [description, setDescription] =
+    useState("");
+
+  const [category, setCategory] =
+    useState("General");
+
+  const [priority, setPriority] =
+    useState("Medium");
+
+  const [saving, setSaving] =
+    useState(false);
 
   useEffect(() => {
     if (!open) return;
@@ -79,12 +92,31 @@ export default function MaintenanceDialog({
     } else {
       setPropertyId("");
       setUnitId("");
+      setUnits([]);
       setTitle("");
       setDescription("");
       setCategory("General");
       setPriority("Medium");
     }
   }, [open, request]);
+
+  useEffect(() => {
+    async function loadUnits() {
+      if (!propertyId) {
+        setUnits([]);
+        setUnitId("");
+        return;
+      }
+
+      const data =
+        await getUnitsForSelect(propertyId);
+
+      setUnits(data);
+      setUnitId("");
+    }
+
+    loadUnits();
+  }, [propertyId]);
 
   async function handleSave() {
     setSaving(true);
@@ -104,8 +136,7 @@ export default function MaintenanceDialog({
       setSaving(false);
     }
   }
-
-  return (
+    return (
     <Modal
       open={open}
       title={
@@ -144,25 +175,29 @@ export default function MaintenanceDialog({
         <Select
           label="Property"
           value={propertyId}
-          onChange={(e: any) =>
+          onChange={(e) =>
             setPropertyId(e.target.value)
           }
-          options={properties.map((p) => ({
-            label: p.name,
-            value: p.id,
-          }))}
+          options={[
+            { label: "Select Property", value: "" },
+            ...properties.map((property) => ({
+              label: property.name,
+              value: property.id,
+            })),
+          ]}
         />
 
         <Select
           label="Unit"
           value={unitId}
-          onChange={(e: any) =>
+          onChange={(e) =>
             setUnitId(e.target.value)
           }
-          options={units.map((u) => ({
-            label: u.unit_number,
-            value: u.id,
-          }))}
+          options={[
+            { label: "Select Unit", value: "" },
+            ...units,
+          ]}
+          disabled={!propertyId}
         />
 
         <Input
@@ -171,29 +206,30 @@ export default function MaintenanceDialog({
           onChange={(e: any) =>
             setTitle(e.target.value)
           }
+          placeholder="e.g. Kitchen sink leaking"
         />
 
         <Select
           label="Category"
           value={category}
-          onChange={(e: any) =>
+          onChange={(e) =>
             setCategory(e.target.value)
           }
-          options={categories.map((c) => ({
-            label: c,
-            value: c,
+          options={categories.map((item) => ({
+            label: item,
+            value: item,
           }))}
         />
 
         <Select
           label="Priority"
           value={priority}
-          onChange={(e: any) =>
+          onChange={(e) =>
             setPriority(e.target.value)
           }
-          options={priorities.map((p) => ({
-            label: p,
-            value: p,
+          options={priorities.map((item) => ({
+            label: item,
+            value: item,
           }))}
         />
 
@@ -205,6 +241,7 @@ export default function MaintenanceDialog({
             onChange={(e: any) =>
               setDescription(e.target.value)
             }
+            placeholder="Describe the maintenance issue..."
           />
         </div>
 
