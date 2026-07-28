@@ -13,18 +13,9 @@ export interface MaintenanceRequest {
 
   category: string;
 
-  priority:
-    | "Low"
-    | "Medium"
-    | "High"
-    | "Emergency";
+  priority: string;
 
-  status:
-    | "Open"
-    | "Assigned"
-    | "In Progress"
-    | "Completed"
-    | "Cancelled";
+  status: string;
 
   assigned_employee: string;
 
@@ -54,11 +45,7 @@ export interface MaintenanceInput {
 
   category: string;
 
-  priority:
-    | "Low"
-    | "Medium"
-    | "High"
-    | "Emergency";
+  priority: string;
 }
 
 export interface EmployeeOption {
@@ -78,3 +65,16 @@ export interface UnitOption {
 
   unit_number: string;
 }
+
+export type MaintenancePriority =
+  | "Low"
+  | "Medium"
+  | "High"
+  | "Emergency";
+
+export type MaintenanceStatus =
+  | "Open"
+  | "Assigned"
+  | "In Progress"
+  | "Completed"
+  | "Cancelled";
