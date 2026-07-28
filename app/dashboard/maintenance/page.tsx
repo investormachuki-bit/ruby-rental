@@ -21,14 +21,12 @@ import { getPropertyOptions } from "@/services/properties/getPropertyOptions";
 import {
   MaintenanceRequest,
   PropertyOption,
-  UnitOption,
   EmployeeOption,
 } from "@/types/maintenance";
 
 export default function MaintenancePage() {
   const [requests, setRequests] = useState<MaintenanceRequest[]>([]);
   const [properties, setProperties] = useState<PropertyOption[]>([]);
-  const [units, setUnits] = useState<UnitOption[]>([]);
   const [employees, setEmployees] = useState<EmployeeOption[]>([]);
 
   const [loading, setLoading] = useState(true);
@@ -50,12 +48,10 @@ export default function MaintenancePage() {
       const [
         maintenance,
         props,
-        unitData,
         employeeData,
       ] = await Promise.all([
         getMaintenanceRequests(),
-        getProperties(),
-        getUnits(),
+        getPropertyOptions(),
         getEmployees(),
       ]);
 
@@ -65,13 +61,6 @@ export default function MaintenancePage() {
         props.map((p: any) => ({
           id: p.id,
           name: p.name,
-        }))
-      );
-
-      setUnits(
-        unitData.map((u: any) => ({
-          id: u.id,
-          unit_number: u.unit_number,
         }))
       );
 
@@ -107,7 +96,9 @@ export default function MaintenancePage() {
 
         </div>
 
-        <Button onClick={() => setDialogOpen(true)}>
+        <Button
+          onClick={() => setDialogOpen(true)}
+        >
           New Request
         </Button>
 
@@ -134,20 +125,22 @@ export default function MaintenancePage() {
         open={dialogOpen}
         request={null}
         properties={properties}
-        units={units}
         onClose={() => setDialogOpen(false)}
         onSave={async (values) => {
+
           await createMaintenanceRequest(values);
 
           setDialogOpen(false);
 
           await loadData();
+
         }}
       />
 
       <Modal
         open={assignOpen}
         title="Assign Employee"
+        description="Assign this maintenance request to an employee."
         onClose={() => setAssignOpen(false)}
         footer={
           <>
@@ -161,6 +154,7 @@ export default function MaintenancePage() {
             <Button
               disabled={!selectedEmployee}
               onClick={async () => {
+
                 if (!selectedRequest) return;
 
                 await assignMaintenance(
@@ -170,7 +164,10 @@ export default function MaintenancePage() {
 
                 setAssignOpen(false);
 
+                setSelectedEmployee("");
+
                 await loadData();
+
               }}
             >
               Assign
@@ -178,8 +175,9 @@ export default function MaintenancePage() {
           </>
         }
       >
+
         <select
-          className="w-full rounded-xl border p-3"
+          className="w-full rounded-xl border border-gray-300 p-3"
           value={selectedEmployee}
           onChange={(e) =>
             setSelectedEmployee(e.target.value)
@@ -197,7 +195,9 @@ export default function MaintenancePage() {
               {employee.full_name}
             </option>
           ))}
+
         </select>
+
       </Modal>
 
     </div>
