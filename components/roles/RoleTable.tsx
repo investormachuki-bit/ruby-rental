@@ -1,11 +1,12 @@
 "use client";
 
+import { Edit2, Shield, Trash2 } from "lucide-react";
+
 import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
 import Badge from "@/components/ui/Badge";
 import DataTable from "@/components/ui/DataTable";
 
-import { Edit2, Shield, Trash2 } from "lucide-react";
 import { Role } from "@/types/roles";
 
 interface Props {
@@ -28,22 +29,32 @@ export default function RoleTable({
       key: "name",
       header: "Role",
       render: (role: Role) => (
-        <span className="font-medium">{role.name}</span>
+        <span className="font-medium">
+          {role.name}
+        </span>
       ),
     },
     {
       key: "description",
       header: "Description",
-      render: (role: Role) => role.description || "-",
+      render: (role: Role) => (
+        role.description || "-"
+      ),
     },
     {
       key: "status",
       header: "Status",
       render: (role: Role) => (
         <Badge
-          variant={role.is_active ? "success" : "secondary"}
+          variant={
+            role.is_active
+              ? "success"
+              : "secondary"
+          }
         >
-          {role.is_active ? "Active" : "Inactive"}
+          {role.is_active
+            ? "Active"
+            : "Inactive"}
         </Badge>
       ),
     },
@@ -55,7 +66,7 @@ export default function RoleTable({
 
           <Button
             variant="ghost"
-            size="sm"
+            className="p-2 min-w-0"
             onClick={() => onPermissions(role)}
           >
             <Shield size={16} />
@@ -63,7 +74,7 @@ export default function RoleTable({
 
           <Button
             variant="ghost"
-            size="sm"
+            className="p-2 min-w-0"
             onClick={() => onEdit(role)}
           >
             <Edit2 size={16} />
@@ -71,7 +82,7 @@ export default function RoleTable({
 
           <Button
             variant="ghost"
-            size="sm"
+            className="p-2 min-w-0"
             onClick={() => onDelete(role)}
           >
             <Trash2 size={16} />
