@@ -1,21 +1,16 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Role } from "@/types/roles";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Switch } from "@/components/ui/switch";
 
-interface RoleDialogProps {
+import Modal from "@/components/ui/Modal";
+import Button from "@/components/ui/Button";
+import Input from "@/components/ui/Input";
+import Textarea from "@/components/ui/Textarea";
+import ToggleSwitch from "@/components/ui/ToggleSwitch";
+
+import { Role } from "@/types/roles";
+
+interface Props {
   open: boolean;
   role?: Role | null;
   onClose: () => void;
@@ -31,21 +26,21 @@ export default function RoleDialog({
   role,
   onClose,
   onSave,
-}: RoleDialogProps) {
+}: Props) {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
-  const [isActive, setIsActive] = useState(true);
+  const [active, setActive] = useState(true);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (role) {
       setName(role.name);
       setDescription(role.description ?? "");
-      setIsActive(role.is_active);
+      setActive(role.is_active);
     } else {
       setName("");
       setDescription("");
-      setIsActive(true);
+      setActive(true);
     }
   }, [role, open]);
 
@@ -56,7 +51,7 @@ export default function RoleDialog({
       await onSave({
         name: name.trim(),
         description: description.trim(),
-        is_active: isActive,
+        is_active: active,
       });
 
       onClose();
@@ -66,69 +61,54 @@ export default function RoleDialog({
   }
 
   return (
-    <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-lg">
-        <DialogHeader>
-          <DialogTitle>
-            {role ? "Edit Role" : "Create Role"}
-          </DialogTitle>
-        </DialogHeader>
-
-        <div className="space-y-5">
-
-          <div>
-            <Label>Role Name</Label>
-            <Input
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Property Manager"
-            />
-          </div>
-
-          <div>
-            <Label>Description</Label>
-            <Textarea
-              rows={4}
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Describe this role..."
-            />
-          </div>
-
-          <div className="flex items-center justify-between border rounded-lg p-3">
-            <div>
-              <Label>Active</Label>
-              <p className="text-sm text-muted-foreground">
-                Allow users to use this role.
-              </p>
-            </div>
-
-            <Switch
-              checked={isActive}
-              onCheckedChange={setIsActive}
-            />
-          </div>
-
-        </div>
-
-        <DialogFooter>
-
-          <Button
-            variant="outline"
-            onClick={onClose}
-          >
+    <Modal
+      open={open}
+      title={role ? "Edit Role" : "New Role"}
+      description="Create or update a user role."
+      onClose={onClose}
+      size="md"
+      footer={
+        <>
+          <Button variant="secondary" onClick={onClose}>
             Cancel
           </Button>
 
           <Button
             onClick={handleSave}
-            disabled={saving || !name.trim()}
+            disabled={!name.trim() || saving}
           >
             {saving ? "Saving..." : "Save Role"}
           </Button>
+        </>
+      }
+    >
+      <div className="space-y-6">
 
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        <Input
+          label="Role Name"
+          value={name}
+          onChange={(e: any) => setName(e.target.value)}
+          placeholder="Property Manager"
+        />
+
+        <Textarea
+          label="Description"
+          value={description}
+          onChange={(e: any) =>
+            setDescription(e.target.value)
+          }
+          placeholder="Describe this role..."
+          rows={4}
+        />
+
+        <ToggleSwitch
+          label="Active"
+          description="Allow this role to be assigned to employees."
+          checked={active}
+          onChange={setActive}
+        />
+
+      </div>
+    </Modal>
   );
 }
