@@ -100,7 +100,6 @@ export default function RoleTable({
         columns={columns}
         data={roles}
         loading={loading}
-        emptyMessage="No roles found."
       />
 
     </Card>
