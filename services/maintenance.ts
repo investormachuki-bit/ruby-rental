@@ -1,40 +1,19 @@
 import { supabase } from "@/lib/supabase";
 
-export interface MaintenanceRequest {
-  id: string;
-  property_name: string;
-  unit_number: string;
-  tenant_name: string;
-  title: string;
-  category: string;
-  priority: string;
-  status: string;
-  assigned_employee: string;
-  estimated_cost: number;
-  actual_cost: number;
-  scheduled_date: string | null;
-  completed_date: string | null;
-  created_at: string;
-}
+import type {
+  MaintenanceRequest,
+  MaintenanceInput,
+} from "@/types/maintenance";
 
-export interface MaintenanceInput {
-  property_id: string;
-  unit_id: string;
-  lease_id?: string;
-  tenant_id?: string;
-  title: string;
-  description: string;
-  category: string;
-  priority: string;
-}
-
-export async function getMaintenanceRequests() {
+export async function getMaintenanceRequests(): Promise<MaintenanceRequest[]> {
   const { data, error } = await supabase.rpc(
     "get_maintenance_requests",
     {}
   );
 
-  if (error) throw error;
+  if (error) {
+    throw error;
+  }
 
   return (data ?? []) as MaintenanceRequest[];
 }
@@ -56,7 +35,9 @@ export async function createMaintenanceRequest(
     }
   );
 
-  if (error) throw error;
+  if (error) {
+    throw error;
+  }
 
   return data;
 }
@@ -75,7 +56,9 @@ export async function assignMaintenance(
     }
   );
 
-  if (error) throw error;
+  if (error) {
+    throw error;
+  }
 }
 
 export async function completeMaintenance(
@@ -90,5 +73,7 @@ export async function completeMaintenance(
     }
   );
 
-  if (error) throw error;
+  if (error) {
+    throw error;
+  }
 }
