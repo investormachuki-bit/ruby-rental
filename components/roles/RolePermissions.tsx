@@ -1,10 +1,12 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+
+import Card from "@/components/ui/Card";
+import Button from "@/components/ui/Button";
+import ToggleSwitch from "@/components/ui/ToggleSwitch";
+
 import { Permission } from "@/types/roles";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
 
 interface Props {
   permissions: Permission[];
@@ -14,15 +16,6 @@ interface Props {
   onSave: (permissionIds: string[]) => Promise<void>;
 }
 
-const ACTIONS = [
-  "view",
-  "create",
-  "edit",
-  "delete",
-  "approve",
-  "export",
-];
-
 export default function RolePermissions({
   permissions,
   selected,
@@ -30,7 +23,7 @@ export default function RolePermissions({
   saving = false,
   onSave,
 }: Props) {
-  const [selectedIds, setSelectedIds] = useState<string[]>(selected);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
   useEffect(() => {
     setSelectedIds(selected);
@@ -60,81 +53,53 @@ export default function RolePermissions({
 
   if (loading) {
     return (
-      <Card className="p-6 text-center">
+      <Card className="p-8 text-center">
         Loading permissions...
       </Card>
     );
   }
 
   return (
-    <Card className="overflow-x-auto">
+    <Card className="p-6">
 
-      <table className="w-full">
+      <div className="space-y-8">
 
-        <thead className="border-b bg-muted/40">
-          <tr>
-            <th className="text-left px-4 py-3">Module</th>
+        {Object.entries(grouped).map(([module, modulePermissions]) => (
 
-            {ACTIONS.map((action) => (
-              <th
-                key={action}
-                className="text-center px-4 py-3 capitalize"
-              >
-                {action}
-              </th>
-            ))}
-          </tr>
-        </thead>
+          <div key={module}>
 
-        <tbody>
+            <h3 className="mb-4 text-lg font-semibold capitalize">
+              {module}
+            </h3>
 
-          {Object.entries(grouped).map(([module, modulePermissions]) => (
+            <div className="grid gap-3 md:grid-cols-2">
 
-            <tr key={module} className="border-b">
+              {modulePermissions.map((permission) => (
 
-              <td className="px-4 py-4 font-medium capitalize">
-                {module}
-              </td>
+                <ToggleSwitch
+                  key={permission.id}
+                  label={permission.action}
+                  checked={selectedIds.includes(permission.id)}
+                  onChange={() => toggle(permission.id)}
+                />
 
-              {ACTIONS.map((action) => {
-                const permission = modulePermissions.find(
-                  (p) => p.action === action
-                );
+              ))}
 
-                return (
-                  <td
-                    key={action}
-                    className="text-center"
-                  >
-                    {permission ? (
-                      <Checkbox
-                        checked={selectedIds.includes(permission.id)}
-                        onCheckedChange={() =>
-                          toggle(permission.id)
-                        }
-                      />
-                    ) : (
-                      "-"
-                    )}
-                  </td>
-                );
-              })}
+            </div>
 
-            </tr>
+          </div>
 
-          ))}
+        ))}
 
-        </tbody>
+      </div>
 
-      </table>
-
-      <div className="flex justify-end p-4 border-t">
+      <div className="mt-8 flex justify-end">
 
         <Button
+          loading={saving}
           onClick={() => onSave(selectedIds)}
-          disabled={saving}
         >
-          {saving ? "Saving..." : "Save Permissions"}
+          Save Permissions
         </Button>
 
       </div>
