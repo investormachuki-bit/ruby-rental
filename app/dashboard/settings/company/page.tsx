@@ -7,6 +7,7 @@ import Input from "@/components/ui/Input";
 import TextArea from "@/components/ui/Textarea";
 import Card from "@/components/ui/Card";
 import ToggleSwitch from "@/components/ui/ToggleSwitch";
+import FileUpload from "@/components/ui/FileUpload";
 
 import {
   Building2,
@@ -20,6 +21,8 @@ import {
   getWorkspaceSettings,
   updateWorkspaceSettings,
 } from "@/services/workspace";
+
+import { useWorkspaceAssets } from "@/hooks/useWorkspaceAssets";
 
 import { WorkspaceSettings } from "@/types/workspace";
 
@@ -87,6 +90,15 @@ export default function CompanyWorkspacePage() {
     );
 
   }
+
+  const {
+    uploading,
+    uploadAsset,
+    removeAsset,
+  } = useWorkspaceAssets(
+    settings,
+    setSettings
+  );
 
   return (
 
@@ -338,6 +350,116 @@ export default function CompanyWorkspacePage() {
         </div>
 
       </Card>
+
+      {/* Brand Assets */}
+
+      <Card>
+
+        <h2 className="mb-6 text-xl font-semibold">
+          Brand Assets
+        </h2>
+
+        <div className="grid gap-6 md:grid-cols-2">
+
+          <FileUpload
+            label="Company Logo"
+            value={settings.logo_url}
+            disabled={uploading}
+            onSelect={(file) =>
+              uploadAsset(
+                "logo_url",
+                "company-logo",
+                file
+              )
+            }
+            onRemove={() =>
+              removeAsset("logo_url")
+            }
+          />
+
+          <FileUpload
+            label="Login Logo"
+            value={settings.login_logo_url}
+            disabled={uploading}
+            onSelect={(file) =>
+              uploadAsset(
+                "login_logo_url",
+                "login-logo",
+                file
+              )
+            }
+            onRemove={() =>
+              removeAsset("login_logo_url")
+            }
+          />
+
+          <FileUpload
+            label="Invoice Logo"
+            value={settings.invoice_logo_url}
+            disabled={uploading}
+            onSelect={(file) =>
+              uploadAsset(
+                "invoice_logo_url",
+                "invoice-logo",
+                file
+              )
+            }
+            onRemove={() =>
+              removeAsset("invoice_logo_url")
+            }
+          />
+
+          <FileUpload
+            label="Receipt Logo"
+            value={settings.receipt_logo_url}
+            disabled={uploading}
+            onSelect={(file) =>
+              uploadAsset(
+                "receipt_logo_url",
+                "receipt-logo",
+                file
+              )
+            }
+            onRemove={() =>
+              removeAsset("receipt_logo_url")
+            }
+          />
+
+          <FileUpload
+            label="Company Stamp"
+            value={settings.company_stamp_url}
+            disabled={uploading}
+            onSelect={(file) =>
+              uploadAsset(
+                "company_stamp_url",
+                "company-stamp",
+                file
+              )
+            }
+            onRemove={() =>
+              removeAsset("company_stamp_url")
+            }
+          />
+
+          <FileUpload
+            label="Authorized Signature"
+            value={settings.signature_url}
+            disabled={uploading}
+            onSelect={(file) =>
+              uploadAsset(
+                "signature_url",
+                "signature",
+                file
+              )
+            }
+            onRemove={() =>
+              removeAsset("signature_url")
+            }
+          />
+
+        </div>
+
+      </Card>
             {/* Contact Information */}
 
       <Card>
@@ -421,9 +543,42 @@ export default function CompanyWorkspacePage() {
             }
           />
 
+          <Input
+            label="County"
+            value={settings.county ?? ""}
+            onChange={(e) =>
+              setSettings({
+                ...settings,
+                county: e.target.value,
+              })
+            }
+          />
+
+          <Input
+            label="Country"
+            value={settings.country ?? ""}
+            onChange={(e) =>
+              setSettings({
+                ...settings,
+                country: e.target.value,
+              })
+            }
+          />
+
+          <Input
+            label="Google Maps URL"
+            value={settings.google_maps_url ?? ""}
+            onChange={(e) =>
+              setSettings({
+                ...settings,
+                google_maps_url: e.target.value,
+              })
+            }
+          />
+
         </div>
 
-        <div className="mt-5">
+        <div className="mt-5 space-y-5">
 
           <TextArea
             label="Physical Address"
@@ -433,6 +588,18 @@ export default function CompanyWorkspacePage() {
               setSettings({
                 ...settings,
                 physical_address: e.target.value,
+              })
+            }
+          />
+
+          <TextArea
+            label="Postal Address"
+            rows={2}
+            value={settings.postal_address ?? ""}
+            onChange={(e) =>
+              setSettings({
+                ...settings,
+                postal_address: e.target.value,
               })
             }
           />
@@ -480,6 +647,50 @@ export default function CompanyWorkspacePage() {
           />
 
           <Input
+            label="Timezone"
+            value={settings.timezone}
+            onChange={(e) =>
+              setSettings({
+                ...settings,
+                timezone: e.target.value,
+              })
+            }
+          />
+
+          <Input
+            label="Language"
+            value={settings.language}
+            onChange={(e) =>
+              setSettings({
+                ...settings,
+                language: e.target.value,
+              })
+            }
+          />
+
+          <Input
+            label="Date Format"
+            value={settings.date_format}
+            onChange={(e) =>
+              setSettings({
+                ...settings,
+                date_format: e.target.value,
+              })
+            }
+          />
+
+          <Input
+            label="Time Format"
+            value={settings.time_format}
+            onChange={(e) =>
+              setSettings({
+                ...settings,
+                time_format: e.target.value,
+              })
+            }
+          />
+
+          <Input
             label="Invoice Prefix"
             value={settings.invoice_prefix}
             onChange={(e) =>
@@ -497,6 +708,28 @@ export default function CompanyWorkspacePage() {
               setSettings({
                 ...settings,
                 receipt_prefix: e.target.value,
+              })
+            }
+          />
+
+          <Input
+            label="Quotation Prefix"
+            value={settings.quotation_prefix}
+            onChange={(e) =>
+              setSettings({
+                ...settings,
+                quotation_prefix: e.target.value,
+              })
+            }
+          />
+
+          <Input
+            label="Expense Prefix"
+            value={settings.expense_prefix}
+            onChange={(e) =>
+              setSettings({
+                ...settings,
+                expense_prefix: e.target.value,
               })
             }
           />
