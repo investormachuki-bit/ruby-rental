@@ -6,6 +6,8 @@ import { createReceipt } from "@/services/receipts/createReceipt";
 
 import { reconcilePayment } from "@/services/payments/reconcilePayment";
 
+import { createTenantCredit } from "@/services/payments/tenantCredits";
+
 type CreatePaymentInput = {
   lease_id: string;
 
@@ -166,45 +168,69 @@ export async function createPayment(
   if (error) {
     throw error;
   }
+const reconciliation =
+  await reconcilePayment({
+    paymentId: payment.id,
+    workspaceId: profile.workspace_id,
+    leaseId: input.lease_id,
+    amount: input.amount,
+    mode: "auto",
+  });
 
-  const reconciliation =
-    await reconcilePayment({
-      paymentId:
-        payment.id,
+/*
+|--------------------------------------------------------------------------
+| Create Tenant Credit (Overpayment)
+|--------------------------------------------------------------------------
+*/
 
-      workspaceId:
-        profile.workspace_id,
+if (
+  reconciliation.unallocated_amount > 0
+) {
 
-      leaseId:
-        input.lease_id,
+  await createTenantCredit({
 
-      amount:
-        input.amount,
+    workspaceId:
+      profile.workspace_id,
 
-      mode:
-        "auto",
-    });
+    tenantId:
+      input.tenant_id,
 
-  const receipt =
-    await createReceipt({
+    paymentId:
+      payment.id,
 
-      payment_id:
-        payment.id,
+    amount:
+      reconciliation.unallocated_amount,
 
-      amount:
-        input.amount,
+    notes:
+      `Automatic credit created from payment ${payment.receipt_number}`,
 
-      receipt_date:
-        input.payment_date,
+  });
 
-      notes:
-        input.notes,
-
-    });
-
-  return {
-    payment,
-    receipt,
-    reconciliation,
-  };
 }
+
+const receipt =
+  await createReceipt({
+
+    payment_id:
+      payment.id,
+
+    amount:
+      input.amount,
+
+    receipt_date:
+      input.payment_date,
+
+    notes:
+      input.notes,
+
+  });
+
+return {
+
+  payment,
+
+  receipt,
+
+  reconciliation,
+
+};
