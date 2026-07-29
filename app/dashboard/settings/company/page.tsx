@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
-import TextArea from "@/components/ui/TextArea";
+import TextArea from "@/components/ui/Textarea";
 import Card from "@/components/ui/Card";
 import ToggleSwitch from "@/components/ui/ToggleSwitch";
 
