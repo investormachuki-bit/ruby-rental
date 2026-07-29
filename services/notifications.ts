@@ -1,47 +1,77 @@
-export async function sendNotification({
+export type NotificationChannel =
+  | "email"
+  | "sms"
+  | "whatsapp"
+  | "push";
 
-    channel,
+export interface NotificationRequest {
+  channel: NotificationChannel;
+  recipient: string;
+  subject?: string;
+  message: string;
+}
 
-    recipient,
+async function sendEmail(
+  request: NotificationRequest
+) {
+  console.log("Email:", request);
 
-    subject,
+  return {
+    success: true,
+    channel: "email",
+  };
+}
 
-    message,
+async function sendSMS(
+  request: NotificationRequest
+) {
+  console.log("SMS:", request);
 
-}:{
+  return {
+    success: true,
+    channel: "sms",
+  };
+}
 
-    channel:
-        |"email"
-        |"sms"
-        |"whatsapp"
-        |"push";
+async function sendWhatsapp(
+  request: NotificationRequest
+) {
+  console.log("WhatsApp:", request);
 
-    recipient:string;
+  return {
+    success: true,
+    channel: "whatsapp",
+  };
+}
 
-    subject?:string;
+async function sendPush(
+  request: NotificationRequest
+) {
+  console.log("Push:", request);
 
-    message:string;
+  return {
+    success: true,
+    channel: "push",
+  };
+}
 
-}){
+export async function sendNotification(
+  request: NotificationRequest
+) {
+  switch (request.channel) {
+    case "email":
+      return sendEmail(request);
 
-    switch(channel){
+    case "sms":
+      return sendSMS(request);
 
-        case "email":
+    case "whatsapp":
+      return sendWhatsapp(request);
 
-            return sendEmail(...);
+    case "push":
+      return sendPush(request);
 
-        case "sms":
-
-            return sendSMS(...);
-
-        case "whatsapp":
-
-            return sendWhatsapp(...);
-
-        case "push":
-
-            return sendPush(...);
-
-    }
-
+    default:
+      throw new Error("Unsupported notification channel.");
+  }
 }
