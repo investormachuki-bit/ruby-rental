@@ -1,14 +1,7 @@
 import { supabase } from "@/lib/supabase";
-
 import { getProfile } from "@/services/auth/getProfile";
 
-import { createReceipt } from "@/services/receipts/createReceipt";
-
-import { reconcilePayment } from "@/services/payments/reconcilePayment";
-
-import { createTenantCredit } from "@/services/payments/tenantCredits";
-
-type CreatePaymentInput = {
+export type CreatePaymentInput = {
   lease_id: string;
 
   property_id: string;
@@ -55,9 +48,7 @@ export async function createPayment(
   }
 
   const profile =
-    await getProfile(
-      session.user.id
-    );
+    await getProfile(session.user.id);
 
   if (!profile) {
     throw new Error(
@@ -65,8 +56,12 @@ export async function createPayment(
     );
   }
 
-  // Temporary receipt number.
-  // Later we'll replace this with a database sequence.
+  /*
+  |--------------------------------------------------------------------------
+  | Temporary Receipt Number
+  | Later this will be replaced by a PostgreSQL sequence/function.
+  |--------------------------------------------------------------------------
+  */
 
   const today = new Date();
 
@@ -104,134 +99,85 @@ export async function createPayment(
   const receiptNumber =
     `${prefix}-${sequence}`;
 
+  /*
+  |--------------------------------------------------------------------------
+  | Create Payment
+  |--------------------------------------------------------------------------
+  */
+
   const {
     data: payment,
     error,
-  } =
-    await supabase
-      .from("payments")
-      .insert({
+  } = await supabase
+    .from("payments")
+    .insert({
 
-        workspace_id:
-          profile.workspace_id,
+      workspace_id:
+        profile.workspace_id,
 
-        lease_id:
-          input.lease_id,
+      lease_id:
+        input.lease_id,
 
-        property_id:
-          input.property_id,
+      property_id:
+        input.property_id,
 
-        unit_id:
-          input.unit_id,
+      unit_id:
+        input.unit_id,
 
-        tenant_id:
-          input.tenant_id,
+      tenant_id:
+        input.tenant_id,
 
-        receipt_number:
-          receiptNumber,
+      receipt_number:
+        receiptNumber,
 
-        payment_date:
-          input.payment_date,
+      payment_date:
+        input.payment_date,
 
-        payment_type:
-          input.payment_type,
+      payment_type:
+        input.payment_type,
 
-        payment_method:
-          input.payment_method,
+      payment_method:
+        input.payment_method,
 
-        amount:
-          input.amount,
+      amount:
+        input.amount,
 
-        allocated_amount: 0,
+      allocated_amount: 0,
 
-        unallocated_amount:
-          input.amount,
+      unallocated_amount:
+        input.amount,
 
-        status:
-          "Unallocated",
+      status:
+        "Unallocated",
 
-        reference_number:
-          input.reference_number ??
-          null,
+      reference_number:
+        input.reference_number ??
+        null,
 
-        notes:
-          input.notes ??
-          null,
+      notes:
+        input.notes ??
+        null,
 
-        received_by:
-          session.user.id,
+      received_by:
+        session.user.id,
 
-      })
-      .select()
-      .single();
+    })
+    .select()
+    .single();
 
   if (error) {
     throw error;
   }
-const reconciliation =
-  await reconcilePayment({
-    paymentId: payment.id,
-    workspaceId: profile.workspace_id,
-    leaseId: input.lease_id,
-    amount: input.amount,
-    mode: "auto",
-  });
 
-/*
-|--------------------------------------------------------------------------
-| Create Tenant Credit (Overpayment)
-|--------------------------------------------------------------------------
-*/
+  return {
 
-if (
-  reconciliation.unallocated_amount > 0
-) {
-
-  await createTenantCredit({
+    payment,
 
     workspaceId:
       profile.workspace_id,
 
-    tenantId:
-      input.tenant_id,
+    userId:
+      session.user.id,
 
-    paymentId:
-      payment.id,
-
-    amount:
-      reconciliation.unallocated_amount,
-
-    notes:
-      `Automatic credit created from payment ${payment.receipt_number}`,
-
-  });
-
-}
-
-const receipt =
-  await createReceipt({
-
-    payment_id:
-      payment.id,
-
-    amount:
-      input.amount,
-
-    receipt_date:
-      input.payment_date,
-
-    notes:
-      input.notes,
-
-  });
-
-return {
-
-  payment,
-
-  receipt,
-
-  reconciliation,
-
-};
+  };
 }
