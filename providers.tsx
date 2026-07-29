@@ -3,6 +3,8 @@
 import { AuthProvider } from "@/contexts/AuthContext";
 import { BrandingProvider } from "@/contexts/BrandingContext";
 
+import BrandingMetadata from "@/components/layout/BrandingMetadata";
+
 export default function Providers({
   children,
 }: {
@@ -11,7 +13,11 @@ export default function Providers({
   return (
     <AuthProvider>
       <BrandingProvider>
+
+        <BrandingMetadata />
+
         {children}
+
       </BrandingProvider>
     </AuthProvider>
   );
