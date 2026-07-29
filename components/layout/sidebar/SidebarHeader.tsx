@@ -2,14 +2,14 @@
 
 import Image from "next/image";
 
-import { useWorkspaceBranding } from "@/hooks/useWorkspaceBranding";
+import { useBranding } from "@/contexts/BrandingContext";
 
 export default function SidebarHeader() {
 
   const {
     branding,
     loading,
-  } = useWorkspaceBranding();
+  } = useBranding();
 
   if (loading) {
 
@@ -56,9 +56,7 @@ export default function SidebarHeader() {
         <div>
 
           <h2 className="text-lg font-bold text-white">
-
             {branding?.company_name ?? "Ruby Rental"}
-
           </h2>
 
           <p
@@ -68,9 +66,7 @@ export default function SidebarHeader() {
                 branding?.accent_color ?? "#D4AF37",
             }}
           >
-
             {branding?.app_name ?? "Property Management"}
-
           </p>
 
         </div>
