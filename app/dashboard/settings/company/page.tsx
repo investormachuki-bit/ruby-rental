@@ -8,6 +8,7 @@ import TextArea from "@/components/ui/Textarea";
 import Card from "@/components/ui/Card";
 import ToggleSwitch from "@/components/ui/ToggleSwitch";
 import FileUpload from "@/components/ui/FileUpload";
+import Image from "next/image";
 
 import {
   Building2,
@@ -460,6 +461,155 @@ export default function CompanyWorkspacePage() {
         </div>
 
       </Card>
+
+      <Card>
+
+  <h2 className="mb-6 text-xl font-semibold">
+    Live Brand Preview
+  </h2>
+
+  <div className="grid gap-8 lg:grid-cols-2">
+
+    {/* Sidebar Preview */}
+
+    <div
+      className="overflow-hidden rounded-3xl"
+      style={{
+        background: settings.primary_color,
+      }}
+    >
+
+      <div className="p-8">
+
+        {settings.logo_url ? (
+
+          <Image
+            src={settings.logo_url}
+            alt="Logo"
+            width={90}
+            height={90}
+            className="mb-6 rounded-xl bg-white p-2"
+          />
+
+        ) : (
+
+          <div
+            className="mb-6 flex h-20 w-20 items-center justify-center rounded-xl bg-white text-3xl font-bold"
+            style={{
+              color: settings.primary_color,
+            }}
+          >
+            R
+          </div>
+
+        )}
+
+        <h3 className="text-xl font-bold text-white">
+          {settings.company_name || "Company"}
+        </h3>
+
+        <p
+          className="mt-1 text-sm"
+          style={{
+            color: settings.accent_color,
+          }}
+        >
+          {settings.app_name}
+        </p>
+
+        <div className="mt-8 space-y-3">
+
+          {[
+            "Dashboard",
+            "Properties",
+            "Tenants",
+            "Invoices",
+            "Reports",
+          ].map((item) => (
+
+            <div
+              key={item}
+              className="rounded-xl bg-white/10 px-4 py-3 text-white"
+            >
+              {item}
+            </div>
+
+          ))}
+
+        </div>
+
+      </div>
+
+    </div>
+
+    {/* Login Preview */}
+
+    <div className="rounded-3xl border bg-gray-50 p-8">
+
+      <div className="mx-auto max-w-sm">
+
+        <div className="flex justify-center">
+
+          {settings.login_logo_url ? (
+
+            <Image
+              src={settings.login_logo_url}
+              alt="Login Logo"
+              width={100}
+              height={100}
+            />
+
+          ) : (
+
+            <div
+              className="flex h-24 w-24 items-center justify-center rounded-full text-4xl font-bold text-white"
+              style={{
+                background: settings.primary_color,
+              }}
+            >
+              R
+            </div>
+
+          )}
+
+        </div>
+
+        <h3 className="mt-6 text-center text-2xl font-bold">
+
+          {settings.company_name}
+
+        </h3>
+
+        <p className="mt-2 text-center text-gray-500">
+
+          Property Management Platform
+
+        </p>
+
+        <div className="mt-8 space-y-4">
+
+          <div className="h-11 rounded-xl bg-white shadow" />
+
+          <div className="h-11 rounded-xl bg-white shadow" />
+
+          <div
+            className="rounded-xl py-3 text-center font-semibold text-white"
+            style={{
+              background: settings.accent_color,
+            }}
+          >
+            Sign In
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</Card>
             {/* Contact Information */}
 
       <Card>
