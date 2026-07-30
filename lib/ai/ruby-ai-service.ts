@@ -1,122 +1,91 @@
 import { supabase } from "@/lib/supabase";
 
 /* ============================================================
-   RUBY AI SUMMARY
+   DASHBOARD SUMMARY
+============================================================ */
+
+interface DashboardSummary {
+
+  workspace_name: string;
+
+  total_properties: number;
+
+  total_units: number;
+
+  occupied_units: number;
+
+  vacant_units: number;
+
+  occupancy_rate: number;
+
+  vacancy_rate: number;
+
+  active_leases: number;
+
+  outstanding_rent: number;
+
+  expected_rent_this_month: number;
+
+  collected_this_month: number;
+
+  collection_rate: number;
+
+  invoices_due_today: number;
+
+  overdue_invoices: number;
+
+  pending_maintenance: number;
+
+  pending_notifications: number;
+
+  expiring_leases: number;
+
+}
+
+/* ============================================================
+   AI INSIGHT
+============================================================ */
+
+interface RubyInsight {
+
+  priority: number;
+
+  category:
+    | "Finance"
+    | "Occupancy"
+    | "Maintenance"
+    | "Notifications"
+    | "Leases"
+    | "Portfolio"
+    | "Positive";
+
+  message: string;
+
+}
+
+/* ============================================================
+   RUBY AI RESPONSE
 ============================================================ */
 
 export interface RubyAISummary {
 
   greeting: string;
 
-  landlordName: string;
+  workspaceName: string;
 
   generatedAt: string;
 
-  totalProperties: number;
+  healthScore: number;
 
-  totalUnits: number;
+  healthStatus: string;
 
-  occupiedUnits: number;
+  dashboard: DashboardSummary;
 
-  vacantUnits: number;
-
-  occupancyRate: number;
-
-  activeLeases: number;
-
-  outstandingRent: number;
-
-  collectedThisMonth: number;
-
-  invoicesDueToday: number;
-
-  overdueInvoices: number;
-
-  pendingMaintenance: number;
-
-  pendingNotifications: number;
-
-  expiringLeases: number;
-
-  systemHealth: string[];
+  priorityInsights: RubyInsight[];
 
   summary: string[];
 
-}
-
-/* ============================================================
-   PROPERTY SUMMARY
-============================================================ */
-
-interface PropertySummary {
-
-  totalProperties: number;
-
-  totalUnits: number;
-
-  occupiedUnits: number;
-
-  vacantUnits: number;
-
-  occupancyRate: number;
-
-}
-
-/* ============================================================
-   FINANCE SUMMARY
-============================================================ */
-
-interface FinanceSummary {
-
-  outstandingRent: number;
-
-  collectedThisMonth: number;
-
-  invoicesDueToday: number;
-
-  overdueInvoices: number;
-
-}
-
-/* ============================================================
-   LEASE SUMMARY
-============================================================ */
-
-interface LeaseSummary {
-
-  activeLeases: number;
-
-  expiringLeases: number;
-
-}
-
-/* ============================================================
-   MAINTENANCE SUMMARY
-============================================================ */
-
-interface MaintenanceSummary {
-
-  pendingMaintenance: number;
-
-}
-
-/* ============================================================
-   NOTIFICATION SUMMARY
-============================================================ */
-
-interface NotificationSummary {
-
-  pendingNotifications: number;
-
-}
-
-/* ============================================================
-   LANDLORD PROFILE
-============================================================ */
-
-interface LandlordProfile {
-
-  landlordName: string;
+  systemHealth: string[];
 
 }
 
@@ -124,755 +93,507 @@ interface LandlordProfile {
    HELPERS
 ============================================================ */
 
-function getGreeting(): string {
+function greeting(): string {
 
   const hour = new Date().getHours();
 
-  if (hour < 12) {
+  if (hour < 12) return "Good Morning";
 
-    return "Good Morning";
-
-  }
-
-  if (hour < 17) {
-
-    return "Good Afternoon";
-
-  }
+  if (hour < 17) return "Good Afternoon";
 
   return "Good Evening";
 
 }
 
-function calculateOccupancy(
+function money(value: number): string {
 
-  occupied: number,
+  return Number(value).toLocaleString(
+    "en-KE",
+    {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2,
+    }
+  );
 
-  total: number
+}
+
+/* ============================================================
+   DASHBOARD RPC
+============================================================ */
+
+async function loadDashboard(
+
+  workspaceId: string
+
+): Promise<DashboardSummary> {
+
+  const { data, error } = await supabase.rpc(
+
+    "get_dashboard_summary",
+
+    {
+
+      p_workspace_id: workspaceId,
+
+    }
+
+  );
+
+  if (error) {
+
+    throw error;
+
+  }
+
+  if (!data || data.length === 0) {
+
+    throw new Error(
+
+      "Dashboard summary not found."
+
+    );
+
+  }
+
+  return data[0] as DashboardSummary;
+
+}
+/* ============================================================
+   HEALTH SCORE ENGINE
+============================================================ */
+
+function calculateHealthScore(
+
+  dashboard: DashboardSummary
 
 ): number {
 
-  if (total === 0) return 0;
+  let score = 100;
 
-  return Math.round((occupied / total) * 100);
+  /*
+  ------------------------------------------------------------
+  Occupancy
+  ------------------------------------------------------------
+  */
+
+  if (dashboard.occupancy_rate < 90) score -= 5;
+
+  if (dashboard.occupancy_rate < 80) score -= 10;
+
+  if (dashboard.occupancy_rate < 70) score -= 15;
+
+  if (dashboard.occupancy_rate < 50) score -= 20;
+
+  /*
+  ------------------------------------------------------------
+  Collection
+  ------------------------------------------------------------
+  */
+
+  if (dashboard.collection_rate < 90) score -= 5;
+
+  if (dashboard.collection_rate < 80) score -= 10;
+
+  if (dashboard.collection_rate < 70) score -= 15;
+
+  if (dashboard.collection_rate < 50) score -= 20;
+
+  /*
+  ------------------------------------------------------------
+  Overdue Invoices
+  ------------------------------------------------------------
+  */
+
+  score -= dashboard.overdue_invoices * 3;
+
+  /*
+  ------------------------------------------------------------
+  Maintenance
+  ------------------------------------------------------------
+  */
+
+  score -= dashboard.pending_maintenance * 2;
+
+  /*
+  ------------------------------------------------------------
+  Notifications
+  ------------------------------------------------------------
+  */
+
+  if (dashboard.pending_notifications > 20)
+
+    score -= 5;
+
+  return Math.max(0, score);
 
 }
 
-function startOfMonth(): string {
-
-  const now = new Date();
-
-  return new Date(
-
-    now.getFullYear(),
-
-    now.getMonth(),
-
-    1
-
-  ).toISOString();
-
-}
-
-function todayISO(): string {
-
-  return new Date()
-
-    .toISOString()
-
-    .split("T")[0];
-
-}
 /* ============================================================
-   LANDLORD PROFILE
+   HEALTH STATUS
 ============================================================ */
 
-async function getLandlordProfile(): Promise<LandlordProfile> {
+function getHealthStatus(
 
-  const { data: profile } = await supabase.auth.getUser();
+  score: number
 
-  if (!profile.user) {
+): string {
 
-    return {
+  if (score >= 90)
 
-      landlordName: "Landlord"
+    return "Excellent";
 
-    };
+  if (score >= 80)
+
+    return "Very Good";
+
+  if (score >= 70)
+
+    return "Good";
+
+  if (score >= 60)
+
+    return "Fair";
+
+  if (score >= 40)
+
+    return "Needs Attention";
+
+  return "Critical";
+
+}
+
+/* ============================================================
+   PRIORITY ENGINE
+============================================================ */
+
+function buildPriorityInsights(
+
+  dashboard: DashboardSummary
+
+): RubyInsight[] {
+
+  const insights: RubyInsight[] = [];
+
+  /*
+  ------------------------------------------------------------
+  Finance
+  ------------------------------------------------------------
+  */
+
+  if (dashboard.overdue_invoices > 0) {
+
+    insights.push({
+
+      priority: 100,
+
+      category: "Finance",
+
+      message:
+
+        `${dashboard.overdue_invoices} overdue invoice(s) require follow-up.`
+
+    });
 
   }
 
-  const { data } = await supabase
+  if (dashboard.collection_rate < 80) {
 
-    .from("profiles")
+    insights.push({
 
-    .select("full_name")
+      priority: 95,
 
-    .eq("id", profile.user.id)
+      category: "Finance",
 
-    .single();
+      message:
 
-  return {
+        `Collection rate is ${dashboard.collection_rate}% with KES ${money(
+          dashboard.outstanding_rent
+        )} still outstanding.`
 
-    landlordName: data?.full_name ?? "Landlord"
+    });
 
-  };
+  }
+
+  /*
+  ------------------------------------------------------------
+  Occupancy
+  ------------------------------------------------------------
+  */
+
+  if (dashboard.occupancy_rate < 80) {
+
+    insights.push({
+
+      priority: 90,
+
+      category: "Occupancy",
+
+      message:
+
+        `${dashboard.vacant_units} unit(s) are vacant. Occupancy stands at ${dashboard.occupancy_rate}%.`
+
+    });
+
+  }
+
+  /*
+  ------------------------------------------------------------
+  Lease Expiry
+  ------------------------------------------------------------
+  */
+
+  if (dashboard.expiring_leases > 0) {
+
+    insights.push({
+
+      priority: 85,
+
+      category: "Leases",
+
+      message:
+
+        `${dashboard.expiring_leases} lease(s) expire within the next 30 days.`
+
+    });
+
+  }
+
+  /*
+  ------------------------------------------------------------
+  Maintenance
+  ------------------------------------------------------------
+  */
+
+  if (dashboard.pending_maintenance > 0) {
+
+    insights.push({
+
+      priority: 80,
+
+      category: "Maintenance",
+
+      message:
+
+        `${dashboard.pending_maintenance} maintenance request(s) are awaiting action.`
+
+    });
+
+  }
+
+  /*
+  ------------------------------------------------------------
+  Notifications
+  ------------------------------------------------------------
+  */
+
+  if (dashboard.pending_notifications > 0) {
+
+    insights.push({
+
+      priority: 50,
+
+      category: "Notifications",
+
+      message:
+
+        `${dashboard.pending_notifications} notification(s) are waiting to be processed.`
+
+    });
+
+  }
+
+  /*
+  ------------------------------------------------------------
+  Portfolio
+  ------------------------------------------------------------
+  */
+
+  insights.push({
+
+    priority: 10,
+
+    category: "Portfolio",
+
+    message:
+
+      `${dashboard.total_properties} properties with ${dashboard.total_units} units are currently managed.`
+
+  });
+
+  /*
+  ------------------------------------------------------------
+  Positive Reinforcement
+  ------------------------------------------------------------
+  */
+
+  if (insights.length === 1) {
+
+    insights.push({
+
+      priority: 5,
+
+      category: "Positive",
+
+      message:
+
+        "Operations are running smoothly with no critical issues detected."
+
+    });
+
+  }
+
+  insights.sort(
+
+    (a, b) => b.priority - a.priority
+
+  );
+
+  return insights;
 
 }
-
 /* ============================================================
-   PROPERTY SUMMARY
+   RUBY AI SERVICE
 ============================================================ */
 
-async function getPropertySummary(): Promise<PropertySummary> {
+export class RubyAIService {
 
-  const [{ count: properties }, { count: totalUnits }, { count: occupiedUnits }] =
-    await Promise.all([
+  static async generateSummary(
 
-      supabase
+    workspaceId: string
 
-        .from("properties")
+  ): Promise<RubyAISummary> {
 
-        .select("*", { count: "exact", head: true }),
+    const dashboard =
 
-      supabase
+      await loadDashboard(
 
-        .from("units")
-
-        .select("*", { count: "exact", head: true }),
-
-      supabase
-
-        .from("units")
-
-        .select("*", { count: "exact", head: true })
-
-        .eq("occupancy_status", "Occupied")
-
-    ]);
-
-  const total = totalUnits ?? 0;
-
-  const occupied = occupiedUnits ?? 0;
-
-  return {
-
-    totalProperties: properties ?? 0,
-
-    totalUnits: total,
-
-    occupiedUnits: occupied,
-
-    vacantUnits: total - occupied,
-
-    occupancyRate: calculateOccupancy(
-
-      occupied,
-
-      total
-
-    )
-
-  };
-
-}
-
-/* ============================================================
-   FINANCE SUMMARY
-============================================================ */
-
-async function getFinanceSummary(): Promise<FinanceSummary> {
-
-  const monthStart = startOfMonth();
-
-  const today = todayISO();
-
-  const [
-
-    outstanding,
-
-    collected,
-
-    dueToday,
-
-    overdue
-
-  ] = await Promise.all([
-
-    supabase
-
-      .from("invoices")
-
-      .select("balance")
-
-      .gt("balance", 0),
-
-    supabase
-
-      .from("payments")
-
-      .select("amount")
-
-      .gte("payment_date", monthStart),
-
-    supabase
-
-      .from("invoices")
-
-      .select("*", {
-
-        count: "exact",
-
-        head: true
-
-      })
-
-      .eq("due_date", today)
-
-      .gt("balance", 0),
-
-    supabase
-
-      .from("invoices")
-
-      .select("*", {
-
-        count: "exact",
-
-        head: true
-
-      })
-
-      .eq("status", "Overdue")
-
-  ]);
-
-  const outstandingRent =
-
-    (outstanding.data ?? [])
-
-      .reduce(
-
-        (sum, row) =>
-
-          sum + Number(row.balance),
-
-        0
+        workspaceId
 
       );
 
-  const collectedThisMonth =
+    const healthScore =
 
-    (collected.data ?? [])
+      calculateHealthScore(
 
-      .reduce(
-
-        (sum, row) =>
-
-          sum + Number(row.amount),
-
-        0
+        dashboard
 
       );
 
-  return {
+    const healthStatus =
 
-    outstandingRent,
+      getHealthStatus(
 
-    collectedThisMonth,
+        healthScore
 
-    invoicesDueToday: dueToday.count ?? 0,
+      );
 
-    overdueInvoices: overdue.count ?? 0
+    const priorityInsights =
 
-  };
+      buildPriorityInsights(
 
-}
+        dashboard
 
-/* ============================================================
-   LEASE SUMMARY
-============================================================ */
+      );
 
-async function getLeaseSummary(): Promise<LeaseSummary> {
+    /*
+    ------------------------------------------------------------
+    Executive Summary
+    ------------------------------------------------------------
+    */
 
-  const today = new Date();
+    const summary = priorityInsights.map(
 
-  const nextMonth = new Date();
-
-  nextMonth.setMonth(
-
-    nextMonth.getMonth() + 1
-
-  );
-
-  const [
-
-    active,
-
-    expiring
-
-  ] = await Promise.all([
-
-    supabase
-
-      .from("leases")
-
-      .select("*", {
-
-        count: "exact",
-
-        head: true
-
-      })
-
-      .eq("status", "Active"),
-
-    supabase
-
-      .from("leases")
-
-      .select("*", {
-
-        count: "exact",
-
-        head: true
-
-      })
-
-      .gte(
-
-        "end_date",
-
-        today.toISOString()
-
-      )
-
-      .lte(
-
-        "end_date",
-
-        nextMonth.toISOString()
-
-      )
-
-  ]);
-
-  return {
-
-    activeLeases: active.count ?? 0,
-
-    expiringLeases: expiring.count ?? 0
-
-  };
-
-}
-
-/* ============================================================
-   MAINTENANCE SUMMARY
-============================================================ */
-
-async function getMaintenanceSummary(): Promise<MaintenanceSummary> {
-
-  const { count } = await supabase
-
-    .from("maintenance_requests")
-
-    .select("*", {
-
-      count: "exact",
-
-      head: true
-
-    })
-
-    .in(
-
-      "status",
-
-      [
-
-        "Open",
-
-        "Pending",
-
-        "Assigned"
-
-      ]
+      insight => insight.message
 
     );
 
-  return {
+    /*
+    ------------------------------------------------------------
+    System Health
+    ------------------------------------------------------------
+    */
 
-    pendingMaintenance: count ?? 0
+    const systemHealth: string[] = [];
 
-  };
+    if (dashboard.overdue_invoices === 0)
 
-}
+      systemHealth.push(
 
-/* ============================================================
-   NOTIFICATION SUMMARY
-============================================================ */
+        "No overdue invoices."
 
-async function getNotificationSummary(): Promise<NotificationSummary> {
+      );
 
-  const { count } = await supabase
+    else
 
-    .from("notifications")
+      systemHealth.push(
 
-    .select("*", {
+        `${dashboard.overdue_invoices} overdue invoice(s).`
 
-      count: "exact",
+      );
 
-      head: true
+    if (dashboard.pending_maintenance === 0)
 
-    })
+      systemHealth.push(
 
-    .eq(
+        "No pending maintenance."
 
-      "status",
+      );
 
-      "Pending"
+    else
 
-    );
+      systemHealth.push(
 
-  return {
+        `${dashboard.pending_maintenance} maintenance request(s) pending.`
 
-    pendingNotifications: count ?? 0
+      );
 
-  };
+    if (dashboard.pending_notifications === 0)
 
-}
-/* ============================================================
-   BUILD AI SUMMARY
-============================================================ */
+      systemHealth.push(
 
-function buildSummary(
+        "Notification queue is clear."
 
-  property: PropertySummary,
+      );
 
-  finance: FinanceSummary,
+    else
 
-  lease: LeaseSummary,
+      systemHealth.push(
 
-  maintenance: MaintenanceSummary,
+        `${dashboard.pending_notifications} notification(s) waiting.`
 
-  notifications: NotificationSummary
+      );
 
-): string[] {
-
-  const summary: string[] = [];
-
-  summary.push(
-
-    `You manage ${property.totalProperties} properties with ${property.totalUnits} rental units.`
-
-  );
-
-  summary.push(
-
-    `${property.occupiedUnits} units are occupied while ${property.vacantUnits} are vacant (${property.occupancyRate}% occupancy).`
-
-  );
-
-  if (finance.invoicesDueToday > 0) {
-
-    summary.push(
-
-      `${finance.invoicesDueToday} invoice(s) are due today.`
-
-    );
-
-  }
-
-  if (finance.overdueInvoices > 0) {
-
-    summary.push(
-
-      `${finance.overdueInvoices} overdue invoice(s) require attention.`
-
-    );
-
-  }
-
-  summary.push(
-
-    `Outstanding rent is KES ${finance.outstandingRent.toLocaleString()}.`
-
-  );
-
-  summary.push(
-
-    `KES ${finance.collectedThisMonth.toLocaleString()} has been collected this month.`
-
-  );
-
-  if (lease.expiringLeases > 0) {
-
-    summary.push(
-
-      `${lease.expiringLeases} lease(s) expire within the next 30 days.`
-
-    );
-
-  }
-
-  if (maintenance.pendingMaintenance > 0) {
-
-    summary.push(
-
-      `${maintenance.pendingMaintenance} maintenance request(s) are pending.`
-
-    );
-
-  }
-
-  if (notifications.pendingNotifications > 0) {
-
-    summary.push(
-
-      `${notifications.pendingNotifications} notification(s) are waiting to be sent.`
-
-    );
-
-  }
-
-  if (
-
-    finance.overdueInvoices === 0 &&
-
-    maintenance.pendingMaintenance === 0 &&
-
-    notifications.pendingNotifications === 0
-
-  ) {
-
-    summary.push(
-
-      "Everything looks good today."
-
-    );
-
-  }
-
-  return summary;
-
-}
-
-/* ============================================================
-   SYSTEM HEALTH
-============================================================ */
-
-function buildSystemHealth(
-
-  notifications: NotificationSummary,
-
-  maintenance: MaintenanceSummary,
-
-  finance: FinanceSummary
-
-): string[] {
-
-  const health: string[] = [];
-
-  health.push(
-
-    "Billing automation is operational."
-
-  );
-
-  if (notifications.pendingNotifications > 0) {
-
-    health.push(
-
-      `${notifications.pendingNotifications} notification(s) are pending delivery.`
-
-    );
-
-  } else {
-
-    health.push(
-
-      "Notification queue is healthy."
-
-    );
-
-  }
-
-  if (maintenance.pendingMaintenance > 0) {
-
-    health.push(
-
-      `${maintenance.pendingMaintenance} maintenance request(s) are awaiting action.`
-
-    );
-
-  }
-
-  if (finance.overdueInvoices > 0) {
-
-    health.push(
-
-      `${finance.overdueInvoices} overdue invoice(s) remain unpaid.`
-
-    );
-
-  }
-
-  return health;
-
-}
-/* ============================================================
-   RUBY AI
-============================================================ */
-
-export async function generateRubySummary(): Promise<RubyAISummary> {
-
-  try {
-
-    const [
-
-      landlord,
-
-      property,
-
-      finance,
-
-      lease,
-
-      maintenance,
-
-      notifications
-
-    ] = await Promise.all([
-
-      getLandlordProfile(),
-
-      getPropertySummary(),
-
-      getFinanceSummary(),
-
-      getLeaseSummary(),
-
-      getMaintenanceSummary(),
-
-      getNotificationSummary()
-
-    ]);
+    /*
+    ------------------------------------------------------------
+    Return
+    ------------------------------------------------------------
+    */
 
     return {
 
-      greeting: getGreeting(),
+      greeting:
 
-      landlordName: landlord.landlordName,
+        greeting(),
 
-      generatedAt: new Date().toISOString(),
+      workspaceName:
 
-      totalProperties: property.totalProperties,
+        dashboard.workspace_name,
 
-      totalUnits: property.totalUnits,
+      generatedAt:
 
-      occupiedUnits: property.occupiedUnits,
+        new Date().toISOString(),
 
-      vacantUnits: property.vacantUnits,
+      healthScore,
 
-      occupancyRate: property.occupancyRate,
+      healthStatus,
 
-      activeLeases: lease.activeLeases,
+      dashboard,
 
-      outstandingRent: finance.outstandingRent,
+      priorityInsights,
 
-      collectedThisMonth: finance.collectedThisMonth,
+      summary,
 
-      invoicesDueToday: finance.invoicesDueToday,
-
-      overdueInvoices: finance.overdueInvoices,
-
-      pendingMaintenance: maintenance.pendingMaintenance,
-
-      pendingNotifications: notifications.pendingNotifications,
-
-      expiringLeases: lease.expiringLeases,
-
-      systemHealth: buildSystemHealth(
-
-        notifications,
-
-        maintenance,
-
-        finance
-
-      ),
-
-      summary: buildSummary(
-
-        property,
-
-        finance,
-
-        lease,
-
-        maintenance,
-
-        notifications
-
-      )
-
-    };
-
-  } catch (error) {
-
-    console.error(
-
-      "Ruby AI Error:",
-
-      error
-
-    );
-
-    return {
-
-      greeting: getGreeting(),
-
-      landlordName: "Landlord",
-
-      generatedAt: new Date().toISOString(),
-
-      totalProperties: 0,
-
-      totalUnits: 0,
-
-      occupiedUnits: 0,
-
-      vacantUnits: 0,
-
-      occupancyRate: 0,
-
-      activeLeases: 0,
-
-      outstandingRent: 0,
-
-      collectedThisMonth: 0,
-
-      invoicesDueToday: 0,
-
-      overdueInvoices: 0,
-
-      pendingMaintenance: 0,
-
-      pendingNotifications: 0,
-
-      expiringLeases: 0,
-
-      systemHealth: [
-
-        "Ruby AI could not retrieve dashboard information."
-
-      ],
-
-      summary: [
-
-        "An unexpected error occurred while preparing today's summary."
-
-      ]
+      systemHealth,
 
     };
 
