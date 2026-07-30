@@ -4,10 +4,10 @@ import { useEffect, useState } from "react";
 
 import {
   Brain,
-  Activity,
-  RefreshCw,
   Sparkles,
   ShieldCheck,
+  RefreshCw,
+  Activity,
   AlertTriangle,
 } from "lucide-react";
 
@@ -34,6 +34,9 @@ export default function RubyAICard() {
   const [analysis, setAnalysis] =
     useState<RubyAISummary | null>(null);
 
+  const [error, setError] =
+    useState<string | null>(null);
+
   useEffect(() => {
 
     loadAnalysis();
@@ -46,19 +49,25 @@ export default function RubyAICard() {
 
       setLoading(true);
 
+      setError(null);
+
       const workspace =
         await getCurrentWorkspace();
 
-      const data =
+      const result =
         await RubyAIService.generateSummary(
           workspace.id
         );
 
-      setAnalysis(data);
+      setAnalysis(result);
 
-    } catch (error) {
+    } catch (err) {
 
-      console.error(error);
+      console.error(err);
+
+      setError(
+        "Unable to generate Ruby AI analysis."
+      );
 
     } finally {
 
@@ -85,6 +94,59 @@ export default function RubyAICard() {
 
   }
 
+  if (error) {
+
+    return (
+
+      <Card className="border-red-200">
+
+        <div className="p-8">
+
+          <div className="flex items-center gap-3">
+
+            <AlertTriangle className="h-8 w-8 text-red-500" />
+
+            <div>
+
+              <h2 className="text-lg font-semibold">
+
+                Ruby AI
+
+              </h2>
+
+              <p className="text-sm text-gray-500">
+
+                {error}
+
+              </p>
+
+            </div>
+
+          </div>
+
+          <div className="mt-6">
+
+            <Button
+              variant="primary"
+              onClick={loadAnalysis}
+            >
+
+              <RefreshCw className="mr-2 h-4 w-4" />
+
+              Try Again
+
+            </Button>
+
+          </div>
+
+        </div>
+
+      </Card>
+
+    );
+
+  }
+
   if (!analysis) {
 
     return null;
@@ -94,32 +156,35 @@ export default function RubyAICard() {
   const scoreColor =
 
     analysis.healthScore >= 90
-      ? "text-green-600"
+
+      ? "text-green-500"
 
       : analysis.healthScore >= 75
-      ? "text-blue-600"
+
+      ? "text-blue-500"
 
       : analysis.healthScore >= 60
-      ? "text-amber-600"
 
-      : "text-red-600";
+      ? "text-yellow-500"
+
+      : "text-red-500";
     return (
 
-    <Card className="overflow-hidden border border-[#D4AF37]/20 bg-gradient-to-br from-black via-neutral-900 to-neutral-950 text-white">
+    <Card className="overflow-hidden border border-[#D4AF37]/20 bg-gradient-to-br from-neutral-950 via-black to-neutral-900 text-white">
 
       <div className="p-8">
 
         {/* Header */}
 
-        <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
+        <div className="flex flex-col gap-8 lg:flex-row lg:items-start lg:justify-between">
 
           <div>
 
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-4">
 
-              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#D4AF37]/20">
+              <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-[#D4AF37]/20">
 
-                <Brain className="h-8 w-8 text-[#D4AF37]" />
+                <Brain className="h-9 w-9 text-[#D4AF37]" />
 
               </div>
 
@@ -149,13 +214,13 @@ export default function RubyAICard() {
 
             <div className="mt-8">
 
-              <p className="text-3xl font-semibold">
+              <h1 className="text-3xl font-bold">
 
                 {analysis.greeting}
 
-              </p>
+              </h1>
 
-              <p className="mt-2 text-lg text-[#D4AF37]">
+              <p className="mt-2 text-xl font-medium text-[#D4AF37]">
 
                 {analysis.workspaceName}
 
@@ -165,72 +230,112 @@ export default function RubyAICard() {
 
           </div>
 
-          <div className="rounded-2xl border border-[#D4AF37]/20 bg-white/5 p-6 text-center backdrop-blur">
+          <div className="min-w-[220px] rounded-2xl border border-[#D4AF37]/20 bg-white/5 p-6 backdrop-blur">
 
             <div className="flex items-center justify-center">
 
-              <ShieldCheck className="h-8 w-8 text-[#D4AF37]" />
+              <ShieldCheck className="h-9 w-9 text-[#D4AF37]" />
 
             </div>
 
-            <p className="mt-4 text-sm uppercase tracking-wider text-neutral-400">
+            <p className="mt-4 text-center text-xs uppercase tracking-[0.2em] text-neutral-400">
 
               Portfolio Health
 
             </p>
 
-            <h1 className={`mt-2 text-5xl font-bold ${scoreColor}`}>
+            <div className="mt-3 text-center">
 
-              {analysis.healthScore}
+              <h2 className={`text-6xl font-bold ${scoreColor}`}>
 
-            </h1>
+                {analysis.healthScore}
 
-            <p className="mt-2 text-base text-[#D4AF37]">
+              </h2>
 
-              {analysis.healthStatus}
+              <p className="mt-2 text-lg font-semibold text-[#D4AF37]">
 
-            </p>
+                {analysis.healthStatus}
+
+              </p>
+
+            </div>
 
           </div>
 
         </div>
 
-        {/* Divider */}
+        {/* Dashboard Snapshot */}
 
-        <div className="my-8 h-px bg-white/10" />
+        <div className="mt-10 grid gap-4 md:grid-cols-4">
 
-        {/* Refresh */}
+          <div className="rounded-xl bg-white/5 p-5">
 
-        <div className="flex justify-end">
+            <p className="text-xs uppercase tracking-widest text-neutral-400">
 
-          <Button
+              Properties
 
-            variant="secondary"
+            </p>
 
-            onClick={loadAnalysis}
+            <h3 className="mt-2 text-3xl font-bold">
 
-          >
+              {analysis.dashboard.total_properties}
 
-            <RefreshCw className="mr-2 h-4 w-4" />
+            </h3>
 
-            Refresh Analysis
+          </div>
 
-          </Button>
+          <div className="rounded-xl bg-white/5 p-5">
+
+            <p className="text-xs uppercase tracking-widest text-neutral-400">
+
+              Units
+
+            </p>
+
+            <h3 className="mt-2 text-3xl font-bold">
+
+              {analysis.dashboard.total_units}
+
+            </h3>
+
+          </div>
+
+          <div className="rounded-xl bg-white/5 p-5">
+
+            <p className="text-xs uppercase tracking-widest text-neutral-400">
+
+              Occupancy
+
+            </p>
+
+            <h3 className="mt-2 text-3xl font-bold">
+
+              {analysis.dashboard.occupancy_rate}%
+
+            </h3>
+
+          </div>
+
+          <div className="rounded-xl bg-white/5 p-5">
+
+            <p className="text-xs uppercase tracking-widest text-neutral-400">
+
+              Collection
+
+            </p>
+
+            <h3 className="mt-2 text-3xl font-bold">
+
+              {analysis.dashboard.collection_rate}%
+
+            </h3>
+
+          </div>
 
         </div>
 
-      </div>
-
-    </Card>
-
-  );
-
-}
-        {/* Divider */}
-
-        <div className="my-8 h-px bg-white/10" />
-
-        {/* Executive Insights */}
+        <div className="my-10 h-px bg-white/10" />
+                {/* Executive Intelligence */}
 
         <div className="grid gap-8 lg:grid-cols-2">
 
@@ -238,13 +343,13 @@ export default function RubyAICard() {
 
           <div>
 
-            <div className="mb-4 flex items-center gap-2">
+            <div className="mb-5 flex items-center gap-2">
 
               <AlertTriangle className="h-5 w-5 text-[#D4AF37]" />
 
               <h3 className="text-lg font-semibold">
 
-                Priority Insights
+                Executive Insights
 
               </h3>
 
@@ -252,22 +357,32 @@ export default function RubyAICard() {
 
             <div className="space-y-3">
 
-              {analysis.summary.map((item, index) => (
+              {analysis.priorityInsights.map((insight, index) => (
 
                 <div
                   key={index}
-                  className="rounded-xl border border-white/10 bg-white/5 p-4"
+                  className="rounded-xl border border-white/10 bg-white/5 p-4 transition hover:border-[#D4AF37]/40"
                 >
 
                   <div className="flex items-start gap-3">
 
-                    <div className="mt-1 h-2 w-2 rounded-full bg-[#D4AF37]" />
+                    <div className="mt-2 h-2 w-2 rounded-full bg-[#D4AF37]" />
 
-                    <p className="text-sm leading-6 text-neutral-200">
+                    <div>
 
-                      {item}
+                      <p className="text-sm font-semibold text-[#D4AF37]">
 
-                    </p>
+                        {insight.category}
+
+                      </p>
+
+                      <p className="mt-1 text-sm leading-6 text-neutral-200">
+
+                        {insight.message}
+
+                      </p>
+
+                    </div>
 
                   </div>
 
@@ -283,7 +398,7 @@ export default function RubyAICard() {
 
           <div>
 
-            <div className="mb-4 flex items-center gap-2">
+            <div className="mb-5 flex items-center gap-2">
 
               <Activity className="h-5 w-5 text-green-400" />
 
@@ -304,15 +419,15 @@ export default function RubyAICard() {
                   className="rounded-xl border border-white/10 bg-white/5 p-4"
                 >
 
-                  <div className="flex items-start gap-3">
+                  <div className="flex items-center gap-3">
 
-                    <ShieldCheck className="mt-0.5 h-4 w-4 text-green-400" />
+                    <ShieldCheck className="h-4 w-4 text-green-400" />
 
-                    <p className="text-sm leading-6 text-neutral-200">
+                    <span className="text-sm text-neutral-200">
 
                       {item}
 
-                    </p>
+                    </span>
 
                   </div>
 
@@ -328,21 +443,29 @@ export default function RubyAICard() {
 
         {/* Footer */}
 
-        <div className="mt-8 flex flex-col gap-4 border-t border-white/10 pt-6 md:flex-row md:items-center md:justify-between">
+        <div className="mt-10 flex flex-col gap-4 border-t border-white/10 pt-6 md:flex-row md:items-center md:justify-between">
 
-          <p className="text-xs text-neutral-400">
+          <div>
 
-            Last analysis:{" "}
+            <p className="text-xs uppercase tracking-widest text-neutral-500">
 
-            {new Date(
-              analysis.generatedAt
-            ).toLocaleString()}
+              Last Analysis
 
-          </p>
+            </p>
+
+            <p className="mt-1 text-sm text-neutral-300">
+
+              {new Date(
+                analysis.generatedAt
+              ).toLocaleString()}
+
+            </p>
+
+          </div>
 
           <Button
 
-            variant="secondary"
+            variant="primary"
 
             onClick={loadAnalysis}
 
