@@ -31,7 +31,7 @@ import {
 } from "@/services/workspaces/getCurrentWorkspace";
 
 /* ============================================================
-   COMPONENT
+   RUBY AI CARD
 ============================================================ */
 
 export default function RubyAICard() {
@@ -79,7 +79,7 @@ export default function RubyAICard() {
       console.error(err);
 
       setError(
-        "Ruby AI could not analyse your portfolio."
+        "Unable to analyse your portfolio."
       );
 
     } finally {
@@ -93,18 +93,18 @@ export default function RubyAICard() {
   const scoreColor = useMemo(() => {
 
     if (!analysis)
-      return "text-white";
+      return "text-gray-900";
 
     if (analysis.healthScore >= 90)
-      return "text-green-400";
+      return "text-green-600";
 
     if (analysis.healthScore >= 75)
-      return "text-blue-400";
+      return "text-blue-600";
 
     if (analysis.healthScore >= 60)
-      return "text-amber-400";
+      return "text-amber-600";
 
-    return "text-red-400";
+    return "text-red-600";
 
   }, [analysis]);
 
@@ -125,7 +125,7 @@ export default function RubyAICard() {
       analysis.dashboard.overdue_invoices > 0
     ) {
 
-      return `${analysis.dashboard.overdue_invoices} overdue invoice(s) require follow-up.`;
+      return `${analysis.dashboard.overdue_invoices} overdue invoice(s) require immediate follow-up.`;
 
     }
 
@@ -133,7 +133,7 @@ export default function RubyAICard() {
       analysis.dashboard.pending_maintenance > 0
     ) {
 
-      return `${analysis.dashboard.pending_maintenance} maintenance request(s) need attention.`;
+      return `${analysis.dashboard.pending_maintenance} maintenance request(s) require attention.`;
 
     }
 
@@ -141,7 +141,7 @@ export default function RubyAICard() {
       analysis.dashboard.pending_notifications > 0
     ) {
 
-      return `${analysis.dashboard.pending_notifications} notification(s) are waiting to be sent.`;
+      return `${analysis.dashboard.pending_notifications} notification(s) are waiting to be processed.`;
 
     }
 
@@ -158,13 +158,7 @@ export default function RubyAICard() {
       analysis.dashboard.total_properties === 1
         ? "y"
         : "ies"
-    } with ${
-      analysis.dashboard.total_units
-    } unit(s). Occupancy stands at ${
-      analysis.dashboard.occupancy_rate
-    }% while rent collection is ${
-      analysis.dashboard.collection_rate
-    }%.`;
+    } containing ${analysis.dashboard.total_units} unit(s). Occupancy stands at ${analysis.dashboard.occupancy_rate}% while rent collection is ${analysis.dashboard.collection_rate}%.`;
 
   }, [analysis]);
 
@@ -221,7 +215,7 @@ export default function RubyAICard() {
               onClick={loadAnalysis}
             >
 
-              Try Again
+              Retry Analysis
 
             </Button>
 
@@ -239,20 +233,19 @@ export default function RubyAICard() {
     return null;
 
   return (
+        <Card className="overflow-hidden rounded-3xl border border-[#D4AF37]/25 bg-white shadow-xl">
 
-    <Card className="overflow-hidden border border-[#D4AF37]/20 bg-gradient-to-br from-[#161616] via-[#1C1C1C] to-[#101010] text-white">
+      <div className="border-b border-[#D4AF37]/15 bg-gradient-to-r from-white via-[#FFFDF7] to-white px-8 py-8">
 
-      <div className="p-8">
+        <div className="flex flex-col gap-8 xl:flex-row xl:items-start xl:justify-between">
 
-        {/* Header */}
+          {/* Left */}
 
-        <div className="flex flex-col gap-8 lg:flex-row lg:items-start lg:justify-between">
-
-          <div>
+          <div className="flex-1">
 
             <div className="flex items-center gap-4">
 
-              <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-[#D4AF37]/15">
+              <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-[#D4AF37]/10">
 
                 <Brain className="h-8 w-8 text-[#D4AF37]" />
 
@@ -260,9 +253,9 @@ export default function RubyAICard() {
 
               <div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-3">
 
-                  <h2 className="text-2xl font-bold">
+                  <h2 className="text-2xl font-bold text-gray-900">
 
                     Ruby AI
 
@@ -270,15 +263,15 @@ export default function RubyAICard() {
 
                   <Sparkles className="h-5 w-5 text-[#D4AF37]" />
 
-                  <span className="rounded-full bg-green-500/20 px-3 py-1 text-xs font-semibold text-green-300">
+                  <span className="rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-700">
 
-                    LIVE
+                    ● LIVE
 
                   </span>
 
                 </div>
 
-                <p className="mt-2 text-sm text-neutral-400">
+                <p className="mt-1 text-sm text-gray-500">
 
                   Your Property Intelligence Assistant
 
@@ -290,7 +283,7 @@ export default function RubyAICard() {
 
             <div className="mt-8">
 
-              <h1 className="text-3xl font-bold">
+              <h1 className="text-3xl font-bold text-gray-900">
 
                 {analysis.greeting},
 
@@ -299,7 +292,7 @@ export default function RubyAICard() {
 
               </h1>
 
-              <p className="mt-3 max-w-2xl text-neutral-300">
+              <p className="mt-3 max-w-2xl text-gray-600">
 
                 Here's what's happening across your portfolio today.
 
@@ -308,43 +301,40 @@ export default function RubyAICard() {
             </div>
 
           </div>
-                   {/* Health Panel */}
 
-          <div className="w-full lg:w-[320px]">
+          {/* Health */}
 
-            <div className="rounded-3xl border border-[#D4AF37]/20 bg-white/5 p-6 backdrop-blur">
+          <div className="w-full xl:w-[280px]">
 
-              <div className="flex items-center justify-center">
+            <div className="rounded-2xl border border-[#D4AF37]/20 bg-gray-50 p-6">
+
+              <div className="flex justify-center">
 
                 <ShieldCheck className="h-9 w-9 text-[#D4AF37]" />
 
               </div>
 
-              <p className="mt-4 text-center text-xs uppercase tracking-[0.25em] text-neutral-400">
+              <p className="mt-4 text-center text-xs font-semibold uppercase tracking-[0.25em] text-gray-500">
 
                 Portfolio Health
 
               </p>
 
-              <div className="mt-5 text-center">
+              <h2 className={`mt-4 text-center text-6xl font-bold ${scoreColor}`}>
 
-                <h2 className={`text-6xl font-bold ${scoreColor}`}>
+                {analysis.healthScore}
 
-                  {analysis.healthScore}
+              </h2>
 
-                </h2>
+              <p className="mt-2 text-center font-semibold text-[#D4AF37]">
 
-                <p className="mt-2 text-lg font-semibold text-[#D4AF37]">
+                {analysis.healthStatus}
 
-                  {analysis.healthStatus}
-
-                </p>
-
-              </div>
+              </p>
 
               <div className="mt-6">
 
-                <div className="h-2 overflow-hidden rounded-full bg-neutral-800">
+                <div className="h-2 overflow-hidden rounded-full bg-gray-200">
 
                   <div
                     className="h-full rounded-full bg-[#D4AF37] transition-all duration-700"
@@ -363,23 +353,27 @@ export default function RubyAICard() {
 
         </div>
 
+      </div>
+
+      <div className="p-8">
+
         {/* Today's Focus */}
 
-        <div className="mt-10 rounded-2xl border border-[#D4AF37]/20 bg-[#D4AF37]/10 p-6">
+        <div className="rounded-2xl border border-amber-200 bg-amber-50 p-6">
 
           <div className="flex items-center gap-3">
 
-            <TrendingUp className="h-6 w-6 text-[#D4AF37]" />
+            <TrendingUp className="h-6 w-6 text-amber-600" />
 
             <div>
 
-              <h3 className="text-lg font-semibold">
+              <h3 className="text-lg font-semibold text-gray-900">
 
                 Today's Focus
 
               </h3>
 
-              <p className="text-sm text-neutral-400">
+              <p className="text-sm text-gray-500">
 
                 Highest priority requiring your attention.
 
@@ -389,7 +383,7 @@ export default function RubyAICard() {
 
           </div>
 
-          <p className="mt-5 text-lg leading-8 text-neutral-100">
+          <p className="mt-5 text-lg leading-8 text-gray-800">
 
             {todayFocus}
 
@@ -399,13 +393,13 @@ export default function RubyAICard() {
 
         {/* Executive Brief */}
 
-        <div className="mt-8 rounded-2xl border border-white/10 bg-white/5 p-6">
+        <div className="mt-8 rounded-2xl border border-gray-200 bg-gray-50 p-6">
 
           <div className="flex items-center gap-3">
 
             <Brain className="h-5 w-5 text-[#D4AF37]" />
 
-            <h3 className="text-lg font-semibold">
+            <h3 className="text-lg font-semibold text-gray-900">
 
               Executive Brief
 
@@ -413,7 +407,7 @@ export default function RubyAICard() {
 
           </div>
 
-          <p className="mt-5 leading-8 text-neutral-300">
+          <p className="mt-5 leading-8 text-gray-700">
 
             {executiveBrief}
 
@@ -423,23 +417,19 @@ export default function RubyAICard() {
 
         {/* Dashboard Snapshot */}
 
-        <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <div className="mt-8 grid gap-5 md:grid-cols-2 xl:grid-cols-4">
 
-          <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
+          <div className="rounded-2xl border border-gray-200 bg-gray-50 p-5">
 
-            <div className="flex items-center justify-between">
+            <Building2 className="h-7 w-7 text-[#D4AF37]" />
 
-              <Building2 className="h-6 w-6 text-[#D4AF37]" />
+            <p className="mt-4 text-sm text-gray-500">
 
-              <span className="text-xs uppercase tracking-widest text-neutral-500">
+              Properties
 
-                Properties
+            </p>
 
-              </span>
-
-            </div>
-
-            <h3 className="mt-5 text-3xl font-bold">
+            <h3 className="mt-2 text-3xl font-bold text-gray-900">
 
               {analysis.dashboard.total_properties}
 
@@ -447,21 +437,17 @@ export default function RubyAICard() {
 
           </div>
 
-          <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
+          <div className="rounded-2xl border border-gray-200 bg-gray-50 p-5">
 
-            <div className="flex items-center justify-between">
+            <Home className="h-7 w-7 text-blue-600" />
 
-              <Home className="h-6 w-6 text-sky-400" />
+            <p className="mt-4 text-sm text-gray-500">
 
-              <span className="text-xs uppercase tracking-widest text-neutral-500">
+              Units
 
-                Units
+            </p>
 
-              </span>
-
-            </div>
-
-            <h3 className="mt-5 text-3xl font-bold">
+            <h3 className="mt-2 text-3xl font-bold text-gray-900">
 
               {analysis.dashboard.total_units}
 
@@ -469,45 +455,35 @@ export default function RubyAICard() {
 
           </div>
 
-          <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
+          <div className="rounded-2xl border border-gray-200 bg-gray-50 p-5">
 
-            <div className="flex items-center justify-between">
+            <DollarSign className="h-7 w-7 text-green-600" />
 
-              <DollarSign className="h-6 w-6 text-green-400" />
+            <p className="mt-4 text-sm text-gray-500">
 
-              <span className="text-xs uppercase tracking-widest text-neutral-500">
+              Outstanding Rent
 
-                Outstanding
+            </p>
 
-              </span>
+            <h3 className="mt-2 text-2xl font-bold text-gray-900">
 
-            </div>
-
-            <h3 className="mt-5 text-2xl font-bold">
-
-              KES{" "}
-
-              {analysis.dashboard.outstanding_rent.toLocaleString()}
+              KES {analysis.dashboard.outstanding_rent.toLocaleString()}
 
             </h3>
 
           </div>
 
-          <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
+          <div className="rounded-2xl border border-gray-200 bg-gray-50 p-5">
 
-            <div className="flex items-center justify-between">
+            <Bell className="h-7 w-7 text-amber-600" />
 
-              <Bell className="h-6 w-6 text-amber-400" />
+            <p className="mt-4 text-sm text-gray-500">
 
-              <span className="text-xs uppercase tracking-widest text-neutral-500">
+              Notifications
 
-                Notifications
+            </p>
 
-              </span>
-
-            </div>
-
-            <h3 className="mt-5 text-3xl font-bold">
+            <h3 className="mt-2 text-3xl font-bold text-gray-900">
 
               {analysis.dashboard.pending_notifications}
 
@@ -517,10 +493,10 @@ export default function RubyAICard() {
 
         </div>
 
-        <div className="my-10 h-px bg-white/10" /> 
+        <div className="my-10 border-b border-gray-200" />
                 {/* Executive Insights & System Health */}
 
-        <div className="grid gap-8 lg:grid-cols-2">
+        <div className="grid gap-8 xl:grid-cols-2">
 
           {/* Executive Insights */}
 
@@ -530,7 +506,7 @@ export default function RubyAICard() {
 
               <AlertTriangle className="h-5 w-5 text-[#D4AF37]" />
 
-              <h3 className="text-lg font-semibold">
+              <h3 className="text-lg font-semibold text-gray-900">
 
                 Executive Insights
 
@@ -542,52 +518,62 @@ export default function RubyAICard() {
 
               {analysis.priorityInsights.map((insight, index) => {
 
-                const color =
-
+                const cardClass =
                   insight.priority >= 90
-                    ? "border-red-500/20 bg-red-500/10"
+                    ? "border-red-200 bg-red-50"
 
                     : insight.priority >= 70
-                    ? "border-amber-500/20 bg-amber-500/10"
+                    ? "border-amber-200 bg-amber-50"
 
-                    : "border-green-500/20 bg-green-500/10";
+                    : "border-green-200 bg-green-50";
+
+                const badgeClass =
+                  insight.priority >= 90
+                    ? "bg-red-100 text-red-700"
+
+                    : insight.priority >= 70
+                    ? "bg-amber-100 text-amber-700"
+
+                    : "bg-green-100 text-green-700";
 
                 return (
 
                   <div
                     key={index}
-                    className={`rounded-2xl border p-5 transition-all ${color}`}
+                    className={`rounded-2xl border p-5 ${cardClass}`}
                   >
 
-                    <div className="flex items-start gap-3">
+                    <div className="flex items-start justify-between gap-4">
 
-                      <div className="mt-2 h-2 w-2 rounded-full bg-[#D4AF37]" />
+                      <div className="flex gap-3">
 
-                      <div className="flex-1">
+                        <div className="mt-2 h-2 w-2 rounded-full bg-[#D4AF37]" />
 
-                        <div className="flex items-center justify-between">
+                        <div>
 
-                          <span className="text-xs font-semibold uppercase tracking-widest text-[#D4AF37]">
+                          <p className="text-xs font-semibold uppercase tracking-widest text-[#D4AF37]">
 
                             {insight.category}
 
-                          </span>
+                          </p>
 
-                          <span className="rounded-full bg-black/20 px-2 py-1 text-[11px]">
+                          <p className="mt-2 leading-7 text-gray-800">
 
-                            P{insight.priority}
+                            {insight.message}
 
-                          </span>
+                          </p>
 
                         </div>
 
-                        <p className="mt-2 leading-7 text-neutral-100">
-
-                          {insight.message}
-
-                        </p>
-
                       </div>
+
+                      <span
+                        className={`rounded-full px-3 py-1 text-xs font-semibold ${badgeClass}`}
+                      >
+
+                        P{insight.priority}
+
+                      </span>
 
                     </div>
 
@@ -607,9 +593,9 @@ export default function RubyAICard() {
 
             <div className="mb-5 flex items-center gap-3">
 
-              <Activity className="h-5 w-5 text-green-400" />
+              <Activity className="h-5 w-5 text-green-600" />
 
-              <h3 className="text-lg font-semibold">
+              <h3 className="text-lg font-semibold text-gray-900">
 
                 System Health
 
@@ -623,14 +609,14 @@ export default function RubyAICard() {
 
                 <div
                   key={index}
-                  className="rounded-2xl border border-white/10 bg-white/5 p-5"
+                  className="rounded-2xl border border-gray-200 bg-gray-50 p-5"
                 >
 
                   <div className="flex items-center gap-3">
 
-                    <ShieldCheck className="h-5 w-5 text-green-400" />
+                    <ShieldCheck className="h-5 w-5 text-green-600" />
 
-                    <p className="leading-7 text-neutral-200">
+                    <p className="leading-7 text-gray-700">
 
                       {item}
 
@@ -650,11 +636,11 @@ export default function RubyAICard() {
 
         {/* Footer */}
 
-        <div className="mt-10 border-t border-white/10 pt-6">
+        <div className="mt-10 border-t border-gray-200 pt-6">
 
           <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
 
-            <div className="flex items-center gap-3 text-sm text-neutral-400">
+            <div className="flex items-center gap-3 text-sm text-gray-500">
 
               <Clock3 className="h-4 w-4" />
 
@@ -671,11 +657,8 @@ export default function RubyAICard() {
             </div>
 
             <Button
-
               variant="primary"
-
               onClick={loadAnalysis}
-
             >
 
               <RefreshCw className="mr-2 h-4 w-4" />
