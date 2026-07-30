@@ -208,39 +208,6 @@ export default function DashboardPage() {
 
         </Section>
 
-        {/* Executive Summary */}
-                <Section
-          title="Executive Summary"
-          description="Overview of your rental portfolio."
-        >
-
-          <div className="grid gap-6 lg:grid-cols-2">
-
-            <Card>
-
-              <h3 className="text-xl font-semibold text-gray-900">
-                Portfolio Summary
-              </h3>
-
-              <div className="mt-6 space-y-5">
-
-                <div className="flex items-center justify-between border-b border-gray-100 pb-3">
-
-                  <span className="text-gray-500">
-                    Properties
-                  </span>
-
-                  <strong className="text-lg">
-                    {stats.totalProperties}
-                  </strong>
-
-                </div>
-
-                <div className="flex items-center justify-between border-b border-gray-100 pb-3">
-
-                  <span className="text-gray-500">
-                    Units
-                  </span>
 
 
         {/* Quick Actions */}
