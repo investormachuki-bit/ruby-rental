@@ -54,22 +54,17 @@ export async function createInvoiceItem(
     } = await supabase
       .from("invoice_items")
       .insert({
-        invoice_id:
-          input.invoice_id,
+        invoice_id: input.invoice_id,
 
-        workspace_id:
-          profile.workspace_id,
+        workspace_id: profile.workspace_id,
 
-        item_type:
-          input.item_type,
+        item_type: input.item_type,
 
-        description:
-          input.description,
+        description: input.description,
 
         quantity,
 
-        unit_price:
-          input.unit_price,
+        unit_price: input.unit_price,
 
         amount,
       })
@@ -82,135 +77,37 @@ export async function createInvoiceItem(
         error
       );
 
-      alert(
-        JSON.stringify(
-          error,
-          null,
-          2
-        )
-      );
-
       throw error;
     }
 
-    const {
-      data: items,
-      error: totalError,
-    } = await supabase
-      .from("invoice_items")
-      .select("amount")
-      .eq(
-        "invoice_id",
-        input.invoice_id
-      );
+    /*
+    --------------------------------------------------------
+    No manual invoice total calculation is required.
 
-    if (totalError) {
-      console.error(
-        "LOAD INVOICE ITEMS ERROR",
-        totalError
-      );
+    The database trigger:
 
-      alert(
-        JSON.stringify(
-          totalError,
-          null,
-          2
-        )
-      );
+        invoice_items_trigger()
 
-      throw totalError;
-    }
+    automatically calls:
 
-    const total =
-      (items ?? []).reduce(
-        (sum, item) =>
-          sum + Number(item.amount),
-        0
-      );
+        recalculate_invoice_totals()
 
-    const {
-      data: invoice,
-      error: invoiceError,
-    } = await supabase
-      .from("invoices")
-      .select("amount_paid")
-      .eq(
-        "id",
-        input.invoice_id
-      )
-      .single();
+    after every INSERT / UPDATE / DELETE.
 
-    if (invoiceError) {
-      console.error(
-        "LOAD INVOICE ERROR",
-        invoiceError
-      );
-
-      alert(
-        JSON.stringify(
-          invoiceError,
-          null,
-          2
-        )
-      );
-
-      throw invoiceError;
-    }
-
-    const amountPaid =
-      Number(
-        invoice.amount_paid ?? 0
-      );
-
-    const balance =
-      total - amountPaid;
-
-    const {
-      error: updateError,
-    } = await supabase
-      .from("invoices")
-      .update({
-        amount: total,
-        balance,
-      })
-      .eq(
-        "id",
-        input.invoice_id
-      );
-
-    if (updateError) {
-      console.error(
-        "UPDATE INVOICE TOTAL ERROR",
-        updateError
-      );
-
-      alert(
-        JSON.stringify(
-          updateError,
-          null,
-          2
-        )
-      );
-
-      throw updateError;
-    }
+    PostgreSQL is therefore the single source of truth.
+    --------------------------------------------------------
+    */
 
     return data;
 
-  } catch (error: any) {
+  } catch (error) {
+
     console.error(
       "createInvoiceItem() failed",
       error
     );
 
-    alert(
-      JSON.stringify(
-        error,
-        null,
-        2
-      )
-    );
-
     throw error;
+
   }
 }
