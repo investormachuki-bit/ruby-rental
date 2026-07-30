@@ -1,4 +1,5 @@
 "use client";
+import Card from "@/components/ui/Card";
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -723,10 +724,10 @@ export default function InvoiceDetailsPage({
                 invoice.tenant.full_name,
 
               phone:
-                invoice.tenant.phone,
+                invoice.tenant.phone ?? undefined,
 
               email:
-                invoice.tenant.email,
+                invoice.tenant.email ?? undefined,
 
             }}
 
@@ -736,7 +737,7 @@ export default function InvoiceDetailsPage({
                 invoice.property.name,
 
               address:
-                invoice.property.address,
+                invoice.property.address ?? undefined,
 
             }}
 

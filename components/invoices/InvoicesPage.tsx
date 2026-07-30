@@ -13,7 +13,7 @@ import InvoiceFilters from "@/components/invoices/InvoiceFilters";
 import InvoiceSummaryCards from "@/components/invoices/InvoiceSummaryCards";
 import InvoicesList from "@/components/invoices/InvoicesList";
 import { getInvoices } from "@/services/invoices/getInvoices";
-import { generateMonthlyInvoices } from "@/services/billing/generateMonthlyInvoices";
+import { runMonthlyBilling } from "@/services/billing/runMonthlyBilling";
 import MonthlyBillingModal from "@/components/invoices/MonthlyBillingModal";
 import type { InvoiceRowData } from "@/components/invoices/InvoiceRow";
 import type { MonthlyBillingSummary } from "@/services/billing/types";
@@ -214,8 +214,7 @@ export default function InvoicesPage() {
           setBillingLoading(true);
           setBillingProgress(["Preparing billing preview..."]);
           try {
-            const targetDate = new Date(`${billingMonth}-01T12:00:00`);
-            const summary = await generateMonthlyInvoices(targetDate);
+            const summary = await runMonthlyBilling();
             setBillingSummary(summary);
             setBillingProgress([`Previewed ${summary.generated} invoices for ${summary.billing_period}.`]);
           } catch (error: any) {
@@ -228,8 +227,7 @@ export default function InvoicesPage() {
           setBillingLoading(true);
           setBillingProgress(["Starting monthly billing generation..."]);
           try {
-            const targetDate = new Date(`${billingMonth}-01T12:00:00`);
-            const summary = await generateMonthlyInvoices(targetDate);
+            const summary = await runMonthlyBilling();
             setBillingSummary(summary);
             setBillingProgress([
               `Generated ${summary.generated} invoices.`,
