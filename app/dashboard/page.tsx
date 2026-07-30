@@ -27,6 +27,7 @@ import EmptyState from "@/components/ui/EmptyState";
 import Button from "@/components/ui/Button";
 
 import { getDashboardStats } from "@/services/dashboard/getDashboardStats";
+import RubyAICard from "@/components/dashboard/RubyAICard";
 
 type DashboardStats = {
   totalProperties: number;
@@ -113,6 +114,8 @@ export default function DashboardPage() {
             Refresh
           </Button>
         </PageHeader>
+
+        <RubyAICard />
 
         <Section>
 
