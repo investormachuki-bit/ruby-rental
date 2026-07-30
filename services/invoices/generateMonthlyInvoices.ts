@@ -1,171 +1,39 @@
 import { supabase } from "@/lib/supabase";
-import { getProfile } from "@/services/auth/getProfile";
-import { createInvoice } from "@/services/invoices/createInvoice";
-import { createInvoiceItem } from "@/services/invoiceItems/createInvoiceItem";
 
-export async function generateMonthlyInvoices() {
+type GenerateMonthlyInvoicesResult = {
+  generated: number;
+};
 
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
+export async function generateMonthlyInvoices(): Promise<GenerateMonthlyInvoicesResult> {
+  try {
+    const {
+      data,
+      error,
+    } = await supabase.rpc(
+      "generate_monthly_invoices"
+    );
 
-  if (!session) {
-    throw new Error("You are not logged in.");
-  }
-
-  const profile =
-    await getProfile(session.user.id);
-
-  if (!profile) {
-    throw new Error("Profile not found.");
-  }
-
-  const today = new Date();
-
-  const monthName =
-    today.toLocaleString("default", {
-      month: "long",
-    });
-
-  const billingPeriod =
-    `${monthName} ${today.getFullYear()}`;
-
-  const invoiceDate =
-    today
-      .toISOString()
-      .split("T")[0];
-
-  const { data: leases, error } =
-    await supabase
-      .from("leases")
-      .select(`
-        *,
-        property:properties(id),
-        unit:units(id),
-        tenant:occupants(id)
-      `)
-      .eq(
-        "workspace_id",
-        profile.workspace_id
-      )
-      .eq(
-        "status",
-        "Active"
+    if (error) {
+      console.error(
+        "GENERATE MONTHLY INVOICES ERROR",
+        error
       );
 
-  if (error) {
-    throw error;
-  }
-
-  if (!leases?.length) {
+      throw error;
+    }
 
     return {
-      generated: 0,
+      generated: Number(data ?? 0),
     };
 
-  }
+  } catch (error) {
 
-  let generated = 0;
+    console.error(
+      "generateMonthlyInvoices() failed",
+      error
+    );
 
-  for (const lease of leases) {
-
-    const dueDay =
-      lease.billing_day ??
-      lease.rent_due_day ??
-      1;
-
-    // Skip until the configured billing day
-    if (
-      today.getDate() < dueDay
-    ) {
-      continue;
-    }
-
-    // Prevent duplicate monthly invoices
-    const { data: existing } =
-      await supabase
-        .from("invoices")
-        .select("id")
-        .eq(
-          "lease_id",
-          lease.id
-        )
-        .eq(
-          "invoice_type",
-          "Rent"
-        )
-        .eq(
-          "billing_period",
-          billingPeriod
-        )
-        .maybeSingle();
-
-    if (existing) {
-      continue;
-    }
-
-    // Create invoice header
-    const invoice =
-      await createInvoice({
-
-        lease_id:
-          lease.id,
-
-        property_id:
-          lease.property_id,
-
-        unit_id:
-          lease.unit_id,
-
-        tenant_id:
-          lease.occupant_id,
-
-        invoice_type:
-          "Rent",
-
-        billing_period:
-          billingPeriod,
-
-        invoice_date:
-          invoiceDate,
-
-        due_date:
-          invoiceDate,
-
-        notes:
-          `Automatic monthly rent invoice for ${billingPeriod}`,
-
-      });
-
-    // Add Rent line item
-    await createInvoiceItem({
-
-      invoice_id:
-        invoice.id,
-
-      item_type:
-        "Rent",
-
-      description:
-        `${billingPeriod} Rent`,
-
-      quantity: 1,
-
-      unit_price:
-        Number(
-          lease.rent_amount
-        ),
-
-    });
-
-    generated++;
+    throw error;
 
   }
-
-  return {
-
-    generated,
-
-  };
-
 }
