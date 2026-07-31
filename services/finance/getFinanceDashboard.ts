@@ -1,6 +1,6 @@
 import { getPaymentDashboard } from "@/services/payments/getPaymentDashboard";
 import { getInvoices } from "@/services/invoices/getInvoices";
-import { getAll } from "@/services/payments/getAll";
+import { getAllPayments } from "@/services/payments/getAll";
 
 export type FinanceDashboardData = {
   revenueThisMonth: number;
@@ -23,7 +23,7 @@ export async function getFinanceDashboard(): Promise<FinanceDashboardData> {
   ] = await Promise.all([
     getPaymentDashboard(),
     getInvoices(),
-    getAll(),
+    getAllPayments(),
   ]);
 
   const paymentSummary =
