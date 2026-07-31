@@ -25,6 +25,14 @@ const tabs = [
     href: "/dashboard/finance/reconciliation",
   },
   {
+    name: "Statements",
+    href: "/dashboard/finance/statements",
+  },
+  {
+    name: "Expenses",
+    href: "/dashboard/finance/expenses",
+  },
+  {
     name: "Reports",
     href: "/dashboard/finance/reports",
   },
