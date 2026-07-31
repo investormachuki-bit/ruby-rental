@@ -5,6 +5,7 @@ import {
   Users,
   FileText,
   CreditCard,
+  Wallet,
   Receipt,
   ReceiptText,
   Wrench,
