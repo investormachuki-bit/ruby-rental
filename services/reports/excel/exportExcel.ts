@@ -1,3 +1,5 @@
+import * as XLSX from "xlsx";
+
 export type ExcelReport = {
   fileName: string;
   rows: Record<string, any>[];
@@ -6,13 +8,24 @@ export type ExcelReport = {
 export async function exportExcel(
   report: ExcelReport
 ) {
-  console.log(
-    "Excel Export",
-    report
+
+  const workbook =
+    XLSX.utils.book_new();
+
+  const worksheet =
+    XLSX.utils.json_to_sheet(
+      report.rows
+    );
+
+  XLSX.utils.book_append_sheet(
+    workbook,
+    worksheet,
+    "Report"
   );
 
-  alert(
-    "Excel export engine coming next.\n\n" +
-    report.fileName
+  XLSX.writeFile(
+    workbook,
+    `${report.fileName.replace(/\s+/g, "_")}.xlsx`
   );
+
 }

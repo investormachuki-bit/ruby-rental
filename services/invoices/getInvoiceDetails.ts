@@ -60,14 +60,6 @@ export async function getInvoiceDetails(
       error
     );
 
-    alert(
-      JSON.stringify(
-        error,
-        null,
-        2
-      )
-    );
-
     throw error;
   }
 
