@@ -13,6 +13,8 @@ import InvoiceFilters from "@/components/invoices/InvoiceFilters";
 import InvoiceSummaryCards from "@/components/invoices/InvoiceSummaryCards";
 import InvoicesList from "@/components/invoices/InvoicesList";
 import { getInvoices } from "@/services/invoices/getInvoices";
+import { downloadInvoicePdf } from "@/services/invoices/pdf/downloadInvoicePdf";
+import { printInvoice } from "@/services/invoices/pdf/printInvoice";
 import { runMonthlyBilling } from "@/services/billing/runMonthlyBilling";
 import MonthlyBillingModal from "@/components/invoices/MonthlyBillingModal";
 import type { InvoiceRowData } from "@/components/invoices/InvoiceRow";
@@ -197,8 +199,8 @@ export default function InvoicesPage() {
               onPageChange={setPage}
               onView={(invoiceId) => router.push(`/invoices/${invoiceId}`)}
               onRecordPayment={(invoiceId) => router.push(`/invoices/${invoiceId}?action=payment`)}
-              onDownload={() => window.alert("PDF download is not available yet.")}
-              onPrint={() => window.print()}
+              onDownload={downloadInvoicePdf}
+              onPrint={printInvoice}
               onDuplicate={() => window.alert("Duplicate invoice is not available yet.")}
               onCancel={() => window.alert("Cancel invoice is not available yet.")}
             />
