@@ -118,6 +118,30 @@ export const FEATURE_REGISTRY: Feature[] = [
     core: true,
   },
 
+  /* ===========================
+       FINANCE MODULE ENTRY
+     =========================== */
+
+  {
+    moduleKey: "finance",
+    name: "Finance",
+    description: "Financial dashboard and accounting.",
+    route: "/dashboard/finance",
+    icon: BarChart3,
+    category: "Finance",
+    permission: "finance.view",
+    minimumPlan: "starter",
+    sidebar: true,
+    searchable: true,
+    aiEnabled: true,
+    core: true,
+  },
+
+  /* ===========================
+       FINANCE PAGES
+       Hidden from main sidebar
+     =========================== */
+
   {
     moduleKey: "recurringCharges",
     name: "Recurring Charges",
@@ -127,7 +151,7 @@ export const FEATURE_REGISTRY: Feature[] = [
     category: "Finance",
     permission: "recurringCharges.view",
     minimumPlan: "starter",
-    sidebar: true,
+    sidebar: false,
     searchable: true,
     aiEnabled: true,
     core: true,
@@ -142,7 +166,7 @@ export const FEATURE_REGISTRY: Feature[] = [
     category: "Finance",
     permission: "invoices.view",
     minimumPlan: "starter",
-    sidebar: true,
+    sidebar: false,
     searchable: true,
     aiEnabled: true,
     core: true,
@@ -157,7 +181,7 @@ export const FEATURE_REGISTRY: Feature[] = [
     category: "Finance",
     permission: "payments.view",
     minimumPlan: "starter",
-    sidebar: true,
+    sidebar: false,
     searchable: true,
     aiEnabled: true,
     core: true,
@@ -172,11 +196,15 @@ export const FEATURE_REGISTRY: Feature[] = [
     category: "Finance",
     permission: "expenses.view",
     minimumPlan: "professional",
-    sidebar: true,
+    sidebar: false,
     searchable: true,
     aiEnabled: true,
     core: false,
   },
+
+  /* ===========================
+       OPERATIONS
+     =========================== */
 
   {
     moduleKey: "maintenance",
@@ -207,6 +235,10 @@ export const FEATURE_REGISTRY: Feature[] = [
     aiEnabled: true,
     core: false,
   },
+
+  /* ===========================
+       ADMINISTRATION
+     =========================== */
 
   {
     moduleKey: "employees",
