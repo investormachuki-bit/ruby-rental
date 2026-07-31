@@ -1,13 +1,14 @@
 import { buildStatement } from "./buildStatement";
 
 export async function getTenantStatement(
-  tenantId: string
+  leaseId: string,
+  tenantName: string
 ) {
-  return buildStatement({
-    title: "Tenant Statement",
-    reference: tenantId,
-    openingBalance: 0,
-    closingBalance: 0,
-    transactions: [],
-  });
+
+  return buildStatement(
+    leaseId,
+    "Tenant Statement",
+    tenantName
+  );
+
 }

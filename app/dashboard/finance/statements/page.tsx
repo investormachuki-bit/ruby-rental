@@ -6,7 +6,7 @@ import PageHeader from "@/components/ui/PageHeader";
 import Section from "@/components/ui/Section";
 
 import FinanceNavigation from "@/components/finance/FinanceNavigation";
-import StatementsDashboard from "@/components/finance/StatementsDashboard";
+import StatementsWorkspace from "@/components/finance/statements/StatementsWorkspace";
 
 export default function StatementsPage() {
   return (
@@ -21,7 +21,7 @@ export default function StatementsPage() {
         <FinanceNavigation />
 
         <Section>
-          <StatementsDashboard />
+          <StatementsWorkspace />
         </Section>
 
       </PageContainer>
