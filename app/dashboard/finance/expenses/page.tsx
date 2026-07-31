@@ -6,22 +6,25 @@ import PageHeader from "@/components/ui/PageHeader";
 import Section from "@/components/ui/Section";
 
 import FinanceNavigation from "@/components/finance/FinanceNavigation";
-import ExpensesDashboard from "@/components/finance/ExpensesDashboard";
 
-export default function ExpensesPage() {
+import ExpensesContent from "@/components/expenses/content/ExpensesContent";
+
+export default function FinanceExpensesPage() {
   return (
     <AppShell>
       <PageContainer>
 
         <PageHeader
           title="Expenses"
-          description="Track operational expenses, suppliers and recurring costs."
+          description="Track operational expenses and business spending."
         />
 
         <FinanceNavigation />
 
         <Section>
-          <ExpensesDashboard />
+
+          <ExpensesContent />
+
         </Section>
 
       </PageContainer>
