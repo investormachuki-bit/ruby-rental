@@ -15,10 +15,7 @@ import InvoicesList from "@/components/invoices/InvoicesList";
 import { getInvoices } from "@/services/invoices/getInvoices";
 import { downloadInvoicePdf } from "@/services/invoices/pdf/downloadInvoicePdf";
 import { printInvoice } from "@/services/invoices/pdf/printInvoice";
-import { runMonthlyBilling } from "@/services/billing/runMonthlyBilling";
-import MonthlyBillingModal from "@/components/invoices/MonthlyBillingModal";
 import type { InvoiceRowData } from "@/components/invoices/InvoiceRow";
-import type { MonthlyBillingSummary } from "@/services/billing/types";
 
 type InvoiceSortField = "invoice_date" | "due_date" | "amount" | "balance";
 type InvoiceSortDirection = "asc" | "desc";
@@ -37,11 +34,6 @@ export default function InvoicesPage() {
     field: "due_date",
     direction: "asc",
   });
-  const [showBillingModal, setShowBillingModal] = useState(false);
-  const [billingMonth, setBillingMonth] = useState(() => new Date().toISOString().slice(0, 7));
-  const [billingLoading, setBillingLoading] = useState(false);
-  const [billingProgress, setBillingProgress] = useState<string[]>([]);
-  const [billingSummary, setBillingSummary] = useState<MonthlyBillingSummary | null>(null);
 
   async function loadInvoices() {
     try {
@@ -138,7 +130,7 @@ export default function InvoicesPage() {
 
         <PageHeader title="Invoices" description="Manage tenant billing, invoice generation, collections and statements.">
           <div className="flex gap-3">
-            <Button variant="secondary" onClick={() => setShowBillingModal(true)}>Generate Monthly</Button>
+            <Button variant="secondary" onClick={() => router.push("/dashboard/finance/billing")}>Monthly Billing</Button>
             <Button
   variant="primary"
   onClick={() =>
@@ -207,46 +199,6 @@ export default function InvoicesPage() {
           </div>
         </Section>
       </PageContainer>
-      <MonthlyBillingModal
-        open={showBillingModal}
-        onClose={() => setShowBillingModal(false)}
-        billingMonth={billingMonth}
-        onBillingMonthChange={setBillingMonth}
-        onPreview={async () => {
-          setBillingLoading(true);
-          setBillingProgress(["Preparing billing preview..."]);
-          try {
-            const summary = await runMonthlyBilling();
-            setBillingSummary(summary);
-            setBillingProgress([`Previewed ${summary.generated} invoices for ${summary.billing_period}.`]);
-          } catch (error: any) {
-            setBillingProgress([error?.message ?? "Unable to preview billing run."]);
-          } finally {
-            setBillingLoading(false);
-          }
-        }}
-        onGenerate={async () => {
-          setBillingLoading(true);
-          setBillingProgress(["Starting monthly billing generation..."]);
-          try {
-            const summary = await runMonthlyBilling();
-            setBillingSummary(summary);
-            setBillingProgress([
-              `Generated ${summary.generated} invoices.`,
-              `Skipped ${summary.skipped_units} units.`,
-              `Encountered ${summary.failed_units} failures.`,
-            ]);
-            await loadInvoices();
-          } catch (error: any) {
-            setBillingProgress([error?.message ?? "Monthly billing generation failed."]);
-          } finally {
-            setBillingLoading(false);
-          }
-        }}
-        loading={billingLoading}
-        progress={billingProgress}
-        summary={billingSummary}
-      />
     </AppShell>
   );
 }
