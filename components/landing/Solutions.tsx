@@ -46,7 +46,7 @@ const solutions = [
 
 export default function Solutions() {
   return (
-    <section className="bg-gray-50 py-28">
+    <section id="solutions" className="bg-gray-50 py-28">
 
       <div className="mx-auto max-w-7xl px-6">
 

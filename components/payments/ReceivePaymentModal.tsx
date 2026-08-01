@@ -7,7 +7,7 @@ import type { LeaseDetails } from "@/types/lease";
 import SectionCard from "@/components/common/SectionCard";
 import StickyActionBar from "@/components/common/StickyActionBar";
 
-import { createPayment } from "@/services/payments/createPayment";
+import { receivePayment } from "@/services/payments/paymentEngine";
 
 type Props = {
   lease: LeaseDetails;
@@ -82,7 +82,7 @@ export default function ReceivePaymentModal({
 
       setLoading(true);
 
-      await createPayment({
+      const result = await receivePayment({
 
         lease_id:
           lease.id,
@@ -311,23 +311,24 @@ export default function ReceivePaymentModal({
 
             <div className="grid gap-5 md:grid-cols-2">
 
-              <div>
+              {form.payment_method !== "Cash" && (
+  <div>
 
-                <label className="mb-2 block font-medium">
-                  M-Pesa / Bank Reference
-                </label>
+    <label className="mb-2 block font-medium">
+      Reference Number
+    </label>
 
-                <input
-                  type="text"
-                  name="reference_number"
-                  value={form.reference_number}
-                  onChange={handleChange}
-                  placeholder="e.g. SGK8D7H2L"
-                  className="w-full rounded-xl border bg-white p-3"
-                />
+    <input
+      type="text"
+      name="reference_number"
+      value={form.reference_number}
+      onChange={handleChange}
+      placeholder="Transaction Reference"
+      className="w-full rounded-xl border bg-white p-3"
+    />
 
-              </div>
-
+  </div>
+)}
               <div>
 
                 <label className="mb-2 block font-medium">

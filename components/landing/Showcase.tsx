@@ -42,7 +42,7 @@ const modules = [
 
 export default function Showcase() {
   return (
-    <section className="bg-gray-50 py-28">
+    <section id="showcase" className="bg-gray-50 py-28">
 
       <div className="mx-auto max-w-7xl px-6">
 

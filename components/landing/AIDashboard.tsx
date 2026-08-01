@@ -42,8 +42,7 @@ const insights = [
 
 export default function AIDashboard() {
   return (
-    <section
-      id="why"
+    <section id="ai"
       className="bg-gradient-to-br from-black via-gray-950 to-black py-28"
     >
       <div className="mx-auto max-w-7xl px-6">
