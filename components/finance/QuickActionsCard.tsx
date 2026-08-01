@@ -26,37 +26,37 @@ const actions: Action[] = [
     title: "Receive Payment",
     description: "Record tenant payments",
     icon: CreditCard,
-    href: "/dashboard/payments",
+    href: "/dashboard/finance/payments",
   },
   {
     title: "Invoices",
     description: "View and manage invoices",
     icon: ReceiptText,
-    href: "/dashboard/invoices",
+    href: "/dashboard/finance/invoices",
   },
   {
     title: "Monthly Billing",
     description: "Generate recurring invoices",
     icon: Repeat,
-    href: "/dashboard/recurring-charges",
+    href: "/dashboard/finance/billing",
   },
   {
     title: "Reconciliation",
     description: "Match invoices and payments",
     icon: Scale,
-    href: "/dashboard/reconciliation",
+    href: "/dashboard/finance/reconciliation",
   },
   {
     title: "Financial Reports",
     description: "Income and collection reports",
     icon: BarChart3,
-    href: "/dashboard/reports",
+    href: "/dashboard/finance/reports",
   },
   {
     title: "Statements",
     description: "Tenant account statements",
     icon: FileText,
-    href: "/dashboard/statements",
+    href: "/dashboard/finance/statements",
   },
 ];
 

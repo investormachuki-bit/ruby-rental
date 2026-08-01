@@ -76,7 +76,6 @@ export default function FinanceDashboardPage() {
 
           <RevenueChartCard
             loading={loading}
-            data={[]}
           />
 
         </Section>

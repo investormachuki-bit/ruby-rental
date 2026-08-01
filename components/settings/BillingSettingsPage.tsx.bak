@@ -1,0 +1,127 @@
+"use client";
+
+import { useState } from "react";
+
+export default function BillingSettingsPage() {
+  const [form, setForm] = useState({
+    invoicePrefix: "INV",
+    nextInvoiceNumber: 1001,
+    dueDays: 7,
+    gracePeriod: 3,
+    receiptPrefix: "RCT",
+    nextReceiptNumber: 5001,
+  });
+
+  function update(key: keyof typeof form, value: string | number) {
+    setForm((prev) => ({
+      ...prev,
+      [key]: value,
+    }));
+  }
+
+  return (
+    <div className="mx-auto max-w-6xl space-y-8 p-8">
+
+      <div>
+        <h1 className="text-3xl font-bold">
+          Billing & Finance Settings
+        </h1>
+
+        <p className="mt-2 text-gray-500">
+          Configure invoice and receipt defaults.
+        </p>
+      </div>
+
+      <div className="grid gap-8 lg:grid-cols-2">
+
+        <div className="rounded-2xl border bg-white p-6 shadow-sm">
+
+          <h2 className="mb-6 text-xl font-semibold">
+            Invoice Settings
+          </h2>
+
+          <div className="space-y-4">
+
+            <input
+              className="w-full rounded-xl border p-3"
+              placeholder="Invoice Prefix"
+              value={form.invoicePrefix}
+              onChange={(e) => update("invoicePrefix", e.target.value)}
+            />
+
+            <input
+              type="number"
+              className="w-full rounded-xl border p-3"
+              placeholder="Next Invoice Number"
+              value={form.nextInvoiceNumber}
+              onChange={(e) =>
+                update("nextInvoiceNumber", Number(e.target.value))
+              }
+            />
+
+            <input
+              type="number"
+              className="w-full rounded-xl border p-3"
+              placeholder="Due Days"
+              value={form.dueDays}
+              onChange={(e) =>
+                update("dueDays", Number(e.target.value))
+              }
+            />
+
+            <input
+              type="number"
+              className="w-full rounded-xl border p-3"
+              placeholder="Grace Period"
+              value={form.gracePeriod}
+              onChange={(e) =>
+                update("gracePeriod", Number(e.target.value))
+              }
+            />
+
+          </div>
+
+        </div>
+
+        <div className="rounded-2xl border bg-white p-6 shadow-sm">
+
+          <h2 className="mb-6 text-xl font-semibold">
+            Receipt Settings
+          </h2>
+
+          <div className="space-y-4">
+
+            <input
+              className="w-full rounded-xl border p-3"
+              placeholder="Receipt Prefix"
+              value={form.receiptPrefix}
+              onChange={(e) => update("receiptPrefix", e.target.value)}
+            />
+
+            <input
+              type="number"
+              className="w-full rounded-xl border p-3"
+              placeholder="Next Receipt Number"
+              value={form.nextReceiptNumber}
+              onChange={(e) =>
+                update("nextReceiptNumber", Number(e.target.value))
+              }
+            />
+
+          </div>
+
+        </div>
+
+      </div>
+
+      <div className="flex justify-end">
+
+        <button className="rounded-xl bg-[#D4AF37] px-8 py-3 font-semibold text-black">
+          Save Billing Settings
+        </button>
+
+      </div>
+
+    </div>
+  );
+}
