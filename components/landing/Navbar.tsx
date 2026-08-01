@@ -1,68 +1,64 @@
-"use client";
-
-import Link from "next/link";
+import { WHATSAPP_DEMO_URL } from "@/constants/links";
 
 export default function Navbar() {
   return (
-    <header className="sticky top-0 z-50 border-b border-gray-200 bg-white/90 backdrop-blur">
-      <div className="mx-auto flex h-20 max-w-7xl max-w-screen-2xl items-center justify-between px-6">
+    <header className="sticky top-0 z-50 border-b border-white/10 bg-black/80 backdrop-blur">
 
-        <Link
+      <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-6">
+
+        <a
           href="/"
           className="flex items-center gap-3"
         >
-          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-black text-lg font-bold text-[#D4AF37]">
+          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#D4AF37] text-xl font-bold text-black">
             R
           </div>
 
           <div>
-            <h1 className="text-xl font-bold tracking-tight text-black">
+            <h1 className="text-lg font-bold text-white">
               Ruby Rental
             </h1>
 
-            <p className="text-xs text-gray-500">
-              Built for landlords who want clarity, not complexity.
+            <p className="text-xs text-gray-400">
+              Rental Management Platform
             </p>
           </div>
-        </Link>
+        </a>
 
-        <nav className="hidden items-center gap-8 lg:flex">
+        <nav className="hidden items-center gap-8 text-sm font-medium text-gray-300 lg:flex">
 
-          <a
-            href="#features"
-            className="text-sm font-medium text-gray-700 transition hover:text-[#D4AF37]"
-          >
+          <a href="#features" className="hover:text-[#D4AF37]">
             Features
           </a>
 
-          <a
-            href="#pricing"
-            className="text-sm font-medium text-gray-700 transition hover:text-[#D4AF37]"
-          >
+          <a href="#pricing" className="hover:text-[#D4AF37]">
             Pricing
           </a>
 
-          <a
-            href="#why"
-            className="text-sm font-medium text-gray-700 transition hover:text-[#D4AF37]"
-          >
-            Why Ruby Rental
+          <a href="#faq" className="hover:text-[#D4AF37]">
+            FAQ
           </a>
 
           <a
-            href="#contact"
-            className="text-sm font-medium text-gray-700 transition hover:text-[#D4AF37]"
+            href="/login"
+            className="hover:text-[#D4AF37]"
           >
-            Contact
+            Login
           </a>
 
         </nav>
 
-        <button className="rounded-xl bg-[#D4AF37] px-6 py-3 font-semibold text-black shadow transition duration-300 hover:scale-105 hover:shadow-xl">
+        <a
+          href={WHATSAPP_DEMO_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="rounded-xl bg-[#D4AF37] px-6 py-3 font-semibold text-black transition hover:scale-105"
+        >
           Book a Demo
-        </button>
+        </a>
 
       </div>
+
     </header>
   );
 }

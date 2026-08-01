@@ -1,4 +1,5 @@
 import { Check } from "lucide-react";
+import { WHATSAPP_DEMO_URL } from "@/constants/links";
 
 const plans = [
   {
@@ -107,13 +108,16 @@ export default function Pricing() {
 
                 ))}
 
+
               </div>
-
-              <button className="mt-10 w-full rounded-2xl bg-[#D4AF37] px-6 py-4 font-bold text-black transition hover:scale-105">
-
+              <a
+                href={WHATSAPP_DEMO_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-10 block w-full rounded-2xl bg-[#D4AF37] px-6 py-4 text-center font-bold text-black transition hover:scale-105"
+              >
                 Book a Demo
-
-              </button>
+              </a>
 
             </div>
 
