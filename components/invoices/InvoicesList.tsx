@@ -58,32 +58,54 @@ export default function InvoicesList({
   return (
     <div className="space-y-4">
       <div className="overflow-x-auto rounded-2xl border border-gray-200 bg-white shadow-sm">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
+        <table className="min-w-[980px] w-full divide-y divide-gray-200">
+          <thead className="bg-gray-50/80">
             <tr>
-              <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-600">Invoice No.</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-600">Tenant</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-600">Property</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-600">Unit</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-600">Billing Period</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-600">
-                <button type="button" className="font-semibold uppercase" onClick={() => onSortChange?.("due_date")}>
+              <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
+                Invoice
+              </th>
+
+              <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
+                Tenant / Unit
+              </th>
+
+              <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
+                <button
+                  type="button"
+                  onClick={() => onSortChange?.("due_date")}
+                  className="font-semibold uppercase"
+                >
                   Due Date
                 </button>
               </th>
-              <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-gray-600">
-                <button type="button" className="font-semibold uppercase" onClick={() => onSortChange?.("amount")}>
-                  Total
+
+              <th className="px-5 py-3.5 text-right text-xs font-semibold uppercase tracking-wide text-gray-500">
+                <button
+                  type="button"
+                  onClick={() => onSortChange?.("amount")}
+                  className="font-semibold uppercase"
+                >
+                  Amount
                 </button>
               </th>
-              <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-gray-600">Paid</th>
-              <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-gray-600">
-                <button type="button" className="font-semibold uppercase" onClick={() => onSortChange?.("balance")}>
+
+              <th className="px-5 py-3.5 text-right text-xs font-semibold uppercase tracking-wide text-gray-500">
+                <button
+                  type="button"
+                  onClick={() => onSortChange?.("balance")}
+                  className="font-semibold uppercase"
+                >
                   Balance
                 </button>
               </th>
-              <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wide text-gray-600">Status</th>
-              <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wide text-gray-600">Actions</th>
+
+              <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
+                Status
+              </th>
+
+              <th className="px-5 py-3.5 text-right text-xs font-semibold uppercase tracking-wide text-gray-500">
+                Actions
+              </th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100 bg-white">
