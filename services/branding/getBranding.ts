@@ -5,6 +5,7 @@ export type WorkspaceBranding = {
   companyName: string;
   tradingName: string;
   logo: string | null;
+  invoiceLogo: string | null;
 
   primaryColor: string;
   secondaryColor: string;
@@ -12,14 +13,27 @@ export type WorkspaceBranding = {
 
   email: string;
   phone: string;
+  alternatePhone: string;
+  whatsapp: string;
   website: string;
 
   address: string;
+  physicalAddress: string;
+  postalAddress: string;
+  city: string;
+  county: string;
+  country: string;
   taxPin: string;
 
   currency: string;
+  currencySymbol: string;
 
   slogan: string;
+  invoiceFooter: string;
+  footerText: string;
+
+  enableWhiteLabel: boolean;
+  removeRubyBranding: boolean;
 };
 
 export async function getBranding(): Promise<WorkspaceBranding> {
@@ -58,40 +72,43 @@ export async function getBranding(): Promise<WorkspaceBranding> {
   if (error || !data) {
 
     return {
-
       companyName: "Ruby Rental",
-
       tradingName: "Ruby Rental",
-
       logo: null,
+      invoiceLogo: null,
 
       primaryColor: "#111827",
-
       secondaryColor: "#D4AF37",
-
       accentColor: "#F8FAFC",
 
       email: "info@rubyrental.app",
-
       phone: "",
-
-      website: "www.rubyrental.app",
+      alternatePhone: "",
+      whatsapp: "",
+      website: "",
 
       address: "",
-
+      physicalAddress: "",
+      postalAddress: "",
+      city: "",
+      county: "",
+      country: "Kenya",
       taxPin: "",
 
       currency: "KES",
+      currencySymbol: "KSh",
 
-      slogan:
-        "Professional Property Management",
+      slogan: "Professional Property Management",
+      invoiceFooter: "",
+      footerText: "",
 
+      enableWhiteLabel: false,
+      removeRubyBranding: false,
     };
 
   }
 
   return {
-
     companyName:
       data.company_name ??
       "Ruby Rental",
@@ -103,6 +120,11 @@ export async function getBranding(): Promise<WorkspaceBranding> {
 
     logo:
       data.logo_url ?? null,
+
+    invoiceLogo:
+      data.invoice_logo_url ??
+      data.logo_url ??
+      null,
 
     primaryColor:
       data.primary_color ??
@@ -122,11 +144,34 @@ export async function getBranding(): Promise<WorkspaceBranding> {
     phone:
       data.phone ?? "",
 
+    alternatePhone:
+      data.alternate_phone ?? "",
+
+    whatsapp:
+      data.whatsapp ?? "",
+
     website:
       data.website ?? "",
 
     address:
-      data.address ?? "",
+      data.physical_address ??
+      data.address ??
+      "",
+
+    physicalAddress:
+      data.physical_address ?? "",
+
+    postalAddress:
+      data.postal_address ?? "",
+
+    city:
+      data.city ?? "",
+
+    county:
+      data.county ?? "",
+
+    country:
+      data.country ?? "Kenya",
 
     taxPin:
       data.tax_pin ?? "",
@@ -134,10 +179,25 @@ export async function getBranding(): Promise<WorkspaceBranding> {
     currency:
       data.currency ?? "KES",
 
-    slogan:
-      data.slogan ??
-      "",
+    currencySymbol:
+      data.currency_symbol ??
+      data.currency ??
+      "KSh",
 
+    slogan:
+      data.slogan ?? "",
+
+    invoiceFooter:
+      data.invoice_footer ?? "",
+
+    footerText:
+      data.footer_text ?? "",
+
+    enableWhiteLabel:
+      Boolean(data.enable_white_label),
+
+    removeRubyBranding:
+      Boolean(data.remove_ruby_branding),
   };
 
 }
