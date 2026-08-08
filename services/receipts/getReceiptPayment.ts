@@ -36,21 +36,7 @@ export async function getReceiptPayment(
 
   const { data, error } = await supabase
     .from("payments")
-    .select([
-      "id",
-      "workspace_id",
-      "lease_id",
-      "property_id",
-      "unit_id",
-      "tenant_id",
-      "receipt_number",
-      "payment_date",
-      "payment_type",
-      "payment_method",
-      "amount",
-      "reference_number",
-      "notes"
-    ].join(","))
+    .select("id, workspace_id, lease_id, property_id, unit_id, tenant_id, receipt_number, payment_date, payment_type, payment_method, amount, reference_number, notes")
     .eq("id", paymentId)
     .eq("workspace_id", profile.workspace_id)
     .single();

@@ -5,11 +5,7 @@ import { buildReceiptPdf } from "./buildReceiptPdf";
 
 export async function downloadReceiptPdf(receiptId: string) {
   const receipt = await getReceipt(receiptId);
-
-  const payment = await getReceiptPayment(
-    receipt.payment_id
-  );
-
+  const payment = await getReceiptPayment(receipt.payment_id);
   const parties = await getReceiptParties(
     payment.tenant_id,
     payment.property_id,
@@ -22,7 +18,5 @@ export async function downloadReceiptPdf(receiptId: string) {
     ...parties,
   });
 
-  pdf.save(
-    `${receipt.receipt_number || "receipt"}.pdf`
-  );
+  pdf.save(`${receipt.receipt_number || "receipt"}.pdf`);
 }
