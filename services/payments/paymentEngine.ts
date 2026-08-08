@@ -1,4 +1,5 @@
 import { createPayment } from "./createPayment";
+import type { CreatePaymentInput } from "./createPayment";
 import { reconcilePayment } from "./reconcilePayment";
 
 import { createReceipt } from "@/services/receipts/createReceipt";
