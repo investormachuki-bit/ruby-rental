@@ -108,7 +108,7 @@ export const FEATURE_REGISTRY: Feature[] = [
     moduleKey: "leases",
     name: "Leases",
     description: "Manage lease agreements.",
-    route: "/dashboard/leases",
+    route: "/leases",
     icon: FileText,
     category: "Core",
     permission: "leases.view",
