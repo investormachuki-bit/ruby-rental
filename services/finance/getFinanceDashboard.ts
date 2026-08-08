@@ -13,6 +13,10 @@ export type FinanceDashboardData = {
 
   recentPayments: any[];
   outstandingInvoices: any[];
+  revenueTrend: {
+    month: string;
+    revenue: number;
+  }[];
 };
 
 export async function getFinanceDashboard(): Promise<FinanceDashboardData> {
@@ -73,6 +77,69 @@ export async function getFinanceDashboard(): Promise<FinanceDashboardData> {
         )
       : 0;
 
+  /*
+  ------------------------------------------------------------
+  Revenue Trend
+  Build the last 12 months from actual payments.
+  Reversed payments have already been excluded by getAllPayments.
+  ------------------------------------------------------------
+  */
+
+  const now = new Date();
+
+  const revenueMap = new Map<string, number>();
+
+  for (let i = 11; i >= 0; i--) {
+    const date = new Date(
+      now.getFullYear(),
+      now.getMonth() - i,
+      1
+    );
+
+    const key = `${date.getFullYear()}-${String(
+      date.getMonth() + 1
+    ).padStart(2, "0")}`;
+
+    revenueMap.set(key, 0);
+  }
+
+  for (const payment of payments) {
+    if (!payment.payment_date) continue;
+
+    const date = new Date(payment.payment_date);
+
+    const key = `${date.getFullYear()}-${String(
+      date.getMonth() + 1
+    ).padStart(2, "0")}`;
+
+    if (revenueMap.has(key)) {
+      revenueMap.set(
+        key,
+        (revenueMap.get(key) ?? 0) +
+          Number(payment.amount ?? 0)
+      );
+    }
+  }
+
+  const revenueTrend = Array.from(
+    revenueMap.entries()
+  ).map(([key, revenue]) => {
+    const [year, month] = key.split("-");
+
+    const date = new Date(
+      Number(year),
+      Number(month) - 1,
+      1
+    );
+
+    return {
+      month: date.toLocaleDateString("en-US", {
+        month: "short",
+      }),
+      revenue,
+    };
+  });
+
   return {
     revenueThisMonth:
       Number(
@@ -102,5 +169,7 @@ export async function getFinanceDashboard(): Promise<FinanceDashboardData> {
 
     outstandingInvoices:
       outstandingInvoices.slice(0, 10),
+
+    revenueTrend,
   };
 }

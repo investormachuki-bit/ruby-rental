@@ -76,6 +76,7 @@ export default function FinanceDashboardPage() {
 
           <RevenueChartCard
             loading={loading}
+            data={dashboard?.revenueTrend ?? []}
           />
 
         </Section>
