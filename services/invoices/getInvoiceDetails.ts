@@ -17,8 +17,7 @@ export async function getInvoiceDetails(
       ),
       unit:units(
         id,
-        unit_number,
-        floor
+        unit_number
       ),
       tenant:tenants(
         id,
@@ -104,10 +103,7 @@ export async function getInvoiceDetails(
     unit_number:
       unit.unit_number ?? "",
 
-    unit_floor:
-      unit.floor ?? "",
-
-    lease_number:
+        lease_number:
       lease.lease_number ?? "",
 
     lease_start:

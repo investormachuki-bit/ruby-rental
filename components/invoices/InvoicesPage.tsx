@@ -15,6 +15,7 @@ import InvoicesList from "@/components/invoices/InvoicesList";
 import { getInvoices } from "@/services/invoices/getInvoices";
 import { downloadInvoicePdf } from "@/services/invoices/pdf/downloadInvoicePdf";
 import { printInvoice } from "@/services/invoices/pdf/printInvoice";
+import { cancelInvoice } from "@/services/invoices/cancelInvoice";
 import type { InvoiceRowData } from "@/components/invoices/InvoiceRow";
 
 type InvoiceSortField = "invoice_date" | "due_date" | "amount" | "balance";
@@ -55,7 +56,85 @@ export default function InvoicesPage() {
     setPage(1);
   }, [search, status, property, tenant, billingPeriod]);
 
-  const filteredInvoices = useMemo(() => {
+  
+async function handleCancelInvoice(invoiceId: string) {
+  const invoice = invoices.find(
+    (item) => item.id === invoiceId
+  );
+
+  if (!invoice) {
+    window.alert("Invoice not found.");
+    return;
+  }
+
+  const normalizedStatus =
+    String(invoice.status ?? "").trim().toLowerCase();
+
+  if (normalizedStatus === "paid") {
+    window.alert(
+      "A paid invoice cannot be cancelled. Reverse the payment first."
+    );
+    return;
+  }
+
+  if (normalizedStatus === "cancelled") {
+    window.alert("This invoice is already cancelled.");
+    return;
+  }
+
+  if (Number(invoice.amount_paid ?? 0) > 0) {
+    window.alert(
+      "This invoice has payments allocated to it. Reverse or remove the payment allocation before cancelling the invoice."
+    );
+    return;
+  }
+
+  const confirmed = window.confirm(
+    `Cancel invoice ${invoice.invoice_number}?\n\nThe invoice will remain in the system for audit purposes.`
+  );
+
+  if (!confirmed) return;
+
+  const reason = window.prompt(
+    "Enter the reason for cancelling this invoice:"
+  );
+
+  if (!reason?.trim()) {
+    window.alert(
+      "Cancellation cancelled. A reason is required."
+    );
+    return;
+  }
+
+  try {
+    setLoading(true);
+
+    await cancelInvoice(
+      invoiceId,
+      reason
+    );
+
+    window.alert(
+      `Invoice ${invoice.invoice_number} has been cancelled successfully.`
+    );
+
+    await loadInvoices();
+  } catch (error: any) {
+    console.error(
+      "CANCEL INVOICE ERROR",
+      error
+    );
+
+    window.alert(
+      error?.message ??
+        "Failed to cancel invoice."
+    );
+  } finally {
+    setLoading(false);
+  }
+}
+
+const filteredInvoices = useMemo(() => {
     const keyword = search.toLowerCase();
 
     return invoices.filter((invoice) => {
@@ -114,14 +193,31 @@ export default function InvoicesPage() {
   const properties = useMemo(() => [...new Set(invoices.map((invoice) => invoice.property_name).filter(Boolean))], [invoices]);
   const tenants = useMemo(() => [...new Set(invoices.map((invoice) => invoice.tenant_name).filter(Boolean))], [invoices]);
 
-  const totalInvoices = sortedInvoices.length;
-  const totalAmount = sortedInvoices.reduce((sum, invoice) => sum + invoice.amount, 0);
-  const paid = sortedInvoices.filter((invoice) => invoice.status === "Paid").length;
-  const outstanding = sortedInvoices.reduce((sum, invoice) => sum + invoice.balance, 0);
-  const overdue = sortedInvoices.filter((invoice) => invoice.status === "Overdue").length;
-  const draft = sortedInvoices.filter((invoice) => invoice.status === "Draft").length;
-  const sent = sortedInvoices.filter((invoice) => invoice.status === "Sent").length;
-  const partiallyPaid = sortedInvoices.filter((invoice) => invoice.status === "Partially Paid").length;
+  const totalAmount = sortedInvoices.reduce(
+    (sum, invoice) => sum + Number(invoice.amount ?? 0),
+    0
+  );
+
+  const paidAmount = sortedInvoices.reduce(
+    (sum, invoice) => sum + Number(invoice.amount_paid ?? 0),
+    0
+  );
+
+  const outstanding = sortedInvoices.reduce(
+    (sum, invoice) => sum + Number(invoice.balance ?? 0),
+    0
+  );
+
+  const overdueInvoices = sortedInvoices.filter(
+    (invoice) => invoice.status === "Overdue"
+  );
+
+  const overdue = overdueInvoices.length;
+
+  const overdueAmount = overdueInvoices.reduce(
+    (sum, invoice) => sum + Number(invoice.balance ?? 0),
+    0
+  );
 
   return (
     <AppShell>
@@ -144,14 +240,11 @@ export default function InvoicesPage() {
 
         <Section>
           <InvoiceSummaryCards
-            totalInvoices={totalInvoices}
             totalAmount={totalAmount}
-            paid={paid}
+            paidAmount={paidAmount}
             outstanding={outstanding}
             overdue={overdue}
-            draft={draft}
-            sent={sent}
-            partiallyPaid={partiallyPaid}
+            overdueAmount={overdueAmount}
           />
         </Section>
 
@@ -194,7 +287,7 @@ export default function InvoicesPage() {
               onDownload={downloadInvoicePdf}
               onPrint={printInvoice}
               onDuplicate={() => window.alert("Duplicate invoice is not available yet.")}
-              onCancel={() => window.alert("Cancel invoice is not available yet.")}
+              onCancel={handleCancelInvoice}
             />
           </div>
         </Section>

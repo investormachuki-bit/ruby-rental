@@ -32,7 +32,12 @@ export default function InvoiceActions({
   onCancel,
 }: Props) {
   const router = useRouter();
-  const isLocked = status === "Paid" || status === "Cancelled";
+  const normalizedStatus =
+  String(status ?? "").trim().toLowerCase();
+
+const isLocked =
+  normalizedStatus === "paid" ||
+  normalizedStatus === "cancelled";
 
   const handleView = () => {
     if (onView) {
@@ -100,10 +105,18 @@ export default function InvoiceActions({
       </button>
 
       <button
-        onClick={() => onCancel?.(invoiceId)}
+        onClick={() => {
+      if (!isLocked) {
+        onCancel?.(invoiceId);
+      }
+    }}
         disabled={isLocked}
         className="rounded-lg p-2 text-red-600 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-40"
-        title="Cancel Invoice"
+        title={
+      isLocked
+        ? `Cannot cancel a ${status ?? "locked"} invoice`
+        : "Cancel Invoice"
+    }
         type="button"
       >
         <XCircle className="h-4 w-4" />

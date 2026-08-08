@@ -44,8 +44,8 @@ import { getBranding }
 import { downloadInvoicePdf }
   from "@/services/invoices/pdf/downloadInvoicePdf";
 
-import { printInvoice }
-  from "@/services/invoices/pdf/printInvoice";
+import { printInvoice } from "@/services/invoices/pdf/printInvoice";
+import { cancelInvoice } from "@/services/invoices/cancelInvoice";
 
 type InvoiceItem = {
   id: string;
@@ -441,14 +441,66 @@ export default function InvoiceDetailsPage({
 
   }
 
-  function handleCancelInvoice() {
+  async function handleCancelInvoice() {
+    if (!invoice?.id) return;
 
-    window.alert(
+    if (
+      invoice.status === "Paid" ||
+      Number(invoice.amount_paid ?? 0) > 0
+    ) {
+      window.alert(
+        "This invoice has payments allocated to it. Reverse or remove the payment allocation before cancelling the invoice."
+      );
 
-      "Invoice cancellation workflow will be connected next."
+      return;
+    }
 
+    const confirmed = window.confirm(
+      `Cancel invoice ${invoice.invoice_number}?\n\nThis will mark the invoice as Cancelled. The invoice will remain in the system for audit purposes.`
     );
 
+    if (!confirmed) return;
+
+    const reason = window.prompt(
+      "Enter the reason for cancelling this invoice:"
+    );
+
+    if (!reason?.trim()) {
+      window.alert(
+        "Cancellation cancelled. A reason is required."
+      );
+
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      await cancelInvoice(
+        invoice.id,
+        reason
+      );
+
+      window.alert(
+        `Invoice ${invoice.invoice_number} has been cancelled successfully.`
+      );
+
+      await loadInvoice();
+
+    } catch (error: any) {
+      console.error(
+        "CANCEL INVOICE ERROR",
+        error
+      );
+
+      window.alert(
+        error?.message ??
+          "Failed to cancel invoice."
+      );
+
+    } finally {
+      setLoading(false);
+    }
   }
 
   const totalItems = useMemo(() => {
