@@ -39,11 +39,21 @@ export async function buildReceiptPdf(data: any) {
     ? payment.allocations
     : [];
 
-  /*
-   * ------------------------------------------------------------
-   * HEADER
-   * ------------------------------------------------------------
-   */
+  const amountReceived = Number(
+    data.amount ?? payment.amount ?? 0
+  );
+
+  const allocatedAmount = Number(
+    payment.allocated_amount ?? 0
+  );
+
+  const unallocatedAmount = Number(
+    payment.unallocated_amount ?? 0
+  );
+
+  // =========================
+  // HEADER
+  // =========================
 
   pdf.setTextColor(primaryColor);
   pdf.setFont("helvetica", "bold");
@@ -100,20 +110,15 @@ export async function buildReceiptPdf(data: any) {
     32
   );
 
-  /*
-   * ------------------------------------------------------------
-   * RECEIVED FROM
-   * ------------------------------------------------------------
-   */
+  // =========================
+  // RECEIVED FROM
+  // =========================
 
   pdf.setFont("helvetica", "bold");
   pdf.setFontSize(11);
   pdf.setTextColor(0);
 
-  pdf.text("RECEIVED FROM", 20, 52);
-
-  pdf.setFont("helvetica", "normal");
-  pdf.setFontSize(9);
+  pdf.text("RECEIVED FROM", 20, 49);
 
   const tenantName =
     safeText(tenant.full_name) ||
@@ -122,39 +127,31 @@ export async function buildReceiptPdf(data: any) {
     )}`.trim() ||
     "Tenant";
 
-  let partyY = 59;
+  const partyLines = [
+    tenantName,
+    tenant.phone,
+    tenant.email,
+    property.name,
+    safeText(unit.unit_number)
+      ? `Unit ${safeText(unit.unit_number)}`
+      : "",
+  ]
+    .map(safeText)
+    .filter(Boolean);
 
-  pdf.text(tenantName, 20, partyY);
-  partyY += 5;
+  pdf.setFont("helvetica", "normal");
+  pdf.setFontSize(9);
 
-  if (safeText(tenant.phone)) {
-    pdf.text(safeText(tenant.phone), 20, partyY);
-    partyY += 5;
+  let partyY = 56;
+
+  for (const line of partyLines) {
+    pdf.text(line, 20, partyY);
+    partyY += 4.5;
   }
 
-  if (safeText(tenant.email)) {
-    pdf.text(safeText(tenant.email), 20, partyY);
-    partyY += 5;
-  }
-
-  if (safeText(property.name)) {
-    pdf.text(safeText(property.name), 20, partyY);
-    partyY += 5;
-  }
-
-  if (safeText(unit.unit_number)) {
-    pdf.text(
-      `Unit ${safeText(unit.unit_number)}`,
-      20,
-      partyY
-    );
-  }
-
-  /*
-   * ------------------------------------------------------------
-   * PAYMENT DETAILS
-   * ------------------------------------------------------------
-   */
+  // =========================
+  // PAYMENT DETAILS
+  // =========================
 
   const rows: string[][] = [];
 
@@ -179,47 +176,40 @@ export async function buildReceiptPdf(data: any) {
     ]);
   }
 
-  rows.push([
-    "Amount Received",
-    money(data.amount, currency),
-  ]);
-
   autoTable(pdf, {
-    startY: 82,
+    startY: Math.max(78, partyY + 4),
     head: [["Description", "Details"]],
     body: rows,
     theme: "grid",
     styles: {
-      fontSize: 9,
-      cellPadding: 3,
+      fontSize: 8.5,
+      cellPadding: 2.6,
     },
     headStyles: {
       fillColor: primaryColor,
       textColor: 255,
       fontStyle: "bold",
     },
+    columnStyles: {
+      0: { cellWidth: 70 },
+      1: { cellWidth: 110 },
+    },
   });
 
-  /*
-   * ------------------------------------------------------------
-   * INVOICE / ALLOCATION SUMMARY
-   * ------------------------------------------------------------
-   */
-
   let currentY =
-    ((pdf as any).lastAutoTable?.finalY ?? 82) + 8;
+    ((pdf as any).lastAutoTable?.finalY ?? 78) + 7;
+
+  // =========================
+  // PAYMENT SUMMARY
+  // =========================
 
   pdf.setFont("helvetica", "bold");
-  pdf.setFontSize(11);
+  pdf.setFontSize(10.5);
   pdf.setTextColor(0);
 
   pdf.text("PAYMENT SUMMARY", 20, currentY);
 
-  currentY += 6;
-
-  /*
-   * Multiple invoice allocations
-   */
+  currentY += 5;
 
   if (allocations.length > 0) {
     const allocationRows = allocations.map(
@@ -227,14 +217,17 @@ export async function buildReceiptPdf(data: any) {
         safeText(
           allocation.invoice_number
         ) || "Invoice",
+
         money(
           allocation.invoice_amount,
           currency
         ),
+
         money(
           allocation.allocated_amount,
           currency
         ),
+
         money(
           allocation.invoice_balance,
           currency
@@ -244,45 +237,58 @@ export async function buildReceiptPdf(data: any) {
 
     autoTable(pdf, {
       startY: currentY,
-      head: [
-        [
-          "Invoice",
-          "Invoice Amount",
-          "Applied",
-          "Balance",
-        ],
-      ],
+
+      head: [[
+        "Invoice",
+        "Invoice Amount",
+        "Applied",
+        "Balance",
+      ]],
+
       body: allocationRows,
+
       theme: "grid",
+
       styles: {
-        fontSize: 8.5,
-        cellPadding: 3,
+        fontSize: 8,
+        cellPadding: 2.5,
       },
+
       headStyles: {
         fillColor: primaryColor,
         textColor: 255,
         fontStyle: "bold",
       },
+
       columnStyles: {
-        1: { halign: "right" },
-        2: { halign: "right" },
-        3: { halign: "right" },
+        0: {
+          cellWidth: 48,
+        },
+        1: {
+          cellWidth: 44,
+          halign: "right",
+        },
+        2: {
+          cellWidth: 44,
+          halign: "right",
+        },
+        3: {
+          cellWidth: 44,
+          halign: "right",
+        },
       },
     });
 
     currentY =
       ((pdf as any).lastAutoTable?.finalY ??
-        currentY) + 7;
+        currentY) + 5;
   } else {
-    /*
-     * Payment has not been allocated to an invoice.
-     */
-
     pdf.setFont("helvetica", "normal");
-    pdf.setFontSize(9);
+    pdf.setFontSize(8.5);
+    pdf.setTextColor(80);
 
     pdf.text(
-      "This payment has not been allocated to an invoice.",
+      "No invoice allocation was made for this payment.",
       20,
       currentY
     );
@@ -290,23 +296,9 @@ export async function buildReceiptPdf(data: any) {
     currentY += 7;
   }
 
-  /*
-   * ------------------------------------------------------------
-   * PAYMENT TOTALS
-   * ------------------------------------------------------------
-   */
-
-  const amountReceived = Number(
-    data.amount ?? payment.amount ?? 0
-  );
-
-  const allocatedAmount = Number(
-    payment.allocated_amount ?? 0
-  );
-
-  const unallocatedAmount = Number(
-    payment.unallocated_amount ?? 0
-  );
+  // =========================
+  // FINANCIAL SUMMARY
+  // =========================
 
   const summaryRows: string[][] = [
     [
@@ -328,18 +320,24 @@ export async function buildReceiptPdf(data: any) {
 
   autoTable(pdf, {
     startY: currentY,
+
     body: summaryRows,
-    theme: "plain",
+
+    theme: "grid",
+
     styles: {
-      fontSize: 9,
-      cellPadding: 2.5,
+      fontSize: 8.5,
+      cellPadding: 2.8,
     },
+
     columnStyles: {
       0: {
+        cellWidth: 115,
         fontStyle: "bold",
-        cellWidth: 100,
       },
+
       1: {
+        cellWidth: 65,
         halign: "right",
         fontStyle: "bold",
       },
@@ -348,13 +346,11 @@ export async function buildReceiptPdf(data: any) {
 
   currentY =
     ((pdf as any).lastAutoTable?.finalY ??
-      currentY) + 5;
+      currentY) + 6;
 
-  /*
-   * ------------------------------------------------------------
-   * NOTES
-   * ------------------------------------------------------------
-   */
+  // =========================
+  // NOTES
+  // =========================
 
   const notes =
     safeText(data.notes) ||
@@ -362,50 +358,84 @@ export async function buildReceiptPdf(data: any) {
 
   if (notes) {
     pdf.setFont("helvetica", "bold");
-    pdf.setFontSize(9.5);
+    pdf.setFontSize(9);
+    pdf.setTextColor(0);
 
     pdf.text("NOTES", 20, currentY);
 
-    currentY += 5;
+    currentY += 4.5;
 
     pdf.setFont("helvetica", "normal");
-    pdf.setFontSize(8.5);
+    pdf.setFontSize(8.2);
 
-    const noteLines = pdf.splitTextToSize(
-      notes,
-      170
+    const noteLines =
+      pdf.splitTextToSize(notes, 170);
+
+    pdf.text(
+      noteLines,
+      20,
+      currentY
     );
 
-    pdf.text(noteLines, 20, currentY);
-
     currentY +=
-      noteLines.length * 4 + 5;
+      noteLines.length * 3.8 + 5;
   }
 
-  /*
-   * ------------------------------------------------------------
-   * FINAL RECEIPT TOTAL
-   * ------------------------------------------------------------
-   */
+  // =========================
+  // FINAL TOTAL
+  // =========================
 
+  const hasCredit = unallocatedAmount > 0;
+
+  const bannerHeight = hasCredit ? 20 : 14;
+
+  const bannerY = Math.min(
+    Math.max(currentY, 185),
+    235
+  );
+
+  pdf.setFillColor(primaryColor);
+
+  pdf.roundedRect(
+    20,
+    bannerY,
+    170,
+    bannerHeight,
+    2,
+    2,
+    "F"
+  );
+
+  pdf.setTextColor(255);
   pdf.setFont("helvetica", "bold");
-  pdf.setFontSize(13);
-  pdf.setTextColor(primaryColor);
+  pdf.setFontSize(11);
 
   pdf.text(
     `TOTAL RECEIVED: ${money(
       amountReceived,
       currency
     )}`,
-    20,
-    currentY + 3
+    25,
+    bannerY + 8
   );
 
-  /*
-   * ------------------------------------------------------------
-   * FOOTER
-   * ------------------------------------------------------------
-   */
+  if (hasCredit) {
+    pdf.setFont("helvetica", "normal");
+    pdf.setFontSize(8);
+
+    pdf.text(
+      `Tenant credit available: ${money(
+        unallocatedAmount,
+        currency
+      )}`,
+      25,
+      bannerY + 14
+    );
+  }
+
+  // =========================
+  // FOOTER
+  // =========================
 
   if (!branding.removeRubyBranding) {
     pdf.setFont("helvetica", "normal");
@@ -415,7 +445,7 @@ export async function buildReceiptPdf(data: any) {
     pdf.text(
       "Powered by Ruby Rental • +254 796 594 295",
       20,
-      285
+      278
     );
   }
 
