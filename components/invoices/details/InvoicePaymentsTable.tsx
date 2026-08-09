@@ -1,6 +1,9 @@
 "use client";
 
 import Card from "@/components/ui/Card";
+import { useState } from "react";
+import { getReceiptByPaymentId } from "@/services/receipts/getReceiptByPaymentId";
+import { downloadReceiptPdf } from "@/services/receipts/pdf/downloadReceiptPdf";
 
 import {
   Wallet,
@@ -67,6 +70,33 @@ export default function InvoicePaymentsTable({
   balance,
   currency = "KES",
 }: Props) {
+
+  const [downloading, setDownloading] = useState<string | null>(null);
+
+  async function handleDownload(paymentId: string) {
+    try {
+      setDownloading(paymentId);
+
+      const receipt = await getReceiptByPaymentId(paymentId);
+
+      if (!receipt) {
+        throw new Error("Receipt not found for this payment.");
+      }
+
+      await downloadReceiptPdf(receipt.id);
+    } catch (error) {
+      console.error(error);
+      alert(
+        error instanceof Error
+          ? error.message
+          : "Unable to download receipt."
+      );
+    } finally {
+      setDownloading(null);
+    }
+  }
+
+
   return (
     <Card>
 
@@ -185,8 +215,24 @@ export default function InvoicePaymentsTable({
 
                   <td className="px-4 py-4 font-medium">
 
-                    {payment.receipt_number ??
-                      "-"}
+                    <div className="flex items-center gap-3">
+
+                      <span>
+                        {payment.receipt_number ?? "-"}
+                      </span>
+
+                      {payment.receipt_number && (
+                        <button
+                          type="button"
+                          onClick={() => handleDownload(payment.id)}
+                          disabled={downloading === payment.id}
+                          className="rounded-lg bg-black px-3 py-1.5 text-xs font-semibold text-white hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          {downloading === payment.id ? "Preparing..." : "Download"}
+                        </button>
+                      )}
+
+                    </div>
 
                   </td>
 
