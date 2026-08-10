@@ -20,13 +20,24 @@ type Props = {
   leases: Lease[];
   value: string;
   onChange: (leaseId: string) => void;
+  statementType: string;
 };
 
 export default function StatementLeaseSelector({
   leases,
   value,
   onChange,
+  statementType,
 }: Props) {
+  const label =
+    statementType === "Tenant Statement"
+      ? "Select Tenant"
+      : statementType === "Property Statement"
+        ? "Select Property"
+        : statementType === "Unit Statement"
+          ? "Select Unit"
+          : "Select Account";
+
   return (
     <select
       className="w-full rounded-lg border p-3"
