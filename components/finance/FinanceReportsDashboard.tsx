@@ -3,33 +3,42 @@
 import { useEffect, useState } from "react";
 
 import Card from "@/components/ui/Card";
-import Button from "@/components/ui/Button";
 import Loading from "@/components/ui/Loading";
+import Button from "@/components/ui/Button";
 
 import { getFinanceReports } from "@/services/reports/getFinanceReports";
 import { exportPdf } from "@/services/reports/pdf/exportPdf";
 import { exportExcel } from "@/services/reports/excel/exportExcel";
 
-type FinanceReports = Awaited<
-  ReturnType<typeof getFinanceReports>
->;
+type ReportData = {
+  revenue: number;
+  outstanding: number;
+  collections: number;
+  collectionRate: number;
+  recentPayments: any[];
+  outstandingInvoices: any[];
+  aging: {
+    current: number;
+    days30: number;
+    days60: number;
+    days90: number;
+    over90: number;
+  };
+  cashFlow: {
+    totalIncome: number;
+    totalExpenses: number;
+    netCashFlow: number;
+    payments: number;
+    expenses: number;
+  };
+};
 
-function money(value: number) {
-  return `KES ${Number(value ?? 0).toLocaleString()}`;
-}
-
-function date(value?: string | null) {
-  if (!value) return "-";
-
-  return new Date(value).toLocaleDateString();
-}
+const money = (value: number) =>
+  `KES ${Number(value ?? 0).toLocaleString()}`;
 
 export default function FinanceReportsDashboard() {
-  const [data, setData] =
-    useState<FinanceReports | null>(null);
-
   const [loading, setLoading] = useState(true);
-  const [exporting, setExporting] = useState(false);
+  const [data, setData] = useState<ReportData | null>(null);
 
   useEffect(() => {
     loadReports();
@@ -37,641 +46,342 @@ export default function FinanceReportsDashboard() {
 
   async function loadReports() {
     try {
-      setLoading(true);
-
-      const result =
-        await getFinanceReports();
-
+      const result = await getFinanceReports();
       setData(result);
     } catch (error) {
-      console.error(
-        "FINANCE REPORTS ERROR",
-        error
-      );
+      console.error("REPORTS ERROR:", error);
     } finally {
       setLoading(false);
     }
   }
 
-  async function exportSummaryPdf() {
-    if (!data) return;
-
-    try {
-      setExporting(true);
-
-      await exportPdf({
-        title: "Ruby Rental Finance Report",
-        subtitle:
-          "Financial performance and outstanding balances",
-        rows: [
-          {
-            Report: "Revenue This Month",
-            Value: money(data.revenue),
-          },
-          {
-            Report: "Outstanding Rent",
-            Value: money(data.outstanding),
-          },
-          {
-            Report: "Collections Today",
-            Value: money(data.collections),
-          },
-          {
-            Report: "Collection Rate",
-            Value: `${data.collectionRate}%`,
-          },
-          {
-            Report: "Total Cash Income",
-            Value: money(data.cashFlow.totalIncome),
-          },
-          {
-            Report: "Total Expenses",
-            Value: money(data.cashFlow.totalExpenses),
-          },
-          {
-            Report: "Net Cash Flow",
-            Value: money(data.cashFlow.netCashFlow),
-          },
-        ],
-      });
-    } finally {
-      setExporting(false);
-    }
-  }
-
-  async function exportSummaryExcel() {
-    if (!data) return;
-
-    try {
-      setExporting(true);
-
-      await exportExcel({
-        fileName:
-          "Ruby_Rental_Finance_Report",
-        rows: [
-          {
-            Report: "Revenue This Month",
-            Value: data.revenue,
-          },
-          {
-            Report: "Outstanding Rent",
-            Value: data.outstanding,
-          },
-          {
-            Report: "Collections Today",
-            Value: data.collections,
-          },
-          {
-            Report: "Collection Rate",
-            Value: data.collectionRate,
-          },
-          {
-            Report: "Total Cash Income",
-            Value:
-              data.cashFlow.totalIncome,
-          },
-          {
-            Report: "Total Expenses",
-            Value:
-              data.cashFlow.totalExpenses,
-          },
-          {
-            Report: "Net Cash Flow",
-            Value:
-              data.cashFlow.netCashFlow,
-          },
-        ],
-      });
-    } finally {
-      setExporting(false);
-    }
-  }
-
   if (loading) {
-    return (
-      <Loading
-        title="Loading finance reports..."
-        description="Preparing your financial reports."
-      />
-    );
+    return <Loading title="Loading finance reports..." />;
   }
 
   if (!data) {
     return (
       <Card>
-        <div className="py-12 text-center">
-          <h2 className="text-lg font-semibold">
-            Unable to load reports
-          </h2>
-
-          <p className="mt-2 text-sm text-gray-500">
-            There was a problem loading your
-            financial reports.
-          </p>
-
-          <div className="mt-5">
-            <Button onClick={loadReports}>
-              Try Again
-            </Button>
-          </div>
+        <div className="py-10 text-center text-gray-500">
+          Unable to load finance reports.
         </div>
       </Card>
     );
   }
 
-  const agingTotal =
-    data.aging.current +
-    data.aging.days30 +
-    data.aging.days60 +
-    data.aging.days90 +
-    data.aging.over90;
+  const revenueRows = [
+    {
+      Metric: "Revenue This Month",
+      Amount: data.revenue,
+    },
+    {
+      Metric: "Collections Today",
+      Amount: data.collections,
+    },
+    {
+      Metric: "Collection Rate",
+      Amount: `${data.collectionRate}%`,
+    },
+  ];
+
+  const agingRows = [
+    { Bucket: "Current", Amount: data.aging.current },
+    { Bucket: "1–30 Days", Amount: data.aging.days30 },
+    { Bucket: "31–60 Days", Amount: data.aging.days60 },
+    { Bucket: "61–90 Days", Amount: data.aging.days90 },
+    { Bucket: "Over 90 Days", Amount: data.aging.over90 },
+  ];
+
+  const cashFlowRows = [
+    {
+      Metric: "Total Income",
+      Amount: data.cashFlow.totalIncome,
+    },
+    {
+      Metric: "Total Expenses",
+      Amount: data.cashFlow.totalExpenses,
+    },
+    {
+      Metric: "Net Cash Flow",
+      Amount: data.cashFlow.netCashFlow,
+    },
+  ];
+
+  async function exportRevenuePdf() {
+    await exportPdf({
+      title: "Revenue & Collections Report",
+      rows: revenueRows,
+    });
+  }
+
+  async function exportRevenueExcel() {
+    await exportExcel({
+      fileName: "Revenue_and_Collections_Report",
+      rows: revenueRows,
+    });
+  }
+
+  async function exportAgingPdf() {
+    await exportPdf({
+      title: "Accounts Receivable Aging Report",
+      rows: agingRows,
+    });
+  }
+
+  async function exportAgingExcel() {
+    await exportExcel({
+      fileName: "Accounts_Receivable_Aging_Report",
+      rows: agingRows,
+    });
+  }
+
+  async function exportCashFlowPdf() {
+    await exportPdf({
+      title: "Cash Flow Report",
+      rows: cashFlowRows,
+    });
+  }
+
+  async function exportCashFlowExcel() {
+    await exportExcel({
+      fileName: "Cash_Flow_Report",
+      rows: cashFlowRows,
+    });
+  }
 
   return (
     <div className="space-y-6">
 
-      {/* Export actions */}
-
-      <div className="flex flex-wrap items-center justify-between gap-3">
-
-        <div>
-          <h2 className="text-xl font-bold">
-            Financial Reports
-          </h2>
-
-          <p className="text-sm text-gray-500">
-            Monitor revenue, collections,
-            receivables and cash flow.
-          </p>
-        </div>
-
-        <div className="flex gap-2">
-          <Button
-            onClick={exportSummaryPdf}
-            disabled={exporting}
-          >
-            Export PDF
-          </Button>
-
-          <Button
-            variant="secondary"
-            onClick={exportSummaryExcel}
-            disabled={exporting}
-          >
-            Export Excel
-          </Button>
-        </div>
-
-      </div>
-
-      {/* Main KPIs */}
-
+      {/* SUMMARY */}
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
 
         <Card>
           <p className="text-sm text-gray-500">
             Revenue This Month
           </p>
-
           <h2 className="mt-2 text-2xl font-bold">
             {money(data.revenue)}
           </h2>
-
-          <p className="mt-1 text-xs text-gray-400">
-            Actual payments received
-          </p>
         </Card>
 
         <Card>
           <p className="text-sm text-gray-500">
             Outstanding Rent
           </p>
-
           <h2 className="mt-2 text-2xl font-bold">
             {money(data.outstanding)}
           </h2>
-
-          <p className="mt-1 text-xs text-gray-400">
-            Current tenant balances
-          </p>
         </Card>
 
         <Card>
           <p className="text-sm text-gray-500">
             Collections Today
           </p>
-
           <h2 className="mt-2 text-2xl font-bold">
             {money(data.collections)}
           </h2>
-
-          <p className="mt-1 text-xs text-gray-400">
-            Payments received today
-          </p>
         </Card>
 
         <Card>
           <p className="text-sm text-gray-500">
             Collection Rate
           </p>
-
           <h2 className="mt-2 text-2xl font-bold">
             {data.collectionRate}%
           </h2>
-
-          <p className="mt-1 text-xs text-gray-400">
-            Current billing cycle
-          </p>
         </Card>
 
       </div>
 
-      {/* Cash Flow */}
-
-      <div className="grid gap-6 lg:grid-cols-3">
-
-        <Card>
-          <p className="text-sm text-gray-500">
-            Total Income
-          </p>
-
-          <h2 className="mt-2 text-2xl font-bold text-green-600">
-            {money(
-              data.cashFlow.totalIncome
-            )}
-          </h2>
-
-          <p className="mt-1 text-xs text-gray-400">
-            {data.cashFlow.payments} payments
-          </p>
-        </Card>
-
-        <Card>
-          <p className="text-sm text-gray-500">
-            Total Expenses
-          </p>
-
-          <h2 className="mt-2 text-2xl font-bold">
-            {money(
-              data.cashFlow.totalExpenses
-            )}
-          </h2>
-
-          <p className="mt-1 text-xs text-gray-400">
-            {data.cashFlow.expenses} expenses
-          </p>
-        </Card>
-
-        <Card>
-          <p className="text-sm text-gray-500">
-            Net Cash Flow
-          </p>
-
-          <h2
-            className={`mt-2 text-2xl font-bold ${
-              data.cashFlow.netCashFlow >= 0
-                ? "text-green-600"
-                : "text-red-600"
-            }`}
-          >
-            {money(
-              data.cashFlow.netCashFlow
-            )}
-          </h2>
-
-          <p className="mt-1 text-xs text-gray-400">
-            Income less expenses
-          </p>
-        </Card>
-
-      </div>
-
-      {/* Aging Report */}
-
+      {/* REVENUE */}
       <Card>
-
-        <div className="mb-5 flex items-center justify-between">
-
+        <div className="mb-5 flex flex-col justify-between gap-4 md:flex-row md:items-center">
           <div>
-            <h2 className="text-lg font-bold">
-              Receivables Aging
+            <h2 className="text-xl font-bold">
+              Revenue & Collections
             </h2>
-
             <p className="text-sm text-gray-500">
-              Outstanding balances by age
+              Current rental income and collection performance.
             </p>
           </div>
 
-          <span className="font-semibold">
-            {money(agingTotal)}
-          </span>
+          <div className="flex gap-2">
+            <Button onClick={exportRevenuePdf}>
+              Export PDF
+            </Button>
 
-        </div>
-
-        <div className="grid gap-3 md:grid-cols-5">
-
-          <AgingCard
-            label="Current"
-            value={data.aging.current}
-          />
-
-          <AgingCard
-            label="1–30 Days"
-            value={data.aging.days30}
-          />
-
-          <AgingCard
-            label="31–60 Days"
-            value={data.aging.days60}
-          />
-
-          <AgingCard
-            label="61–90 Days"
-            value={data.aging.days90}
-          />
-
-          <AgingCard
-            label="90+ Days"
-            value={data.aging.over90}
-          />
-
-        </div>
-
-      </Card>
-
-      {/* Revenue Trend */}
-
-      <Card>
-
-        <div className="mb-5">
-
-          <h2 className="text-lg font-bold">
-            Revenue Trend
-          </h2>
-
-          <p className="text-sm text-gray-500">
-            Actual payments received over the
-            last 12 months
-          </p>
-
-        </div>
-
-        <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-4 xl:grid-cols-6">
-
-          {data.revenueTrend.map((item) => (
-            <div
-              key={`${item.month}-${item.revenue}`}
-              className="rounded-xl border p-4"
+            <Button
+              variant="secondary"
+              onClick={exportRevenueExcel}
             >
-              <p className="text-xs text-gray-500">
-                {item.month}
-              </p>
-
-              <p className="mt-2 font-bold">
-                {money(item.revenue)}
-              </p>
-            </div>
-          ))}
-
-        </div>
-
-      </Card>
-
-      {/* Property Performance */}
-
-      <Card>
-
-        <div className="mb-5">
-
-          <h2 className="text-lg font-bold">
-            Property Performance
-          </h2>
-
-          <p className="text-sm text-gray-500">
-            Occupancy, collections and outstanding
-            balances by property.
-          </p>
-
-        </div>
-
-        {data.propertyPerformance.length === 0 ? (
-
-          <p className="py-8 text-center text-gray-400">
-            No properties found.
-          </p>
-
-        ) : (
-
-          <div className="overflow-x-auto">
-
-            <table className="w-full text-sm">
-
-              <thead>
-
-                <tr className="border-b text-left text-gray-500">
-
-                  <th className="px-3 py-3">
-                    Property
-                  </th>
-
-                  <th className="px-3 py-3">
-                    Units
-                  </th>
-
-                  <th className="px-3 py-3">
-                    Occupied
-                  </th>
-
-                  <th className="px-3 py-3">
-                    Vacant
-                  </th>
-
-                  <th className="px-3 py-3">
-                    Occupancy
-                  </th>
-
-                  <th className="px-3 py-3 text-right">
-                    Expected
-                  </th>
-
-                  <th className="px-3 py-3 text-right">
-                    Collected
-                  </th>
-
-                  <th className="px-3 py-3 text-right">
-                    Outstanding
-                  </th>
-
-                </tr>
-
-              </thead>
-
-              <tbody>
-
-                {data.propertyPerformance.map(
-                  (property) => (
-
-                    <tr
-                      key={property.id}
-                      className="border-b last:border-0"
-                    >
-
-                      <td className="px-3 py-3 font-semibold">
-                        {property.property}
-                      </td>
-
-                      <td className="px-3 py-3">
-                        {property.totalUnits}
-                      </td>
-
-                      <td className="px-3 py-3">
-                        {property.occupiedUnits}
-                      </td>
-
-                      <td className="px-3 py-3">
-                        {property.vacantUnits}
-                      </td>
-
-                      <td className="px-3 py-3 font-semibold">
-                        {property.occupancyRate}%
-                      </td>
-
-                      <td className="px-3 py-3 text-right">
-                        {money(property.expectedRent)}
-                      </td>
-
-                      <td className="px-3 py-3 text-right font-semibold text-green-600">
-                        {money(property.collectedRent)}
-                      </td>
-
-                      <td className="px-3 py-3 text-right font-semibold">
-                        {money(property.outstandingRent)}
-                      </td>
-
-                    </tr>
-
-                  )
-                )}
-
-              </tbody>
-
-            </table>
-
+              Excel
+            </Button>
           </div>
-
-        )}
-
-      </Card>
-
-      {/* Recent Payments */}
-
-      <Card>
-
-        <div className="mb-5">
-
-          <h2 className="text-lg font-bold">
-            Recent Payments
-          </h2>
-
-          <p className="text-sm text-gray-500">
-            Latest payments received
-          </p>
-
         </div>
 
-        {data.recentPayments.length === 0 ? (
-          <p className="py-8 text-center text-gray-400">
-            No payments found.
-          </p>
-        ) : (
-          <div className="overflow-x-auto">
-
-            <table className="w-full text-sm">
-
-              <thead>
-                <tr className="border-b text-left text-gray-500">
-                  <th className="px-3 py-3">
-                    Date
-                  </th>
-                  <th className="px-3 py-3">
-                    Tenant
-                  </th>
-                  <th className="px-3 py-3">
-                    Reference
-                  </th>
-                  <th className="px-3 py-3">
-                    Method
-                  </th>
-                  <th className="px-3 py-3 text-right">
-                    Amount
-                  </th>
-                </tr>
-              </thead>
-
-              <tbody>
-
-                {data.recentPayments.map(
-                  (payment) => (
-                    <tr
-                      key={payment.id}
-                      className="border-b last:border-0"
-                    >
-                      <td className="px-3 py-3">
-                        {date(
-                          payment.payment_date
-                        )}
-                      </td>
-
-                      <td className="px-3 py-3 font-medium">
-                        {payment.tenant_name}
-                      </td>
-
-                      <td className="px-3 py-3">
-                        {payment.reference_number ??
-                          payment.receipt_number ??
-                          "-"}
-                      </td>
-
-                      <td className="px-3 py-3">
-                        {payment.payment_method ??
-                          "-"}
-                      </td>
-
-                      <td className="px-3 py-3 text-right font-semibold text-green-600">
-                        {money(payment.amount)}
-                      </td>
-                    </tr>
-                  )
-                )}
-
-              </tbody>
-
-            </table>
-
-          </div>
-        )}
-
-      </Card>
-
-      {/* Outstanding Invoices */}
-
-      <Card>
-
-        <div className="mb-5 flex items-center justify-between">
-
-          <div>
-            <h2 className="text-lg font-bold">
-              Outstanding Invoices
-            </h2>
-
+        <div className="grid gap-4 md:grid-cols-3">
+          <div className="rounded-xl border p-4">
             <p className="text-sm text-gray-500">
-              Invoices with unpaid balances
+              Revenue This Month
+            </p>
+            <p className="mt-2 text-xl font-bold">
+              {money(data.revenue)}
             </p>
           </div>
 
-          <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold">
-            {data.outstandingInvoices.length}
-          </span>
+          <div className="rounded-xl border p-4">
+            <p className="text-sm text-gray-500">
+              Collections Today
+            </p>
+            <p className="mt-2 text-xl font-bold">
+              {money(data.collections)}
+            </p>
+          </div>
 
+          <div className="rounded-xl border p-4">
+            <p className="text-sm text-gray-500">
+              Collection Rate
+            </p>
+            <p className="mt-2 text-xl font-bold">
+              {data.collectionRate}%
+            </p>
+          </div>
+        </div>
+      </Card>
+
+      {/* AGING */}
+      <Card>
+        <div className="mb-5 flex flex-col justify-between gap-4 md:flex-row md:items-center">
+          <div>
+            <h2 className="text-xl font-bold">
+              Accounts Receivable Aging
+            </h2>
+            <p className="text-sm text-gray-500">
+              Outstanding tenant balances by age.
+            </p>
+          </div>
+
+          <div className="flex gap-2">
+            <Button onClick={exportAgingPdf}>
+              Export PDF
+            </Button>
+
+            <Button
+              variant="secondary"
+              onClick={exportAgingExcel}
+            >
+              Excel
+            </Button>
+          </div>
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-5">
+
+          <div className="rounded-xl border p-4">
+            <p className="text-sm text-gray-500">Current</p>
+            <p className="mt-2 font-bold">
+              {money(data.aging.current)}
+            </p>
+          </div>
+
+          <div className="rounded-xl border p-4">
+            <p className="text-sm text-gray-500">1–30 Days</p>
+            <p className="mt-2 font-bold">
+              {money(data.aging.days30)}
+            </p>
+          </div>
+
+          <div className="rounded-xl border p-4">
+            <p className="text-sm text-gray-500">31–60 Days</p>
+            <p className="mt-2 font-bold">
+              {money(data.aging.days60)}
+            </p>
+          </div>
+
+          <div className="rounded-xl border p-4">
+            <p className="text-sm text-gray-500">61–90 Days</p>
+            <p className="mt-2 font-bold">
+              {money(data.aging.days90)}
+            </p>
+          </div>
+
+          <div className="rounded-xl border p-4">
+            <p className="text-sm text-gray-500">90+ Days</p>
+            <p className="mt-2 font-bold">
+              {money(data.aging.over90)}
+            </p>
+          </div>
+
+        </div>
+      </Card>
+
+      {/* CASH FLOW */}
+      <Card>
+        <div className="mb-5 flex flex-col justify-between gap-4 md:flex-row md:items-center">
+          <div>
+            <h2 className="text-xl font-bold">
+              Cash Flow
+            </h2>
+            <p className="text-sm text-gray-500">
+              Income, expenses and net cash position.
+            </p>
+          </div>
+
+          <div className="flex gap-2">
+            <Button onClick={exportCashFlowPdf}>
+              Export PDF
+            </Button>
+
+            <Button
+              variant="secondary"
+              onClick={exportCashFlowExcel}
+            >
+              Excel
+            </Button>
+          </div>
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-3">
+
+          <div className="rounded-xl border p-4">
+            <p className="text-sm text-gray-500">
+              Total Income
+            </p>
+            <p className="mt-2 text-xl font-bold">
+              {money(data.cashFlow.totalIncome)}
+            </p>
+          </div>
+
+          <div className="rounded-xl border p-4">
+            <p className="text-sm text-gray-500">
+              Total Expenses
+            </p>
+            <p className="mt-2 text-xl font-bold">
+              {money(data.cashFlow.totalExpenses)}
+            </p>
+          </div>
+
+          <div className="rounded-xl border p-4">
+            <p className="text-sm text-gray-500">
+              Net Cash Flow
+            </p>
+            <p className="mt-2 text-xl font-bold">
+              {money(data.cashFlow.netCashFlow)}
+            </p>
+          </div>
+
+        </div>
+      </Card>
+
+      {/* OUTSTANDING */}
+      <Card>
+        <div className="mb-5">
+          <h2 className="text-xl font-bold">
+            Outstanding Invoices
+          </h2>
+          <p className="text-sm text-gray-500">
+            Invoices currently carrying an outstanding balance.
+          </p>
         </div>
 
         {data.outstandingInvoices.length === 0 ? (
@@ -680,89 +390,54 @@ export default function FinanceReportsDashboard() {
           </p>
         ) : (
           <div className="overflow-x-auto">
-
-            <table className="w-full text-sm">
-
+            <table className="w-full text-left text-sm">
               <thead>
-                <tr className="border-b text-left text-gray-500">
-                  <th className="px-3 py-3">
-                    Invoice
-                  </th>
-                  <th className="px-3 py-3">
-                    Tenant
-                  </th>
-                  <th className="px-3 py-3">
-                    Property
-                  </th>
-                  <th className="px-3 py-3">
-                    Due
-                  </th>
-                  <th className="px-3 py-3 text-right">
-                    Balance
-                  </th>
+                <tr className="border-b">
+                  <th className="p-3">Invoice</th>
+                  <th className="p-3">Tenant</th>
+                  <th className="p-3">Property</th>
+                  <th className="p-3">Due Date</th>
+                  <th className="p-3 text-right">Balance</th>
                 </tr>
               </thead>
 
               <tbody>
+                {data.outstandingInvoices.map((invoice) => (
+                  <tr
+                    key={invoice.id}
+                    className="border-b last:border-0"
+                  >
+                    <td className="p-3 font-medium">
+                      {invoice.invoice_number}
+                    </td>
 
-                {data.outstandingInvoices.map(
-                  (invoice) => (
-                    <tr
-                      key={invoice.id}
-                      className="border-b last:border-0"
-                    >
-                      <td className="px-3 py-3 font-medium">
-                        {invoice.invoice_number}
-                      </td>
+                    <td className="p-3">
+                      {invoice.tenant_name}
+                    </td>
 
-                      <td className="px-3 py-3">
-                        {invoice.tenant_name}
-                      </td>
+                    <td className="p-3">
+                      {invoice.property_name}
+                    </td>
 
-                      <td className="px-3 py-3">
-                        {invoice.property_name}
-                      </td>
+                    <td className="p-3">
+                      {invoice.due_date
+                        ? new Date(
+                            invoice.due_date
+                          ).toLocaleDateString()
+                        : "-"}
+                    </td>
 
-                      <td className="px-3 py-3">
-                        {date(invoice.due_date)}
-                      </td>
-
-                      <td className="px-3 py-3 text-right font-semibold">
-                        {money(invoice.balance)}
-                      </td>
-                    </tr>
-                  )
-                )}
-
+                    <td className="p-3 text-right font-semibold">
+                      {money(invoice.balance)}
+                    </td>
+                  </tr>
+                ))}
               </tbody>
-
             </table>
-
           </div>
         )}
-
       </Card>
 
-    </div>
-  );
-}
-
-function AgingCard({
-  label,
-  value,
-}: {
-  label: string;
-  value: number;
-}) {
-  return (
-    <div className="rounded-xl border p-4">
-      <p className="text-xs text-gray-500">
-        {label}
-      </p>
-
-      <p className="mt-2 font-bold">
-        {money(value)}
-      </p>
     </div>
   );
 }
