@@ -5,10 +5,15 @@ export type ReceiptAllocation = {
   id: string;
   invoice_id: string;
   allocated_amount: number;
-  invoice_number: string | null;
-  invoice_amount: number;
-  invoice_amount_paid: number;
-  invoice_balance: number;
+  is_reversed: boolean;
+  invoice: {
+    id: string;
+    invoice_number: string;
+    amount: number;
+    amount_paid: number;
+    balance: number;
+    currency: string;
+  } | null;
 };
 
 export type ReceiptPayment = {
@@ -49,34 +54,25 @@ export async function getReceiptPayment(
 
   const { data, error } = await supabase
     .from("payments")
-    .select(`
-      id,
-      workspace_id,
-      lease_id,
-      property_id,
-      unit_id,
-      tenant_id,
-      receipt_number,
-      payment_date,
-      payment_type,
-      payment_method,
-      amount,
-      allocated_amount,
-      unallocated_amount,
-      reference_number,
-      notes,
-      payment_allocations(
-        id,
-        invoice_id,
-        allocated_amount,
-        invoices(
-          invoice_number,
-          amount,
-          amount_paid,
-          balance
-        )
-      )
-    `)
+    .select(
+      [
+        "id",
+        "workspace_id",
+        "lease_id",
+        "property_id",
+        "unit_id",
+        "tenant_id",
+        "receipt_number",
+        "payment_date",
+        "payment_type",
+        "payment_method",
+        "amount",
+        "allocated_amount",
+        "unallocated_amount",
+        "reference_number",
+        "notes",
+      ].join(",")
+    )
     .eq("id", paymentId)
     .eq("workspace_id", profile.workspace_id)
     .single();
@@ -89,34 +85,65 @@ export async function getReceiptPayment(
     throw new Error("Payment not found.");
   }
 
+  const { data: allocationRows, error: allocationError } =
+    await supabase
+      .from("payment_allocations")
+      .select(
+        `
+        id,
+        invoice_id,
+        allocated_amount,
+        is_reversed,
+        invoices (
+          id,
+          invoice_number,
+          amount,
+          amount_paid,
+          balance,
+          currency
+        )
+      `
+      )
+      .eq("payment_id", paymentId)
+      .eq("workspace_id", profile.workspace_id)
+      .eq("is_reversed", false)
+      .order("allocated_at", {
+        ascending: true,
+      });
+
+  if (allocationError) {
+    throw allocationError;
+  }
+
   const payment = data as any;
 
-  const allocations: ReceiptAllocation[] = (
-    payment.payment_allocations ?? []
-  )
-    .filter((allocation: any) => !allocation.is_reversed)
-    .map((allocation: any) => {
-      const invoice = allocation.invoices ?? {};
-
-      return {
-        id: allocation.id,
-        invoice_id: allocation.invoice_id,
-        allocated_amount: Number(
-          allocation.allocated_amount ?? 0
-        ),
-        invoice_number:
-          invoice.invoice_number ?? null,
-        invoice_amount: Number(
-          invoice.amount ?? 0
-        ),
-        invoice_amount_paid: Number(
-          invoice.amount_paid ?? 0
-        ),
-        invoice_balance: Number(
-          invoice.balance ?? 0
-        ),
-      };
-    });
+  const allocations: ReceiptAllocation[] =
+    (allocationRows ?? []).map((row: any) => ({
+      id: row.id,
+      invoice_id: row.invoice_id,
+      allocated_amount: Number(
+        row.allocated_amount ?? 0
+      ),
+      is_reversed: Boolean(row.is_reversed),
+      invoice: row.invoices
+        ? {
+            id: row.invoices.id,
+            invoice_number:
+              row.invoices.invoice_number,
+            amount: Number(
+              row.invoices.amount ?? 0
+            ),
+            amount_paid: Number(
+              row.invoices.amount_paid ?? 0
+            ),
+            balance: Number(
+              row.invoices.balance ?? 0
+            ),
+            currency:
+              row.invoices.currency || "KES",
+          }
+        : null,
+    }));
 
   return {
     id: payment.id,
@@ -137,8 +164,8 @@ export async function getReceiptPayment(
       payment.unallocated_amount ?? 0
     ),
     reference_number:
-      payment.reference_number ?? null,
-    notes: payment.notes ?? null,
+      payment.reference_number,
+    notes: payment.notes,
     allocations,
   };
 }
