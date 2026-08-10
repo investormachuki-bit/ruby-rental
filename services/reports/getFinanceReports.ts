@@ -3,7 +3,6 @@ import { getAgingReport } from "./aging/getAgingReport";
 import { getCashFlow } from "./cashflow/getCashFlow";
 
 export async function getFinanceReports() {
-
   const [
     dashboard,
     aging,
@@ -15,7 +14,6 @@ export async function getFinanceReports() {
   ]);
 
   return {
-
     revenue:
       dashboard.revenueThisMonth,
 
@@ -34,10 +32,11 @@ export async function getFinanceReports() {
     outstandingInvoices:
       dashboard.outstandingInvoices,
 
+    revenueTrend:
+      dashboard.revenueTrend,
+
     aging,
 
     cashFlow,
-
   };
-
 }
