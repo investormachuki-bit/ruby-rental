@@ -375,13 +375,59 @@ export default function FinanceReportsDashboard() {
 
       {/* OUTSTANDING */}
       <Card>
-        <div className="mb-5">
-          <h2 className="text-xl font-bold">
-            Outstanding Invoices
-          </h2>
-          <p className="text-sm text-gray-500">
-            Invoices currently carrying an outstanding balance.
-          </p>
+        <div className="mb-5 flex flex-col justify-between gap-4 md:flex-row md:items-center">
+          <div>
+            <h2 className="text-xl font-bold">
+              Outstanding Invoices
+            </h2>
+
+            <p className="text-sm text-gray-500">
+              Invoices currently carrying an outstanding balance.
+            </p>
+          </div>
+
+          <div className="flex gap-2">
+            <Button
+              onClick={async () => {
+                await exportPdf({
+                  title: "Outstanding Invoices Report",
+                  rows: data.outstandingInvoices.map((invoice) => ({
+                    Invoice: invoice.invoice_number,
+                    Tenant: invoice.tenant_name,
+                    Property: invoice.property_name,
+                    Unit: invoice.unit_number,
+                    "Due Date": invoice.due_date
+                      ? new Date(invoice.due_date).toLocaleDateString()
+                      : "-",
+                    Balance: Number(invoice.balance ?? 0),
+                  })),
+                });
+              }}
+            >
+              Export PDF
+            </Button>
+
+            <Button
+              variant="secondary"
+              onClick={async () => {
+                await exportExcel({
+                  fileName: "Outstanding_Invoices_Report",
+                  rows: data.outstandingInvoices.map((invoice) => ({
+                    Invoice: invoice.invoice_number,
+                    Tenant: invoice.tenant_name,
+                    Property: invoice.property_name,
+                    Unit: invoice.unit_number,
+                    "Due Date": invoice.due_date
+                      ? new Date(invoice.due_date).toLocaleDateString()
+                      : "-",
+                    Balance: Number(invoice.balance ?? 0),
+                  })),
+                });
+              }}
+            >
+              Excel
+            </Button>
+          </div>
         </div>
 
         {data.outstandingInvoices.length === 0 ? (
