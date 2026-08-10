@@ -436,6 +436,132 @@ export default function FinanceReportsDashboard() {
 
       </Card>
 
+      {/* Property Performance */}
+
+      <Card>
+
+        <div className="mb-5">
+
+          <h2 className="text-lg font-bold">
+            Property Performance
+          </h2>
+
+          <p className="text-sm text-gray-500">
+            Occupancy, collections and outstanding
+            balances by property.
+          </p>
+
+        </div>
+
+        {data.propertyPerformance.length === 0 ? (
+
+          <p className="py-8 text-center text-gray-400">
+            No properties found.
+          </p>
+
+        ) : (
+
+          <div className="overflow-x-auto">
+
+            <table className="w-full text-sm">
+
+              <thead>
+
+                <tr className="border-b text-left text-gray-500">
+
+                  <th className="px-3 py-3">
+                    Property
+                  </th>
+
+                  <th className="px-3 py-3">
+                    Units
+                  </th>
+
+                  <th className="px-3 py-3">
+                    Occupied
+                  </th>
+
+                  <th className="px-3 py-3">
+                    Vacant
+                  </th>
+
+                  <th className="px-3 py-3">
+                    Occupancy
+                  </th>
+
+                  <th className="px-3 py-3 text-right">
+                    Expected
+                  </th>
+
+                  <th className="px-3 py-3 text-right">
+                    Collected
+                  </th>
+
+                  <th className="px-3 py-3 text-right">
+                    Outstanding
+                  </th>
+
+                </tr>
+
+              </thead>
+
+              <tbody>
+
+                {data.propertyPerformance.map(
+                  (property) => (
+
+                    <tr
+                      key={property.id}
+                      className="border-b last:border-0"
+                    >
+
+                      <td className="px-3 py-3 font-semibold">
+                        {property.property}
+                      </td>
+
+                      <td className="px-3 py-3">
+                        {property.totalUnits}
+                      </td>
+
+                      <td className="px-3 py-3">
+                        {property.occupiedUnits}
+                      </td>
+
+                      <td className="px-3 py-3">
+                        {property.vacantUnits}
+                      </td>
+
+                      <td className="px-3 py-3 font-semibold">
+                        {property.occupancyRate}%
+                      </td>
+
+                      <td className="px-3 py-3 text-right">
+                        {money(property.expectedRent)}
+                      </td>
+
+                      <td className="px-3 py-3 text-right font-semibold text-green-600">
+                        {money(property.collectedRent)}
+                      </td>
+
+                      <td className="px-3 py-3 text-right font-semibold">
+                        {money(property.outstandingRent)}
+                      </td>
+
+                    </tr>
+
+                  )
+                )}
+
+              </tbody>
+
+            </table>
+
+          </div>
+
+        )}
+
+      </Card>
+
       {/* Recent Payments */}
 
       <Card>
