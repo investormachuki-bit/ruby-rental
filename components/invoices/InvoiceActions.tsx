@@ -6,6 +6,7 @@ import {
   Wallet,
   Download,
   Printer,
+Share2,
   Copy,
   XCircle,
 } from "lucide-react";
@@ -16,6 +17,7 @@ type Props = {
   onView?: (invoiceId: string) => void;
   onRecordPayment?: (invoiceId: string) => void;
   onDownload?: (invoiceId: string) => void;
+onShare?: (invoiceId: string) => void;
   onPrint?: (invoiceId: string) => void;
   onDuplicate?: (invoiceId: string) => void;
   onCancel?: (invoiceId: string) => void;
@@ -27,6 +29,7 @@ export default function InvoiceActions({
   onView,
   onRecordPayment,
   onDownload,
+  onShare,
   onPrint,
   onDuplicate,
   onCancel,
