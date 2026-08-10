@@ -15,6 +15,12 @@ type ReportData = {
   outstanding: number;
   collections: number;
   collectionRate: number;
+
+  revenueTrend: {
+    month: string;
+    revenue: number;
+  }[];
+
   recentPayments: any[];
   outstandingInvoices: any[];
   aging: {
@@ -246,6 +252,93 @@ export default function FinanceReportsDashboard() {
               {data.collectionRate}%
             </p>
           </div>
+        </div>
+      </Card>
+
+      {/* REVENUE TREND */}
+      <Card>
+        <div className="mb-5 flex flex-col justify-between gap-4 md:flex-row md:items-center">
+          <div>
+            <h2 className="text-xl font-bold">
+              Revenue Trend
+            </h2>
+            <p className="text-sm text-gray-500">
+              Rental collections over the last 12 months.
+            </p>
+          </div>
+
+          <div className="flex gap-2">
+            <Button
+              onClick={async () => {
+                await exportPdf({
+                  title: "12 Month Revenue Trend",
+                  rows: data.revenueTrend.map((item) => ({
+                    Month: item.month,
+                    Revenue: Number(item.revenue ?? 0),
+                  })),
+                });
+              }}
+            >
+              Export PDF
+            </Button>
+
+            <Button
+              variant="secondary"
+              onClick={async () => {
+                await exportExcel({
+                  fileName: "12_Month_Revenue_Trend",
+                  rows: data.revenueTrend.map((item) => ({
+                    Month: item.month,
+                    Revenue: Number(item.revenue ?? 0),
+                  })),
+                });
+              }}
+            >
+              Excel
+            </Button>
+          </div>
+        </div>
+
+        <div className="space-y-4">
+          {data.revenueTrend.map((item) => (
+            <div
+              key={item.month}
+              className="flex items-center gap-4"
+            >
+              <div className="w-14 text-sm font-medium">
+                {item.month}
+              </div>
+
+              <div className="flex-1">
+                <div className="h-3 overflow-hidden rounded-full bg-gray-100">
+                  <div
+                    className="h-full rounded-full bg-[#D4AF37]"
+                    style={{
+                      width: `${
+                        data.revenueTrend.length
+                          ? Math.min(
+                              100,
+                              (item.revenue /
+                                Math.max(
+                                  ...data.revenueTrend.map(
+                                    (x) => x.revenue
+                                  ),
+                                  1
+                                )) *
+                                100
+                            )
+                          : 0
+                      }%`,
+                    }}
+                  />
+                </div>
+              </div>
+
+              <div className="w-32 text-right text-sm font-semibold">
+                {money(item.revenue)}
+              </div>
+            </div>
+          ))}
         </div>
       </Card>
 
