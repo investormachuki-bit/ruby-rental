@@ -41,8 +41,11 @@ import { createPayment }
 import { getBranding }
   from "@/services/branding/getBranding";
 
-import { downloadInvoicePdf }
-  from "@/services/invoices/pdf/downloadInvoicePdf";
+import {
+  downloadInvoicePdf,
+  getInvoicePdfBlob,
+} from "@/services/invoices/pdf/downloadInvoicePdf";
+import { shareDocument } from "@/services/sharing/shareDocument";
 
 import { printInvoice } from "@/services/invoices/pdf/printInvoice";
 import { cancelInvoice } from "@/services/invoices/cancelInvoice";
@@ -385,6 +388,39 @@ export default function InvoiceDetailsPage({
 
   }
 
+  async function handleShareInvoice() {
+    try {
+      const { blob, fileName, invoice } =
+        await getInvoicePdfBlob(invoiceId);
+
+      const tenant = (invoice as any)?.tenant;
+
+      const message =
+        `Hello ${tenant?.full_name || "Tenant"},\n\n` +
+        `Please find attached your invoice ${invoice.invoice_number}.\n\n` +
+        `Amount: ${invoice.currency || "KES"} ${Number(invoice.amount || 0).toLocaleString("en-KE", { minimumFractionDigits: 2 })}\n` +
+        `Balance: ${invoice.currency || "KES"} ${Number(invoice.balance || 0).toLocaleString("en-KE", { minimumFractionDigits: 2 })}\n\n` +
+        `Thank you.`;
+
+      await shareDocument({
+        blob,
+        fileName,
+        title: `Invoice ${invoice.invoice_number}`,
+        message,
+        phone: tenant?.phone,
+        email: tenant?.email,
+      });
+    } catch (error) {
+      console.error("SHARE INVOICE ERROR", error);
+      alert(
+        error instanceof Error
+          ? error.message
+          : "Unable to share invoice."
+      );
+    }
+  }
+
+
   async function handlePrintInvoice() {
 
     if (!invoice) return;
@@ -666,6 +702,10 @@ export default function InvoiceDetailsPage({
 
             onDownload={
               handleDownloadPdf
+            }
+
+            onShare={
+              handleShareInvoice
             }
 
             onPrint={
