@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import * as XLSX from "xlsx";
 import Section from "@/components/ui/Section";
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
@@ -43,34 +44,61 @@ export default function ReconciliationContent() {
   }
 
   async function handleImport(file: File, sourceType: string) {
-    const text = await file.text();
-    const rows = text
-      .split(/\r?\n/)
-      .filter(Boolean)
-      .slice(1)
-      .map((line) => line.split(",").map((part) => part.trim()));
+    let rows: any[][] = [];
 
-    const transactions = rows.map((row) => ({
-      transaction_date: row[0] ?? "",
-      amount: Number(row[1] ?? 0),
-      reference_number: row[2] ?? null,
-      transaction_code: row[3] ?? null,
-      narration: row[4] ?? null,
-      sender_name: row[5] ?? null,
-      phone_number: row[6] ?? null,
-      bank_account: row[7] ?? null,
-    }));
+    if (file.name.toLowerCase().endsWith(".xlsx")) {
+      const buffer = await file.arrayBuffer();
+      const workbook = XLSX.read(buffer, { type: "array" });
+      const sheet = workbook.Sheets[workbook.SheetNames[0]];
+
+      rows = XLSX.utils.sheet_to_json<any[]>(sheet, {
+        header: 1,
+        defval: "",
+        raw: false,
+      });
+
+      rows = rows.slice(1);
+    } else {
+      const text = await file.text();
+
+      rows = text
+        .split(/\r?\n/)
+        .filter((line) => line.trim() !== "")
+        .slice(1)
+        .map((line) =>
+          line.split(",").map((part) =>
+            part.trim().replace(/^"|"$/g, "")
+          )
+        );
+    }
+
+    const importedTransactions = rows
+      .filter((row) => row.length > 0)
+      .map((row) => ({
+        transaction_date: row[0] ?? "",
+        amount:
+          Number(String(row[1] ?? "0").replace(/,/g, "")) || 0,
+        reference_number: row[2] ?? null,
+        transaction_code: row[3] ?? null,
+        narration: row[4] ?? null,
+        sender_name: row[5] ?? null,
+        phone_number: row[6] ?? null,
+        bank_account: row[7] ?? null,
+      }));
+
+    if (importedTransactions.length === 0) {
+      throw new Error("No transactions found in the statement.");
+    }
 
     await importStatement({
       sourceType,
       sourceName: file.name,
-      transactions,
+      transactions: importedTransactions,
     });
 
     setModalOpen(false);
     setRefreshKey((value) => value + 1);
   }
-
   const stats = useMemo(() => {
     const imported = transactions.filter((item) => item.status === "Imported").length;
     const matched = transactions.filter((item) => item.status === "Reconciled").length;
@@ -157,7 +185,19 @@ export default function ReconciliationContent() {
           </div>
         </Section>
 
-        <Section title="Imported Transactions" description="Review imported payments and reconcile them to invoices.">
+        <Section
+      title="Imported Transactions"
+      description="Review imported payments and reconcile them to invoices."
+      actions={
+        <Button
+          variant="primary"
+          onClick={() => setModalOpen(true)}
+        >
+          <Upload className="mr-2 h-4 w-4" />
+          Import Statement
+        </Button>
+      }
+    >
           <div className="mb-4 flex items-center gap-3 rounded-2xl border border-gray-200 bg-white px-4 py-3">
             <Search className="h-4 w-4 text-gray-400" />
             <input
