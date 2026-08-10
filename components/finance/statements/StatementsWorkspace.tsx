@@ -48,42 +48,66 @@ export default function StatementsWorkspace() {
     load();
   }, []);
 
-  async function generateStatement() {
-    if (!selectedLease) {
-      alert("Select a lease.");
+async function generateStatement() {
+  if (!selectedLease) {
+    alert("Select a statement item.");
+    return;
+  }
+
+  let result: any = null;
+
+  if (selectedType === "Account Statement") {
+    result = await getAccountStatement(selectedLease);
+  } else if (selectedType === "Tenant Statement") {
+    const lease = leases.find((l) => l.id === selectedLease);
+
+    if (!lease) {
+      alert("Selected tenant could not be found.");
       return;
     }
 
-    const lease = leases.find((l) => l.id === selectedLease);
-    if (!lease) return;
-
     const tenantName =
       lease.tenant?.full_name ??
-      `${lease.tenant?.first_name ?? ""} ${lease.tenant?.last_name ?? ""}`.trim();
+      `${lease.tenant?.first_name ?? ""} ${
+        lease.tenant?.last_name ?? ""
+      }`.trim();
 
-    const propertyName = lease.property?.name ?? "Property";
-    const unitNumber = lease.unit?.unit_number ?? "Unit";
+    result = await getTenantStatement(
+      lease.id,
+      tenantName || "Tenant"
+    );
+  } else if (selectedType === "Property Statement") {
+    const lease = leases.find(
+      (l) => l.property?.id === selectedLease
+    );
 
-    let result: any = null;
-
-    switch (selectedType) {
-      case "Tenant Statement":
-        result = await getTenantStatement(selectedLease, tenantName);
-        break;
-      case "Property Statement":
-        result = await getPropertyStatement(selectedLease, propertyName);
-        break;
-      case "Unit Statement":
-        result = await getUnitStatement(selectedLease, unitNumber);
-        break;
-      case "Account Statement":
-        result = await getAccountStatement(selectedLease);
-        break;
+    if (!lease) {
+      alert("Selected property could not be found.");
+      return;
     }
 
-    setStatement(result);
+    result = await getPropertyStatement(
+      lease.id,
+      lease.property?.name ?? "Property"
+    );
+  } else if (selectedType === "Unit Statement") {
+    const lease = leases.find(
+      (l) => l.unit?.id === selectedLease
+    );
+
+    if (!lease) {
+      alert("Selected unit could not be found.");
+      return;
+    }
+
+    result = await getUnitStatement(
+      lease.id,
+      lease.unit?.unit_number ?? "Unit"
+    );
   }
 
+  setStatement(result);
+}
   async function exportCurrentPdf() {
     if (!statement) return;
 
