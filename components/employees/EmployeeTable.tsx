@@ -41,16 +41,14 @@ export default function EmployeeTable({
     {
       key: "role",
       header: "Role",
-      render: (employee: Employee) => (
-        employee.role_name
-      ),
+      render: (employee: Employee) =>
+        employee.role_name || "-",
     },
     {
       key: "designation",
       header: "Designation",
-      render: (employee: Employee) => (
-        employee.designation || "-"
-      ),
+      render: (employee: Employee) =>
+        employee.designation || "-",
     },
     {
       key: "status",
@@ -72,10 +70,9 @@ export default function EmployeeTable({
       header: "",
       render: (employee: Employee) => (
         <div className="flex justify-end gap-2">
-
           <Button
             variant="ghost"
-            className="p-2 min-w-0"
+            className="min-w-0 p-2"
             onClick={() => onEdit(employee)}
           >
             <Edit2 size={16} />
@@ -83,35 +80,147 @@ export default function EmployeeTable({
 
           <Button
             variant="ghost"
-            className="p-2 min-w-0"
-            onClick={() => onDeactivate(employee)}
+            className="min-w-0 p-2"
+            onClick={() =>
+              onDeactivate(employee)
+            }
           >
             <UserX size={16} />
           </Button>
-
         </div>
       ),
     },
   ];
 
-  return (
-    <Card>
+  if (loading) {
+    return (
+      <Card>
+        <div className="p-8 text-center text-sm text-gray-500">
+          Loading employees...
+        </div>
+      </Card>
+    );
+  }
 
-      {employees.length === 0 && !loading ? (
-
+  if (employees.length === 0) {
+    return (
+      <Card>
         <div className="p-8 text-center text-gray-500">
           No employees found.
         </div>
+      </Card>
+    );
+  }
 
-      ) : (
+  return (
+    <Card className="overflow-hidden p-0">
 
+      {/* Desktop */}
+
+      <div className="hidden md:block">
         <DataTable
           columns={columns}
           data={employees}
-          loading={loading}
         />
+      </div>
 
-      )}
+      {/* Mobile */}
+
+      <div className="divide-y divide-gray-100 md:hidden">
+
+        {employees.map((employee) => (
+          <div
+            key={employee.id}
+            className="p-5"
+          >
+
+            <div className="flex items-start justify-between gap-4">
+
+              <div className="min-w-0">
+
+                <h3 className="truncate text-base font-semibold text-gray-900">
+                  {employee.full_name}
+                </h3>
+
+                <p className="mt-1 text-sm text-gray-500">
+                  {employee.phone}
+                </p>
+
+              </div>
+
+              <Badge
+                variant={
+                  employee.employment_status ===
+                  "Active"
+                    ? "success"
+                    : "secondary"
+                }
+              >
+                {employee.employment_status}
+              </Badge>
+
+            </div>
+
+            <div className="mt-4 grid grid-cols-2 gap-4">
+
+              <div>
+                <p className="text-xs font-medium uppercase tracking-wide text-gray-400">
+                  Role
+                </p>
+
+                <p className="mt-1 text-sm font-medium text-gray-800">
+                  {employee.role_name || "-"}
+                </p>
+              </div>
+
+              <div>
+                <p className="text-xs font-medium uppercase tracking-wide text-gray-400">
+                  Designation
+                </p>
+
+                <p className="mt-1 text-sm font-medium text-gray-800">
+                  {employee.designation || "-"}
+                </p>
+              </div>
+
+            </div>
+
+            <div className="mt-4 flex gap-2 border-t border-gray-100 pt-4">
+
+              <Button
+                variant="ghost"
+                className="flex-1"
+                onClick={() =>
+                  onEdit(employee)
+                }
+              >
+                <Edit2
+                  size={16}
+                  className="mr-2"
+                />
+                Edit
+              </Button>
+
+              <Button
+                variant="ghost"
+                className="flex-1"
+                onClick={() =>
+                  onDeactivate(employee)
+                }
+              >
+                <UserX
+                  size={16}
+                  className="mr-2"
+                />
+                Deactivate
+              </Button>
+
+            </div>
+
+          </div>
+        ))}
+
+      </div>
 
     </Card>
   );
