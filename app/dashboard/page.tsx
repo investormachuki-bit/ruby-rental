@@ -251,87 +251,77 @@ export default function DashboardPage() {
           title="Quick Actions"
           description="Frequently used shortcuts."
         >
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4">
+          
+         <div
+  className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4"
+  style={brandVariable}
+>
+  <Link href="/properties">
+    <Card className="cursor-pointer p-6 transition-all duration-200 hover:-translate-y-1 hover:border-[var(--brand-accent)] hover:shadow-lg">
+      <Building2
+        className="h-10 w-10"
+        style={{
+          color: accentColor,
+        }}
+      />
 
-            <Link href="/properties">
-              <Card
-                className="cursor-pointer p-6 transition-all duration-200 hover:-translate-y-1 hover:border-[var(--brand-accent)] hover:shadow-lg"
-                style={brandVariable}
-              >
-                <Building2
-                  className="h-10 w-10"
-                  style={{
-                    color: accentColor,
-                  }}
-                />
+      <h4 className="mt-5 text-lg font-semibold">
+        Properties
+      </h4>
 
-                <h4 className="mt-5 text-lg font-semibold">
-                  Properties
-                </h4>
+      <p className="mt-2 text-sm text-gray-500">
+        Manage all your rental properties.
+      </p>
+    </Card>
+  </Link>
 
-                <p className="mt-2 text-sm text-gray-500">
-                  Manage all your rental properties.
-                </p>
-              </Card>
-            </Link>
+  <Link href="/units">
+    <Card className="cursor-pointer p-6 transition-all duration-200 hover:-translate-y-1 hover:border-[var(--brand-accent)] hover:shadow-lg">
+      <Home className="h-10 w-10 text-sky-600" />
 
-            <Link href="/units">
-              <Card
-                className="cursor-pointer p-6 transition-all duration-200 hover:-translate-y-1 hover:border-[var(--brand-accent)] hover:shadow-lg"
-                style={brandVariable}
-              >
-                <Home className="h-10 w-10 text-sky-600" />
+      <h4 className="mt-5 text-lg font-semibold">
+        Units
+      </h4>
 
-                <h4 className="mt-5 text-lg font-semibold">
-                  Units
-                </h4>
+      <p className="mt-2 text-sm text-gray-500">
+        View and manage rental units.
+      </p>
+    </Card>
+  </Link>
 
-                <p className="mt-2 text-sm text-gray-500">
-                  View and manage rental units.
-                </p>
-              </Card>
-            </Link>
+  <Link href="/occupants">
+    <Card className="cursor-pointer p-6 transition-all duration-200 hover:-translate-y-1 hover:border-[var(--brand-accent)] hover:shadow-lg">
+      <Users className="h-10 w-10 text-violet-600" />
 
-            <Link href="/occupants">
-              <Card
-                className="cursor-pointer p-6 transition-all duration-200 hover:-translate-y-1 hover:border-[var(--brand-accent)] hover:shadow-lg"
-                style={brandVariable}
-              >
-                <Users className="h-10 w-10 text-violet-600" />
+      <h4 className="mt-5 text-lg font-semibold">
+        Occupants
+      </h4>
 
-                <h4 className="mt-5 text-lg font-semibold">
-                  Occupants
-                </h4>
+      <p className="mt-2 text-sm text-gray-500">
+        Manage tenants and occupants.
+      </p>
+    </Card>
+  </Link>
 
-                <p className="mt-2 text-sm text-gray-500">
-                  Manage tenants and occupants.
-                </p>
-              </Card>
-            </Link>
+  <Link href="/reports">
+    <Card className="cursor-pointer p-6 transition-all duration-200 hover:-translate-y-1 hover:border-[var(--brand-accent)] hover:shadow-lg">
+      <BarChart3
+        className="h-10 w-10"
+        style={{
+          color: accentColor,
+        }}
+      />
 
-            <Link href="/reports">
-              <Card
-                className="cursor-pointer p-6 transition-all duration-200 hover:-translate-y-1 hover:border-[var(--brand-accent)] hover:shadow-lg"
-                style={brandVariable}
-              >
-                <BarChart3
-                  className="h-10 w-10"
-                  style={{
-                    color: accentColor,
-                  }}
-                />
+      <h4 className="mt-5 text-lg font-semibold">
+        Reports
+      </h4>
 
-                <h4 className="mt-5 text-lg font-semibold">
-                  Reports
-                </h4>
-
-                <p className="mt-2 text-sm text-gray-500">
-                  View portfolio reports and insights.
-                </p>
-              </Card>
-            </Link>
-
-          </div>
+      <p className="mt-2 text-sm text-gray-500">
+        View portfolio reports and insights.
+      </p>
+    </Card>
+  </Link>
+</div>
         </Section>
 
       </PageContainer>
