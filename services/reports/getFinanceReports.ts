@@ -1,8 +1,7 @@
 import { getFinanceDashboard } from "@/services/finance/getFinanceDashboard";
 import { getAgingReport } from "./aging/getAgingReport";
 import { getCashFlow } from "./cashflow/getCashFlow";
-import { getPropertyRentRoll } from "./property/getPropertyRentRoll";
-import { getRentRollReport } from "./rentRoll/getRentRollReport";
+import { getRentRoll } from "./rentRoll/getRentRoll";
 import { getPropertyPerformance } from "./property/getPropertyPerformance";
 
 export async function getFinanceReports() {
@@ -10,39 +9,37 @@ export async function getFinanceReports() {
     dashboard,
     aging,
     cashFlow,
+    rentRoll,
     propertyPerformance,
   ] = await Promise.all([
     getFinanceDashboard(),
     getAgingReport(),
     getCashFlow(),
+    getRentRoll(),
     getPropertyPerformance(),
   ]);
 
   return {
-    revenue:
-      dashboard.revenueThisMonth,
+    revenue: dashboard.revenueThisMonth,
 
-    outstanding:
-      dashboard.outstandingRent,
+    outstanding: dashboard.outstandingRent,
 
-    collections:
-      dashboard.collectionsToday,
+    collections: dashboard.collectionsToday,
 
-    collectionRate:
-      dashboard.collectionRate,
+    collectionRate: dashboard.collectionRate,
 
-    recentPayments:
-      dashboard.recentPayments,
+    recentPayments: dashboard.recentPayments,
 
-    outstandingInvoices:
-      dashboard.outstandingInvoices,
+    outstandingInvoices: dashboard.outstandingInvoices,
 
-    revenueTrend:
-      dashboard.revenueTrend,
+    revenueTrend: dashboard.revenueTrend,
 
     aging,
 
     cashFlow,
+
+    rentRoll,
+
     propertyPerformance,
   };
 }
