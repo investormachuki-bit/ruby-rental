@@ -3,6 +3,7 @@ import { getAgingReport } from "./aging/getAgingReport";
 import { getCashFlow } from "./cashflow/getCashFlow";
 import { getRentRoll } from "./rentRoll/getRentRoll";
 import { getPropertyPerformance } from "./property/getPropertyPerformance";
+import { getOutstandingBalances } from "./outstanding/getOutstandingBalances";
 
 export async function getFinanceReports() {
   const [
@@ -11,12 +12,14 @@ export async function getFinanceReports() {
     cashFlow,
     rentRoll,
     propertyPerformance,
+    outstandingBalances,
   ] = await Promise.all([
     getFinanceDashboard(),
     getAgingReport(),
     getCashFlow(),
     getRentRoll(),
     getPropertyPerformance(),
+    getOutstandingBalances(),
   ]);
 
   return {
@@ -41,5 +44,7 @@ export async function getFinanceReports() {
     rentRoll,
 
     propertyPerformance,
+
+    outstandingBalances,
   };
 }
