@@ -7,6 +7,7 @@ import Loading from "@/components/ui/Loading";
 
 import { getFinanceReports } from "@/services/reports/getFinanceReports";
 import PropertyRentRollCard from "./reports/PropertyRentRollCard";
+import PropertyPerformanceCard from "./reports/PropertyPerformanceCard";
 
 type ReportData = Awaited<ReturnType<typeof getFinanceReports>>;
 
@@ -113,6 +114,10 @@ export default function FinanceReportsDashboard() {
       {/* PROPERTY RENT ROLL */}
       <PropertyRentRollCard
         rows={data.rentRoll ?? []}
+      />
+
+      <PropertyPerformanceCard
+        rows={data.propertyPerformance ?? []}
       />
 
       {/* AGING REPORT */}
