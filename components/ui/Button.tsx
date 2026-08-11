@@ -1,4 +1,11 @@
-import { ButtonHTMLAttributes, ReactNode } from "react";
+"use client";
+
+import {
+  ButtonHTMLAttributes,
+  ReactNode,
+} from "react";
+
+import { useBranding } from "@/contexts/BrandingContext";
 
 type ButtonVariant =
   | "primary"
@@ -24,12 +31,31 @@ export default function Button({
   disabled,
   ...props
 }: ButtonProps) {
+  const {
+    branding,
+  } = useBranding();
+
+  const whiteLabelEnabled =
+    branding?.enable_white_label === true;
+
+  const primaryColor =
+    whiteLabelEnabled &&
+    branding?.primary_color
+      ? branding.primary_color
+      : "#111111";
+
+  const accentColor =
+    whiteLabelEnabled &&
+    branding?.accent_color
+      ? branding.accent_color
+      : "#D4AF37";
+
   const base =
     "inline-flex items-center justify-center rounded-2xl px-5 py-3 font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60";
 
   const variants = {
     primary:
-      "bg-black text-white hover:bg-gray-900 focus:ring-black",
+      "text-white hover:opacity-90 focus:ring-[var(--button-primary)]",
 
     secondary:
       "border border-gray-300 bg-white text-gray-900 hover:bg-gray-100 focus:ring-gray-400",
@@ -44,6 +70,20 @@ export default function Button({
       "bg-transparent text-gray-700 hover:bg-gray-100 focus:ring-gray-400",
   };
 
+  const primaryStyle =
+    variant === "primary"
+      ? ({
+          backgroundColor:
+            whiteLabelEnabled
+              ? accentColor
+              : primaryColor,
+          "--button-primary":
+            whiteLabelEnabled
+              ? accentColor
+              : primaryColor,
+        } as React.CSSProperties)
+      : undefined;
+
   return (
     <button
       {...props}
@@ -54,8 +94,11 @@ export default function Button({
         ${fullWidth ? "w-full" : ""}
         ${className}
       `}
+      style={primaryStyle}
     >
-      {loading ? "Please wait..." : children}
+      {loading
+        ? "Please wait..."
+        : children}
     </button>
   );
 }
