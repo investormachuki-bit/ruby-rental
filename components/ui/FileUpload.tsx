@@ -1,14 +1,25 @@
 "use client";
 
-import { ChangeEvent, useRef } from "react";
-import { Upload, Image as ImageIcon, Trash2 } from "lucide-react";
+import {
+  ChangeEvent,
+  useRef,
+  useState,
+} from "react";
+
+import {
+  Upload,
+  Image as ImageIcon,
+  Trash2,
+  Loader2,
+} from "lucide-react";
+
 import Button from "@/components/ui/Button";
 
 type FileUploadProps = {
   label: string;
   value?: string | null;
-  onSelect: (file: File) => void;
-  onRemove?: () => void;
+  onSelect: (file: File) => void | Promise<void>;
+  onRemove?: () => void | Promise<void>;
   accept?: string;
   disabled?: boolean;
 };
@@ -21,21 +32,108 @@ export default function FileUpload({
   accept = "image/*",
   disabled = false,
 }: FileUploadProps) {
+  const inputRef =
+    useRef<HTMLInputElement>(null);
 
-  const inputRef = useRef<HTMLInputElement>(null);
+  const [
+    uploading,
+    setUploading,
+  ] = useState(false);
 
-  function handleChange(
+  const [
+    error,
+    setError,
+  ] = useState<string | null>(null);
+
+  async function handleChange(
     event: ChangeEvent<HTMLInputElement>
   ) {
-    const file = event.target.files?.[0];
+    const file =
+      event.target.files?.[0];
 
-    if (!file) return;
+    // Reset the input so selecting the same
+    // file again will trigger onChange.
+    event.target.value = "";
 
-    onSelect(file);
+    if (!file) {
+      return;
+    }
+
+    setError(null);
+    setUploading(true);
+
+    try {
+      await onSelect(file);
+    } catch (error: unknown) {
+      console.error(
+        "File upload failed:",
+        error
+      );
+
+      let message =
+        "Upload failed. Please try again.";
+
+      if (error instanceof Error) {
+        message = error.message;
+      } else if (
+        typeof error === "object" &&
+        error !== null &&
+        "message" in error
+      ) {
+        message = String(
+          (error as { message?: unknown })
+            .message
+        );
+      }
+
+      setError(message);
+    } finally {
+      setUploading(false);
+    }
   }
 
-  return (
+  async function handleRemove() {
+    if (!onRemove) {
+      return;
+    }
 
+    setError(null);
+    setUploading(true);
+
+    try {
+      await onRemove();
+    } catch (error: unknown) {
+      console.error(
+        "File removal failed:",
+        error
+      );
+
+      let message =
+        "Unable to remove the file.";
+
+      if (error instanceof Error) {
+        message = error.message;
+      } else if (
+        typeof error === "object" &&
+        error !== null &&
+        "message" in error
+      ) {
+        message = String(
+          (error as { message?: unknown })
+            .message
+        );
+      }
+
+      setError(message);
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  const isDisabled =
+    disabled || uploading;
+
+  return (
     <div className="space-y-3">
 
       <label className="block text-sm font-medium text-gray-700">
@@ -51,39 +149,57 @@ export default function FileUpload({
             <img
               src={value}
               alt={label}
-              className="h-40 w-full rounded-xl object-contain bg-white"
+              className="h-40 w-full rounded-xl bg-white object-contain"
             />
 
-            <div className="flex gap-3">
+            <div className="flex flex-wrap gap-3">
 
               <Button
                 type="button"
                 variant="secondary"
-                onClick={() => inputRef.current?.click()}
-                disabled={disabled}
+                onClick={() =>
+                  inputRef.current?.click()
+                }
+                disabled={isDisabled}
               >
-                <Upload
-                  size={16}
-                  className="mr-2"
-                />
-                Replace
-              </Button>
-
-              {onRemove && (
-
-                <Button
-                  type="button"
-                  variant="danger"
-                  onClick={onRemove}
-                  disabled={disabled}
-                >
-                  <Trash2
+                {uploading ? (
+                  <Loader2
+                    size={16}
+                    className="mr-2 animate-spin"
+                  />
+                ) : (
+                  <Upload
                     size={16}
                     className="mr-2"
                   />
+                )}
+
+                {uploading
+                  ? "Uploading..."
+                  : "Replace"}
+              </Button>
+
+              {onRemove && (
+                <Button
+                  type="button"
+                  variant="danger"
+                  onClick={handleRemove}
+                  disabled={isDisabled}
+                >
+                  {uploading ? (
+                    <Loader2
+                      size={16}
+                      className="mr-2 animate-spin"
+                    />
+                  ) : (
+                    <Trash2
+                      size={16}
+                      className="mr-2"
+                    />
+                  )}
+
                   Remove
                 </Button>
-
               )}
 
             </div>
@@ -94,22 +210,35 @@ export default function FileUpload({
 
           <button
             type="button"
-            disabled={disabled}
-            onClick={() => inputRef.current?.click()}
-            className="flex w-full flex-col items-center justify-center gap-3 py-10 transition hover:opacity-80"
+            disabled={isDisabled}
+            onClick={() =>
+              inputRef.current?.click()
+            }
+            className="flex w-full flex-col items-center justify-center gap-3 rounded-xl py-10 transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-60"
           >
 
-            <ImageIcon
-              size={48}
-              className="text-gray-400"
-            />
+            {uploading ? (
+              <Loader2
+                size={48}
+                className="animate-spin text-gray-400"
+              />
+            ) : (
+              <ImageIcon
+                size={48}
+                className="text-gray-400"
+              />
+            )}
 
             <p className="font-medium text-gray-700">
-              Click to upload
+              {uploading
+                ? "Uploading..."
+                : "Click to upload"}
             </p>
 
             <p className="text-sm text-gray-500">
-              PNG, JPG, SVG or WEBP
+              {uploading
+                ? "Please wait..."
+                : "PNG, JPG, SVG or WEBP"}
             </p>
 
           </button>
@@ -121,13 +250,19 @@ export default function FileUpload({
           type="file"
           hidden
           accept={accept}
+          disabled={isDisabled}
           onChange={handleChange}
         />
+
+        {error && (
+          <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+            <strong>Upload error:</strong>{" "}
+            {error}
+          </div>
+        )}
 
       </div>
 
     </div>
-
   );
-
 }
