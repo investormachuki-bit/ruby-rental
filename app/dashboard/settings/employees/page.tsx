@@ -100,36 +100,72 @@ export default function EmployeesPage() {
   }, []);
 
   return (
-    <div className="space-y-6">
+    <div className="mx-auto w-full max-w-7xl space-y-6">
 
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      {/* Header */}
 
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">
-            Employees
-          </h1>
+      <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm sm:p-6">
 
-          <p className="mt-1 text-gray-500">
-            Manage your staff and assign roles.
-          </p>
+        <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+
+          <div className="flex items-start gap-4">
+
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#D4AF37]/10 text-[#B8941F]">
+              <span className="text-lg font-bold">
+                E
+              </span>
+            </div>
+
+            <div>
+
+              <div className="flex flex-wrap items-center gap-3">
+
+                <h1 className="text-2xl font-bold tracking-tight text-gray-900 sm:text-3xl">
+                  Employees
+                </h1>
+
+                {!loading && (
+                  <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold text-gray-600">
+                    {employees.length}{" "}
+                    {employees.length === 1
+                      ? "employee"
+                      : "employees"}
+                  </span>
+                )}
+
+              </div>
+
+              <p className="mt-1 text-sm text-gray-500 sm:text-base">
+                Manage your staff and assign roles.
+              </p>
+
+            </div>
+
+          </div>
+
+          <Button
+            onClick={() => {
+              setSelectedEmployee(null);
+              setDialogOpen(true);
+            }}
+            className="w-full sm:w-auto"
+          >
+            + New Employee
+          </Button>
+
         </div>
 
-        <Button
-          onClick={() => {
-            setSelectedEmployee(null);
-            setDialogOpen(true);
-          }}
-        >
-          New Employee
-        </Button>
-
       </div>
+
+      {/* Error */}
 
       {error && (
         <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
           {error}
         </div>
       )}
+
+      {/* Employees */}
 
       <EmployeeTable
         employees={employees}
@@ -154,6 +190,8 @@ export default function EmployeesPage() {
           await loadEmployees();
         }}
       />
+
+      {/* Dialog */}
 
       <EmployeeDialog
         open={dialogOpen}
