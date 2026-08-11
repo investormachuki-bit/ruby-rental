@@ -82,7 +82,16 @@ export default function CompanyWorkspacePage() {
 
   }
 
-  if (loading || !settings) {
+  const {
+  uploading,
+  uploadAsset,
+  removeAsset,
+} = useWorkspaceAssets(
+  settings,
+  setSettings
+);
+
+if (loading || !settings) {
 
     return (
       <div className="p-10 text-center">
@@ -91,15 +100,6 @@ export default function CompanyWorkspacePage() {
     );
 
   }
-
-  const {
-    uploading,
-    uploadAsset,
-    removeAsset,
-  } = useWorkspaceAssets(
-    settings,
-    setSettings
-  );
 
   return (
 

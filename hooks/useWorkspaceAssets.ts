@@ -7,7 +7,7 @@ import { updateWorkspaceSettings } from "@/services/workspace";
 import { WorkspaceSettings } from "@/types/workspace";
 
 export function useWorkspaceAssets(
-  settings: WorkspaceSettings,
+  settings: WorkspaceSettings | null,
   setSettings: (settings: WorkspaceSettings) => void
 ) {
   const [uploading, setUploading] = useState(false);
@@ -17,6 +17,10 @@ export function useWorkspaceAssets(
     fileName: string,
     file: File
   ) {
+    if (!settings) {
+      throw new Error("Workspace settings are not loaded.");
+    }
+
     setUploading(true);
 
     try {
@@ -43,6 +47,10 @@ export function useWorkspaceAssets(
   async function removeAsset(
     field: keyof WorkspaceSettings
   ) {
+    if (!settings) {
+      throw new Error("Workspace settings are not loaded.");
+    }
+
     const updatedSettings = {
       ...settings,
       [field]: null,
