@@ -69,8 +69,6 @@ export default function CompanyWorkspacePage() {
 
       setSettings(updated);
 
-      // Refresh the application-wide branding context
-      // so the new branding is reflected immediately.
       await refreshBranding();
 
       alert("Settings saved successfully.");
@@ -81,6 +79,7 @@ export default function CompanyWorkspacePage() {
 
   const {
     uploading,
+    error: assetError,
     uploadAsset,
     removeAsset,
   } = useWorkspaceAssets(
@@ -365,6 +364,13 @@ export default function CompanyWorkspacePage() {
         <h2 className="mb-6 text-xl font-semibold">
           Brand Assets
         </h2>
+
+        {assetError && (
+          <div className="mb-6 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+            <strong>Upload error:</strong>{" "}
+            {assetError}
+          </div>
+        )}
 
         <div className="grid gap-6 md:grid-cols-2">
 
