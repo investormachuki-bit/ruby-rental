@@ -1,8 +1,11 @@
 "use client";
 
 import { useState } from "react";
+
 import Sidebar from "./sidebar/Sidebar";
 import Topbar from "./Topbar";
+
+import { useBranding } from "@/contexts/BrandingContext";
 
 type AppShellProps = {
   children: React.ReactNode;
@@ -16,9 +19,33 @@ export default function AppShell({
     setSidebarOpen,
   ] = useState(false);
 
-  return (
-    <div className="min-h-screen bg-slate-50 text-gray-900">
+  const {
+    branding,
+  } = useBranding();
 
+  const whiteLabelEnabled =
+    branding?.enable_white_label === true;
+
+  const backgroundColor =
+    whiteLabelEnabled &&
+    branding?.secondary_color
+      ? branding.secondary_color
+      : "#F8FAFC";
+
+  const textColor =
+    whiteLabelEnabled &&
+    branding?.primary_color
+      ? branding.primary_color
+      : "#111827";
+
+  return (
+    <div
+      className="min-h-screen"
+      style={{
+        backgroundColor,
+        color: textColor,
+      }}
+    >
       {/* Mobile Overlay */}
 
       {sidebarOpen && (
@@ -46,14 +73,15 @@ export default function AppShell({
           setSidebarOpen={setSidebarOpen}
         />
 
-        <main className="flex-1 overflow-x-hidden bg-slate-50">
-
+        <main
+          className="flex-1 overflow-x-hidden"
+          style={{
+            backgroundColor,
+          }}
+        >
           <div className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-
             {children}
-
           </div>
-
         </main>
 
       </div>
