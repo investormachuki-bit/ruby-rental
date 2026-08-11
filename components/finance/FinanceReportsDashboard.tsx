@@ -112,7 +112,7 @@ export default function FinanceReportsDashboard() {
 
       {/* PROPERTY RENT ROLL */}
       <PropertyRentRollCard
-        rows={data.propertyPerformance ?? []}
+        rows={data.rentRoll ?? []}
       />
 
       {/* AGING REPORT */}

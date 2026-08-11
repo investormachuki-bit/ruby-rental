@@ -1,17 +1,25 @@
 "use client";
 
 import Card from "@/components/ui/Card";
+import Button from "@/components/ui/Button";
+import { exportPdf } from "@/services/reports/pdf/exportPdf";
+import { exportExcel } from "@/services/reports/excel/exportExcel";
 
 export type PropertyRentRoll = {
   id: string;
-  property: string;
-  totalUnits: number;
-  occupiedUnits: number;
-  vacantUnits: number;
-  occupancyRate: number;
-  expectedRent: number;
-  collectedRent: number;
-  outstandingRent: number;
+  property_id: string | null;
+  property_name: string;
+  unit_id: string | null;
+  unit_number: string;
+  tenant_id: string | null;
+  tenant_name: string;
+  lease_id: string | null;
+  lease_number: string;
+  rent: number;
+  billed: number;
+  paid: number;
+  outstanding: number;
+  lease_status: string;
 };
 
 type Props = {
@@ -23,21 +31,62 @@ function money(value: number) {
 }
 
 export default function PropertyRentRollCard({ rows }: Props) {
+  async function handlePdf() {
+    await exportPdf({
+      title: "Rent Roll",
+      subtitle: "Property rental income and tenant balances",
+      rows: rows.map((row) => ({
+        Property: row.property_name,
+        Unit: row.unit_number,
+        Tenant: row.tenant_name,
+        Lease: row.lease_number,
+        Rent: money(row.rent),
+        Billed: money(row.billed),
+        Paid: money(row.paid),
+        Outstanding: money(row.outstanding),
+        Status: row.lease_status,
+      })),
+    });
+  }
+
+  async function handleExcel() {
+    await exportExcel({
+      fileName: "Rent_Roll",
+      rows: rows.map((row) => ({
+        Property: row.property_name,
+        Unit: row.unit_number,
+        Tenant: row.tenant_name,
+        Lease: row.lease_number,
+        Rent: row.rent,
+        Billed: row.billed,
+        Paid: row.paid,
+        Outstanding: row.outstanding,
+        Status: row.lease_status,
+      })),
+    });
+  }
+
   return (
     <Card>
-      <div className="mb-5">
-        <h2 className="text-xl font-bold">
-          Property Performance
-        </h2>
+      <div className="mb-5 flex items-center justify-between gap-4">
+        <div>
+          <h2 className="text-xl font-bold">Rent Roll</h2>
+          <p className="text-sm text-gray-500">
+            Property, tenant, rent and outstanding balances.
+          </p>
+        </div>
 
-        <p className="text-sm text-gray-500">
-          Occupancy, expected rent, collections and outstanding balances.
-        </p>
+        <div className="flex gap-2">
+          <Button onClick={handlePdf}>Export PDF</Button>
+          <Button variant="secondary" onClick={handleExcel}>
+            Export Excel
+          </Button>
+        </div>
       </div>
 
       {rows.length === 0 ? (
         <div className="py-10 text-center text-gray-400">
-          No property performance data found.
+          No rent roll records found.
         </div>
       ) : (
         <div className="overflow-x-auto">
@@ -45,11 +94,11 @@ export default function PropertyRentRollCard({ rows }: Props) {
             <thead>
               <tr className="border-b text-left text-gray-500">
                 <th className="px-3 py-3">Property</th>
-                <th className="px-3 py-3">Units</th>
-                <th className="px-3 py-3">Occupied</th>
-                <th className="px-3 py-3">Occupancy</th>
-                <th className="px-3 py-3">Expected</th>
-                <th className="px-3 py-3">Collected</th>
+                <th className="px-3 py-3">Unit</th>
+                <th className="px-3 py-3">Tenant</th>
+                <th className="px-3 py-3">Rent</th>
+                <th className="px-3 py-3">Billed</th>
+                <th className="px-3 py-3">Paid</th>
                 <th className="px-3 py-3">Outstanding</th>
               </tr>
             </thead>
@@ -58,31 +107,31 @@ export default function PropertyRentRollCard({ rows }: Props) {
               {rows.map((row) => (
                 <tr key={row.id} className="border-b">
                   <td className="px-3 py-3 font-semibold">
-                    {row.property}
+                    {row.property_name}
                   </td>
 
                   <td className="px-3 py-3">
-                    {row.totalUnits}
+                    {row.unit_number}
                   </td>
 
                   <td className="px-3 py-3">
-                    {row.occupiedUnits}
+                    {row.tenant_name}
                   </td>
 
                   <td className="px-3 py-3">
-                    {row.occupancyRate}%
+                    {money(row.rent)}
                   </td>
 
                   <td className="px-3 py-3">
-                    {money(row.expectedRent)}
+                    {money(row.billed)}
                   </td>
 
                   <td className="px-3 py-3 font-semibold">
-                    {money(row.collectedRent)}
+                    {money(row.paid)}
                   </td>
 
                   <td className="px-3 py-3 font-semibold">
-                    {money(row.outstandingRent)}
+                    {money(row.outstanding)}
                   </td>
                 </tr>
               ))}
