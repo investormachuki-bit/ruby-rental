@@ -8,19 +8,19 @@ import TextArea from "@/components/ui/Textarea";
 import Card from "@/components/ui/Card";
 
 import {
+  Employee,
   EmployeeFormValues,
   RoleOption,
 } from "@/types/employees";
 
 type EmployeeDialogProps = {
   open: boolean;
+  employee: Employee | null;
+  roles: RoleOption[];
   onClose: () => void;
-  onSubmit: (
+  onSave: (
     values: EmployeeFormValues
   ) => Promise<void>;
-  roles: RoleOption[];
-  initialValues?: EmployeeFormValues | null;
-  loading?: boolean;
 };
 
 const emptyValues: EmployeeFormValues = {
@@ -34,28 +34,41 @@ const emptyValues: EmployeeFormValues = {
 
 export default function EmployeeDialog({
   open,
-  onClose,
-  onSubmit,
+  employee,
   roles,
-  initialValues,
-  loading = false,
+  onClose,
+  onSave,
 }: EmployeeDialogProps) {
   const [values, setValues] =
     useState<EmployeeFormValues>(
-      initialValues ?? emptyValues
+      emptyValues
     );
+
+  const [saving, setSaving] =
+    useState(false);
 
   const [error, setError] =
     useState<string | null>(null);
 
   useEffect(() => {
-    if (open) {
-      setValues(
-        initialValues ?? emptyValues
-      );
-      setError(null);
+    if (!open) return;
+
+    if (employee) {
+      setValues({
+        full_name: employee.full_name ?? "",
+        phone: employee.phone ?? "",
+        email: employee.email ?? "",
+        designation:
+          employee.designation ?? "",
+        role_id: employee.role_id ?? "",
+        notes: "",
+      });
+    } else {
+      setValues(emptyValues);
     }
-  }, [open, initialValues]);
+
+    setError(null);
+  }, [open, employee]);
 
   if (!open) {
     return null;
@@ -79,22 +92,30 @@ export default function EmployeeDialog({
     setError(null);
 
     if (!values.full_name.trim()) {
-      setError("Employee name is required.");
+      setError(
+        "Employee name is required."
+      );
       return;
     }
 
     if (!values.phone.trim()) {
-      setError("Phone number is required.");
+      setError(
+        "Phone number is required."
+      );
       return;
     }
 
     if (!values.role_id) {
-      setError("Please select a role.");
+      setError(
+        "Please select a role."
+      );
       return;
     }
 
+    setSaving(true);
+
     try {
-      await onSubmit({
+      await onSave({
         ...values,
         full_name:
           values.full_name.trim(),
@@ -107,6 +128,8 @@ export default function EmployeeDialog({
         notes:
           values.notes.trim(),
       });
+
+      onClose();
     } catch (error: unknown) {
       console.error(
         "Employee save failed:",
@@ -120,6 +143,8 @@ export default function EmployeeDialog({
           "Unable to save employee. Please try again."
         );
       }
+    } finally {
+      setSaving(false);
     }
   }
 
@@ -131,13 +156,13 @@ export default function EmployeeDialog({
         <div className="mb-6">
 
           <h2 className="text-xl font-semibold text-gray-900">
-            {initialValues
+            {employee
               ? "Edit Employee"
               : "Add Employee"}
           </h2>
 
           <p className="mt-1 text-sm text-gray-500">
-            {initialValues
+            {employee
               ? "Update employee information."
               : "Add a staff member to your workspace."}
           </p>
@@ -164,7 +189,7 @@ export default function EmployeeDialog({
                 event.target.value
               )
             }
-            disabled={loading}
+            disabled={saving}
             autoFocus
           />
 
@@ -179,7 +204,7 @@ export default function EmployeeDialog({
                   event.target.value
                 )
               }
-              disabled={loading}
+              disabled={saving}
               type="tel"
             />
 
@@ -192,7 +217,7 @@ export default function EmployeeDialog({
                   event.target.value
                 )
               }
-              disabled={loading}
+              disabled={saving}
               type="email"
             />
 
@@ -209,7 +234,7 @@ export default function EmployeeDialog({
                   event.target.value
                 )
               }
-              disabled={loading}
+              disabled={saving}
               placeholder="e.g. Property Manager"
             />
 
@@ -226,7 +251,7 @@ export default function EmployeeDialog({
                     event.target.value
                   )
                 }
-                disabled={loading}
+                disabled={saving}
                 className="w-full rounded-xl border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 outline-none transition focus:border-gray-500 focus:ring-2 focus:ring-gray-200 disabled:bg-gray-100"
               >
                 <option value="">
@@ -256,7 +281,7 @@ export default function EmployeeDialog({
                 event.target.value
               )
             }
-            disabled={loading}
+            disabled={saving}
             placeholder="Optional notes"
           />
 
@@ -266,16 +291,16 @@ export default function EmployeeDialog({
               type="button"
               variant="secondary"
               onClick={onClose}
-              disabled={loading}
+              disabled={saving}
             >
               Cancel
             </Button>
 
             <Button
               type="submit"
-              loading={loading}
+              loading={saving}
             >
-              {initialValues
+              {employee
                 ? "Save Changes"
                 : "Add Employee"}
             </Button>
