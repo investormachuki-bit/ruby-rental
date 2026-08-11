@@ -6,8 +6,11 @@ import {
   useEffect,
   useState,
 } from "react";
+
 import { Session } from "@supabase/supabase-js";
+
 import { supabase } from "@/lib/supabase";
+
 import { getProfile } from "@/services/auth/getProfile";
 
 type AuthContextType = {
@@ -16,25 +19,35 @@ type AuthContextType = {
   workspace: any;
   loading: boolean;
   refreshProfile: () => Promise<void>;
+  signOut: () => Promise<void>;
 };
 
-const AuthContext = createContext<AuthContextType>({
-  session: null,
-  profile: null,
-  workspace: null,
-  loading: true,
-  refreshProfile: async () => {},
-});
+const AuthContext =
+  createContext<AuthContextType>({
+    session: null,
+    profile: null,
+    workspace: null,
+    loading: true,
+    refreshProfile: async () => {},
+    signOut: async () => {},
+  });
 
 export function AuthProvider({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const [session, setSession] = useState<Session | null>(null);
-  const [profile, setProfile] = useState<any>(null);
-  const [workspace, setWorkspace] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  const [session, setSession] =
+    useState<Session | null>(null);
+
+  const [profile, setProfile] =
+    useState<any>(null);
+
+  const [workspace, setWorkspace] =
+    useState<any>(null);
+
+  const [loading, setLoading] =
+    useState(true);
 
   async function refreshProfile() {
     const {
@@ -47,10 +60,25 @@ export function AuthProvider({
       return;
     }
 
-    const profileData = await getProfile(session.user.id);
+    const profileData =
+      await getProfile(session.user.id);
 
     setProfile(profileData);
     setWorkspace(profileData.workspace);
+  }
+
+  async function signOut() {
+    const {
+      error,
+    } = await supabase.auth.signOut();
+
+    if (error) {
+      throw error;
+    }
+
+    setSession(null);
+    setProfile(null);
+    setWorkspace(null);
   }
 
   useEffect(() => {
@@ -72,20 +100,22 @@ export function AuthProvider({
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
-        setSession(session);
+    } =
+      supabase.auth.onAuthStateChange(
+        async (_event, session) => {
+          setSession(session);
 
-        if (session) {
-          await refreshProfile();
-        } else {
-          setProfile(null);
-          setWorkspace(null);
-        }
-      }
-    );
+          if (session) {
+            await refreshProfile();
+          } else {
+            setProfile(null);
+            setWorkspace(null);
+          }
+        },
+      );
 
-    return () => subscription.unsubscribe();
+    return () =>
+      subscription.unsubscribe();
   }, []);
 
   return (
@@ -96,6 +126,7 @@ export function AuthProvider({
         workspace,
         loading,
         refreshProfile,
+        signOut,
       }}
     >
       {children}
@@ -103,4 +134,5 @@ export function AuthProvider({
   );
 }
 
-export const useAuth = () => useContext(AuthContext);
+export const useAuth =
+  () => useContext(AuthContext);
