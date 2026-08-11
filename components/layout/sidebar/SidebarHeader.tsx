@@ -1,7 +1,5 @@
 "use client";
 
-import Image from "next/image";
-
 import { useBranding } from "@/contexts/BrandingContext";
 
 export default function SidebarHeader() {
@@ -83,12 +81,12 @@ export default function SidebarHeader() {
       <div className="flex items-center gap-4">
 
         {branding?.logo_url ? (
-          <Image
+          <img
             src={branding.logo_url}
             alt={`${companyName} Logo`}
             width={52}
             height={52}
-            className="rounded-xl bg-white object-contain p-1"
+            className="h-[52px] w-[52px] rounded-xl bg-white object-contain p-1"
           />
         ) : (
           <div
@@ -102,13 +100,13 @@ export default function SidebarHeader() {
           </div>
         )}
 
-        <div>
-          <h2 className="text-lg font-bold text-white">
+        <div className="min-w-0">
+          <h2 className="truncate text-lg font-bold text-white">
             {companyName}
           </h2>
 
           <p
-            className="text-sm"
+            className="truncate text-sm"
             style={{
               color: accentColor,
             }}
