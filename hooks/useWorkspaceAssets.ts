@@ -10,7 +10,11 @@ export function useWorkspaceAssets(
   settings: WorkspaceSettings | null,
   setSettings: (settings: WorkspaceSettings) => void
 ) {
-  const [uploading, setUploading] = useState(false);
+  const [uploading, setUploading] =
+    useState(false);
+
+  const [error, setError] =
+    useState<string | null>(null);
 
   async function uploadAsset(
     field: keyof WorkspaceSettings,
@@ -18,17 +22,23 @@ export function useWorkspaceAssets(
     file: File
   ) {
     if (!settings) {
-      throw new Error("Workspace settings are not loaded.");
+      const message =
+        "Workspace settings are not loaded.";
+
+      setError(message);
+      throw new Error(message);
     }
 
     setUploading(true);
+    setError(null);
 
     try {
-      const url = await uploadWorkspaceAsset(
-        settings.workspace_id,
-        file,
-        fileName
-      );
+      const url =
+        await uploadWorkspaceAsset(
+          settings.workspace_id,
+          file,
+          fileName
+        );
 
       const updatedSettings = {
         ...settings,
@@ -36,9 +46,36 @@ export function useWorkspaceAssets(
       } as WorkspaceSettings;
 
       const saved =
-        await updateWorkspaceSettings(updatedSettings);
+        await updateWorkspaceSettings(
+          updatedSettings
+        );
 
       setSettings(saved);
+    } catch (error: unknown) {
+      console.error(
+        "Workspace asset upload failed:",
+        error
+      );
+
+      let message =
+        "Logo upload failed. Please try again.";
+
+      if (error instanceof Error) {
+        message = error.message;
+      } else if (
+        typeof error === "object" &&
+        error !== null &&
+        "message" in error
+      ) {
+        message = String(
+          (error as { message?: unknown })
+            .message
+        );
+      }
+
+      setError(message);
+
+      throw error;
     } finally {
       setUploading(false);
     }
@@ -48,22 +85,58 @@ export function useWorkspaceAssets(
     field: keyof WorkspaceSettings
   ) {
     if (!settings) {
-      throw new Error("Workspace settings are not loaded.");
+      const message =
+        "Workspace settings are not loaded.";
+
+      setError(message);
+      throw new Error(message);
     }
 
-    const updatedSettings = {
-      ...settings,
-      [field]: null,
-    } as WorkspaceSettings;
+    setError(null);
 
-    const saved =
-      await updateWorkspaceSettings(updatedSettings);
+    try {
+      const updatedSettings = {
+        ...settings,
+        [field]: null,
+      } as WorkspaceSettings;
 
-    setSettings(saved);
+      const saved =
+        await updateWorkspaceSettings(
+          updatedSettings
+        );
+
+      setSettings(saved);
+    } catch (error: unknown) {
+      console.error(
+        "Workspace asset removal failed:",
+        error
+      );
+
+      let message =
+        "Unable to remove the file.";
+
+      if (error instanceof Error) {
+        message = error.message;
+      } else if (
+        typeof error === "object" &&
+        error !== null &&
+        "message" in error
+      ) {
+        message = String(
+          (error as { message?: unknown })
+            .message
+        );
+      }
+
+      setError(message);
+
+      throw error;
+    }
   }
 
   return {
     uploading,
+    error,
     uploadAsset,
     removeAsset,
   };
