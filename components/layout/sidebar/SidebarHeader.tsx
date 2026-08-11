@@ -62,7 +62,7 @@ export default function SidebarHeader() {
         }}
       >
         <div
-          className="h-12 w-full animate-pulse rounded-xl"
+          className="h-14 w-full animate-pulse rounded-xl"
           style={{
             backgroundColor: loadingColor,
           }}
@@ -73,24 +73,29 @@ export default function SidebarHeader() {
 
   return (
     <div
-      className="border-b p-6"
+      className="border-b px-5 py-5 sm:px-6 sm:py-6"
       style={{
         borderColor: secondaryColor,
       }}
     >
-      <div className="flex items-center gap-4">
+      <div className="flex min-w-0 items-center gap-4">
+
+        {/* Adaptive Company Logo */}
 
         {branding?.logo_url ? (
-          <img
-            src={branding.logo_url}
-            alt={`${companyName} Logo`}
-            width={52}
-            height={52}
-            className="h-[52px] w-[52px] rounded-xl bg-white object-contain p-1"
-          />
+          <div
+            className="flex h-14 max-w-[170px] shrink-0 items-center overflow-hidden rounded-xl bg-white px-2.5 py-1.5 shadow-sm"
+            title={companyName}
+          >
+            <img
+              src={branding.logo_url}
+              alt={`${companyName} Logo`}
+              className="block h-auto max-h-11 w-auto max-w-[155px] object-contain"
+            />
+          </div>
         ) : (
           <div
-            className="flex h-12 w-12 items-center justify-center rounded-xl text-xl font-bold"
+            className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl text-2xl font-bold"
             style={{
               backgroundColor: accentColor,
               color: primaryColor,
@@ -100,19 +105,23 @@ export default function SidebarHeader() {
           </div>
         )}
 
-        <div className="min-w-0">
+        {/* Company Information */}
+
+        <div className="min-w-0 flex-1">
+
           <h2 className="truncate text-lg font-bold text-white">
             {companyName}
           </h2>
 
           <p
-            className="truncate text-sm"
+            className="mt-0.5 truncate text-sm"
             style={{
               color: accentColor,
             }}
           >
             {appName}
           </p>
+
         </div>
 
       </div>
