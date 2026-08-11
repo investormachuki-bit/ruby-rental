@@ -8,6 +8,8 @@ import {
 
 import { usePathname } from "next/navigation";
 
+import { useBranding } from "@/contexts/BrandingContext";
+
 type TopbarProps = {
   sidebarOpen: boolean;
   setSidebarOpen: (open: boolean) => void;
@@ -18,6 +20,43 @@ export default function Topbar({
   setSidebarOpen,
 }: TopbarProps) {
   const pathname = usePathname();
+
+  const {
+    branding,
+  } = useBranding();
+
+  const whiteLabelEnabled =
+    branding?.enable_white_label === true;
+
+  const accentColor =
+    whiteLabelEnabled &&
+    branding?.accent_color
+      ? branding.accent_color
+      : "#D4AF37";
+
+  const primaryColor =
+    whiteLabelEnabled &&
+    branding?.primary_color
+      ? branding.primary_color
+      : "#111111";
+
+  const appName =
+    whiteLabelEnabled &&
+    branding?.app_name
+      ? branding.app_name
+      : "Rental Management Platform";
+
+  const companyName =
+    whiteLabelEnabled &&
+    branding?.company_name
+      ? branding.company_name
+      : "Ruby Rental";
+
+  const companyInitial =
+    companyName
+      .trim()
+      .charAt(0)
+      .toUpperCase() || "R";
 
   function getTitle() {
     if (pathname === "/")
@@ -50,18 +89,17 @@ export default function Topbar({
     if (pathname.startsWith("/settings"))
       return "Settings";
 
-    return "Ruby Rental";
+    return companyName;
   }
 
   function getSubtitle() {
     return pathname === "/"
       ? "Welcome back."
-      : "Rental Management Platform";
+      : appName;
   }
 
   return (
     <header className="sticky top-0 z-30 border-b border-gray-200 bg-white/95 backdrop-blur-md">
-
       <div className="flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
 
         {/* Left */}
@@ -79,19 +117,13 @@ export default function Topbar({
           </button>
 
           <div>
-
             <h1 className="text-xl font-bold text-gray-900">
-
               {getTitle()}
-
             </h1>
 
             <p className="hidden text-sm text-gray-500 md:block">
-
               {getSubtitle()}
-
             </p>
-
           </div>
 
         </div>
@@ -101,38 +133,67 @@ export default function Topbar({
         <div className="flex items-center gap-3">
 
           <button
-            className="hidden h-10 w-10 items-center justify-center rounded-xl border border-gray-200 transition hover:border-[#D4AF37] hover:bg-gray-50 lg:flex"
+            className="hidden h-10 w-10 items-center justify-center rounded-xl border border-gray-200 transition lg:flex"
+            style={{
+              borderColor: undefined,
+            }}
+            onMouseEnter={(event) => {
+              event.currentTarget.style.borderColor =
+                accentColor;
+              event.currentTarget.style.backgroundColor =
+                "#f9fafb";
+            }}
+            onMouseLeave={(event) => {
+              event.currentTarget.style.borderColor =
+                "#e5e7eb";
+              event.currentTarget.style.backgroundColor =
+                "transparent";
+            }}
             title="Search"
           >
-
             <Search size={18} />
-
           </button>
 
           <button
-            className="relative flex h-10 w-10 items-center justify-center rounded-xl border border-gray-200 transition hover:border-[#D4AF37] hover:bg-gray-50"
+            className="relative flex h-10 w-10 items-center justify-center rounded-xl border border-gray-200 transition"
+            onMouseEnter={(event) => {
+              event.currentTarget.style.borderColor =
+                accentColor;
+              event.currentTarget.style.backgroundColor =
+                "#f9fafb";
+            }}
+            onMouseLeave={(event) => {
+              event.currentTarget.style.borderColor =
+                "#e5e7eb";
+              event.currentTarget.style.backgroundColor =
+                "transparent";
+            }}
             title="Notifications"
           >
-
             <Bell size={18} />
 
-            <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-[#D4AF37]" />
-
+            <span
+              className="absolute right-2 top-2 h-2 w-2 rounded-full"
+              style={{
+                backgroundColor: accentColor,
+              }}
+            />
           </button>
 
           <button
-            className="flex h-10 w-10 items-center justify-center rounded-full bg-[#111111] font-semibold text-[#D4AF37] shadow-sm transition hover:scale-105"
-            title="Profile"
+            className="flex h-10 w-10 items-center justify-center rounded-full font-semibold shadow-sm transition hover:scale-105"
+            style={{
+              backgroundColor: primaryColor,
+              color: accentColor,
+            }}
+            title={companyName}
           >
-
-            R
-
+            {companyInitial}
           </button>
 
         </div>
 
       </div>
-
     </header>
   );
 }
