@@ -22,36 +22,77 @@ import {
 } from "@/types/employees";
 
 export default function EmployeesPage() {
-  const [employees, setEmployees] = useState<Employee[]>([]);
-  const [roles, setRoles] = useState<RoleOption[]>([]);
+  const [employees, setEmployees] =
+    useState<Employee[]>([]);
 
-  const [loading, setLoading] = useState(true);
-  const [dialogOpen, setDialogOpen] = useState(false);
+  const [roles, setRoles] =
+    useState<RoleOption[]>([]);
+
+  const [loading, setLoading] =
+    useState(true);
+
+  const [dialogOpen, setDialogOpen] =
+    useState(false);
 
   const [selectedEmployee, setSelectedEmployee] =
     useState<Employee | null>(null);
 
-  async function loadData() {
-    setLoading(true);
+  const [error, setError] =
+    useState<string | null>(null);
 
+  async function loadEmployees() {
     try {
-      const [employeeData, roleData] =
-        await Promise.all([
-          getEmployees(),
-          getRoles(),
-        ]);
+      const employeeData =
+        await getEmployees();
 
       setEmployees(employeeData);
+    } catch (error) {
+      console.error(
+        "Failed to load employees:",
+        error
+      );
+
+      setEmployees([]);
+    }
+  }
+
+  async function loadRoles() {
+    try {
+      const roleData =
+        await getRoles();
 
       setRoles(
-        roleData.map((r) => ({
-          id: r.id,
-          name: r.name,
-        }))
+        roleData
+          .filter((role) => role.is_active)
+          .map((role) => ({
+            id: role.id,
+            name: role.name,
+          }))
       );
-    } finally {
-      setLoading(false);
+    } catch (error) {
+      console.error(
+        "Failed to load roles:",
+        error
+      );
+
+      setRoles([]);
+
+      setError(
+        "Unable to load roles. Please refresh the page and try again."
+      );
     }
+  }
+
+  async function loadData() {
+    setLoading(true);
+    setError(null);
+
+    await Promise.all([
+      loadEmployees(),
+      loadRoles(),
+    ]);
+
+    setLoading(false);
   }
 
   useEffect(() => {
@@ -61,18 +102,16 @@ export default function EmployeesPage() {
   return (
     <div className="space-y-6">
 
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
 
         <div>
-
-          <h1 className="text-3xl font-bold">
+          <h1 className="text-3xl font-bold text-gray-900">
             Employees
           </h1>
 
           <p className="mt-1 text-gray-500">
             Manage your staff and assign roles.
           </p>
-
         </div>
 
         <Button
@@ -86,6 +125,12 @@ export default function EmployeesPage() {
 
       </div>
 
+      {error && (
+        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {error}
+        </div>
+      )}
+
       <EmployeeTable
         employees={employees}
         loading={loading}
@@ -98,12 +143,15 @@ export default function EmployeesPage() {
             !window.confirm(
               `Deactivate ${employee.full_name}?`
             )
-          )
+          ) {
             return;
+          }
 
-          await deactivateEmployee(employee.id);
+          await deactivateEmployee(
+            employee.id
+          );
 
-          await loadData();
+          await loadEmployees();
         }}
       />
 
@@ -111,24 +159,23 @@ export default function EmployeesPage() {
         open={dialogOpen}
         employee={selectedEmployee}
         roles={roles}
-        onClose={() => setDialogOpen(false)}
+        onClose={() =>
+          setDialogOpen(false)
+        }
         onSave={async (values) => {
 
           if (selectedEmployee) {
-
             await updateEmployee(
               selectedEmployee.id,
               values
             );
-
           } else {
-
             await createEmployee(values);
-
           }
 
-          await loadData();
+          await loadEmployees();
 
+          setDialogOpen(false);
         }}
       />
 
