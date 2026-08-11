@@ -27,7 +27,12 @@ import { useWorkspaceAssets } from "@/hooks/useWorkspaceAssets";
 
 import { WorkspaceSettings } from "@/types/workspace";
 
+import { useBranding } from "@/contexts/BrandingContext";
+
 export default function CompanyWorkspacePage() {
+  const {
+    refreshBranding,
+  } = useBranding();
 
   const [settings, setSettings] =
     useState<WorkspaceSettings | null>(null);
@@ -43,72 +48,66 @@ export default function CompanyWorkspacePage() {
   }, []);
 
   async function loadSettings() {
-
     try {
-
       const data =
         await getWorkspaceSettings();
 
       setSettings(data);
-
     } finally {
-
       setLoading(false);
-
     }
-
   }
 
   async function saveSettings() {
-
     if (!settings) return;
 
     setSaving(true);
 
     try {
-
       const updated =
         await updateWorkspaceSettings(settings);
 
       setSettings(updated);
 
+      // Refresh the application-wide branding context
+      // so the new branding is reflected immediately.
+      await refreshBranding();
+
       alert("Settings saved successfully.");
-
     } finally {
-
       setSaving(false);
-
     }
-
   }
 
   const {
-  uploading,
-  uploadAsset,
-  removeAsset,
-} = useWorkspaceAssets(
-  settings,
-  setSettings
-);
+    uploading,
+    uploadAsset,
+    removeAsset,
+  } = useWorkspaceAssets(
+    settings,
+    setSettings
+  );
 
-if (loading || !settings) {
-
+  if (loading || !settings) {
     return (
       <div className="p-10 text-center">
         Loading workspace settings...
       </div>
     );
-
   }
 
-  return (
+  const companyInitial =
+    (settings.company_name || "Company")
+      .trim()
+      .charAt(0)
+      .toUpperCase();
 
+  return (
     <div className="space-y-8">
 
       <div className="flex items-center justify-between">
 
         <div>
-
           <h1 className="text-3xl font-bold">
             Company & Workspace
           </h1>
@@ -116,7 +115,6 @@ if (loading || !settings) {
           <p className="mt-2 text-gray-500">
             Configure your company's white-label settings.
           </p>
-
         </div>
 
         <Button
@@ -129,17 +127,21 @@ if (loading || !settings) {
           />
 
           Save Changes
-
         </Button>
 
       </div>
-            {/* Company Profile */}
+
+      {/* Company Profile */}
 
       <Card>
 
         <div className="mb-6 flex items-center gap-3">
 
-          <Building2 className="text-[#D4AF37]" />
+          <Building2
+            style={{
+              color: settings.accent_color,
+            }}
+          />
 
           <h2 className="text-xl font-semibold">
             Company Profile
@@ -241,7 +243,11 @@ if (loading || !settings) {
 
         <div className="mb-6 flex items-center gap-3">
 
-          <Palette className="text-[#D4AF37]" />
+          <Palette
+            style={{
+              color: settings.accent_color,
+            }}
+          />
 
           <h2 className="text-xl font-semibold">
             White Label Branding
@@ -462,161 +468,171 @@ if (loading || !settings) {
 
       </Card>
 
+      {/* Live Brand Preview */}
+
       <Card>
 
-  <h2 className="mb-6 text-xl font-semibold">
-    Live Brand Preview
-  </h2>
+        <h2 className="mb-6 text-xl font-semibold">
+          Live Brand Preview
+        </h2>
 
-  <div className="grid gap-8 lg:grid-cols-2">
+        <div className="grid gap-8 lg:grid-cols-2">
 
-    {/* Sidebar Preview */}
-
-    <div
-      className="overflow-hidden rounded-3xl"
-      style={{
-        background: settings.primary_color,
-      }}
-    >
-
-      <div className="p-8">
-
-        {settings.logo_url ? (
-
-          <Image
-            src={settings.logo_url}
-            alt="Logo"
-            width={90}
-            height={90}
-            className="mb-6 rounded-xl bg-white p-2"
-          />
-
-        ) : (
+          {/* Sidebar Preview */}
 
           <div
-            className="mb-6 flex h-20 w-20 items-center justify-center rounded-xl bg-white text-3xl font-bold"
+            className="overflow-hidden rounded-3xl"
             style={{
-              color: settings.primary_color,
+              background:
+                settings.primary_color,
             }}
           >
-            R
-          </div>
 
-        )}
+            <div className="p-8">
 
-        <h3 className="text-xl font-bold text-white">
-          {settings.company_name || "Company"}
-        </h3>
+              {settings.logo_url ? (
 
-        <p
-          className="mt-1 text-sm"
-          style={{
-            color: settings.accent_color,
-          }}
-        >
-          {settings.app_name}
-        </p>
+                <Image
+                  src={settings.logo_url}
+                  alt="Logo"
+                  width={90}
+                  height={90}
+                  className="mb-6 rounded-xl bg-white p-2"
+                />
 
-        <div className="mt-8 space-y-3">
+              ) : (
 
-          {[
-            "Dashboard",
-            "Properties",
-            "Tenants",
-            "Invoices",
-            "Reports",
-          ].map((item) => (
+                <div
+                  className="mb-6 flex h-20 w-20 items-center justify-center rounded-xl bg-white text-3xl font-bold"
+                  style={{
+                    color:
+                      settings.primary_color,
+                  }}
+                >
+                  {companyInitial}
+                </div>
 
-            <div
-              key={item}
-              className="rounded-xl bg-white/10 px-4 py-3 text-white"
-            >
-              {item}
+              )}
+
+              <h3 className="text-xl font-bold text-white">
+                {settings.company_name ||
+                  "Company"}
+              </h3>
+
+              <p
+                className="mt-1 text-sm"
+                style={{
+                  color:
+                    settings.accent_color,
+                }}
+              >
+                {settings.app_name}
+              </p>
+
+              <div className="mt-8 space-y-3">
+
+                {[
+                  "Dashboard",
+                  "Properties",
+                  "Tenants",
+                  "Invoices",
+                  "Reports",
+                ].map((item) => (
+
+                  <div
+                    key={item}
+                    className="rounded-xl bg-white/10 px-4 py-3 text-white"
+                  >
+                    {item}
+                  </div>
+
+                ))}
+
+              </div>
+
             </div>
 
-          ))}
+          </div>
 
-        </div>
+          {/* Login Preview */}
 
-      </div>
+          <div className="rounded-3xl border bg-gray-50 p-8">
 
-    </div>
+            <div className="mx-auto max-w-sm">
 
-    {/* Login Preview */}
+              <div className="flex justify-center">
 
-    <div className="rounded-3xl border bg-gray-50 p-8">
+                {settings.login_logo_url ? (
 
-      <div className="mx-auto max-w-sm">
+                  <Image
+                    src={settings.login_logo_url}
+                    alt="Login Logo"
+                    width={100}
+                    height={100}
+                  />
 
-        <div className="flex justify-center">
+                ) : (
 
-          {settings.login_logo_url ? (
+                  <div
+                    className="flex h-24 w-24 items-center justify-center rounded-full text-4xl font-bold text-white"
+                    style={{
+                      background:
+                        settings.primary_color,
+                    }}
+                  >
+                    {companyInitial}
+                  </div>
 
-            <Image
-              src={settings.login_logo_url}
-              alt="Login Logo"
-              width={100}
-              height={100}
-            />
+                )}
 
-          ) : (
+              </div>
 
-            <div
-              className="flex h-24 w-24 items-center justify-center rounded-full text-4xl font-bold text-white"
-              style={{
-                background: settings.primary_color,
-              }}
-            >
-              R
+              <h3 className="mt-6 text-center text-2xl font-bold">
+                {settings.company_name}
+              </h3>
+
+              <p className="mt-2 text-center text-gray-500">
+                {settings.app_name ||
+                  "Property Management Platform"}
+              </p>
+
+              <div className="mt-8 space-y-4">
+
+                <div className="h-11 rounded-xl bg-white shadow" />
+
+                <div className="h-11 rounded-xl bg-white shadow" />
+
+                <div
+                  className="rounded-xl py-3 text-center font-semibold text-white"
+                  style={{
+                    background:
+                      settings.accent_color,
+                  }}
+                >
+                  Sign In
+                </div>
+
+              </div>
+
             </div>
 
-          )}
-
-        </div>
-
-        <h3 className="mt-6 text-center text-2xl font-bold">
-
-          {settings.company_name}
-
-        </h3>
-
-        <p className="mt-2 text-center text-gray-500">
-
-          Property Management Platform
-
-        </p>
-
-        <div className="mt-8 space-y-4">
-
-          <div className="h-11 rounded-xl bg-white shadow" />
-
-          <div className="h-11 rounded-xl bg-white shadow" />
-
-          <div
-            className="rounded-xl py-3 text-center font-semibold text-white"
-            style={{
-              background: settings.accent_color,
-            }}
-          >
-            Sign In
           </div>
 
         </div>
 
-      </div>
+      </Card>
 
-    </div>
-
-  </div>
-
-</Card>
-            {/* Contact Information */}
+      {/* Contact Information */}
 
       <Card>
 
         <div className="mb-6 flex items-center gap-3">
 
-          <Phone className="text-[#D4AF37]" />
+          <Phone
+            style={{
+              color: settings.accent_color,
+            }}
+          />
 
           <h2 className="text-xl font-semibold">
             Contact Information
@@ -643,7 +659,8 @@ if (loading || !settings) {
             onChange={(e) =>
               setSettings({
                 ...settings,
-                alternate_phone: e.target.value,
+                alternate_phone:
+                  e.target.value,
               })
             }
           />
@@ -717,11 +734,14 @@ if (loading || !settings) {
 
           <Input
             label="Google Maps URL"
-            value={settings.google_maps_url ?? ""}
+            value={
+              settings.google_maps_url ?? ""
+            }
             onChange={(e) =>
               setSettings({
                 ...settings,
-                google_maps_url: e.target.value,
+                google_maps_url:
+                  e.target.value,
               })
             }
           />
@@ -733,11 +753,14 @@ if (loading || !settings) {
           <TextArea
             label="Physical Address"
             rows={3}
-            value={settings.physical_address ?? ""}
+            value={
+              settings.physical_address ?? ""
+            }
             onChange={(e) =>
               setSettings({
                 ...settings,
-                physical_address: e.target.value,
+                physical_address:
+                  e.target.value,
               })
             }
           />
@@ -745,11 +768,14 @@ if (loading || !settings) {
           <TextArea
             label="Postal Address"
             rows={2}
-            value={settings.postal_address ?? ""}
+            value={
+              settings.postal_address ?? ""
+            }
             onChange={(e) =>
               setSettings({
                 ...settings,
-                postal_address: e.target.value,
+                postal_address:
+                  e.target.value,
               })
             }
           />
@@ -764,7 +790,11 @@ if (loading || !settings) {
 
         <div className="mb-6 flex items-center gap-3">
 
-          <DollarSign className="text-[#D4AF37]" />
+          <DollarSign
+            style={{
+              color: settings.accent_color,
+            }}
+          />
 
           <h2 className="text-xl font-semibold">
             Financial Defaults
@@ -791,7 +821,8 @@ if (loading || !settings) {
             onChange={(e) =>
               setSettings({
                 ...settings,
-                currency_symbol: e.target.value,
+                currency_symbol:
+                  e.target.value,
               })
             }
           />
@@ -824,7 +855,8 @@ if (loading || !settings) {
             onChange={(e) =>
               setSettings({
                 ...settings,
-                date_format: e.target.value,
+                date_format:
+                  e.target.value,
               })
             }
           />
@@ -835,7 +867,8 @@ if (loading || !settings) {
             onChange={(e) =>
               setSettings({
                 ...settings,
-                time_format: e.target.value,
+                time_format:
+                  e.target.value,
               })
             }
           />
@@ -846,7 +879,8 @@ if (loading || !settings) {
             onChange={(e) =>
               setSettings({
                 ...settings,
-                invoice_prefix: e.target.value,
+                invoice_prefix:
+                  e.target.value,
               })
             }
           />
@@ -857,7 +891,8 @@ if (loading || !settings) {
             onChange={(e) =>
               setSettings({
                 ...settings,
-                receipt_prefix: e.target.value,
+                receipt_prefix:
+                  e.target.value,
               })
             }
           />
@@ -868,7 +903,8 @@ if (loading || !settings) {
             onChange={(e) =>
               setSettings({
                 ...settings,
-                quotation_prefix: e.target.value,
+                quotation_prefix:
+                  e.target.value,
               })
             }
           />
@@ -879,7 +915,8 @@ if (loading || !settings) {
             onChange={(e) =>
               setSettings({
                 ...settings,
-                expense_prefix: e.target.value,
+                expense_prefix:
+                  e.target.value,
               })
             }
           />
@@ -890,7 +927,8 @@ if (loading || !settings) {
             onChange={(e) =>
               setSettings({
                 ...settings,
-                tax_name: e.target.value,
+                tax_name:
+                  e.target.value,
               })
             }
           />
@@ -902,7 +940,8 @@ if (loading || !settings) {
             onChange={(e) =>
               setSettings({
                 ...settings,
-                tax_rate: Number(e.target.value),
+                tax_rate:
+                  Number(e.target.value),
               })
             }
           />
@@ -928,7 +967,5 @@ if (loading || !settings) {
       </Card>
 
     </div>
-
   );
-
 }
