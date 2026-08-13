@@ -1,77 +1,50 @@
 "use client";
 
 import { useEffect, useState } from "react";
-
 import {
-  Package,
-  Plus,
   Edit2,
-  Power,
+  Package,
+  RefreshCw,
+  X,
 } from "lucide-react";
 
 import Card from "@/components/ui/Card";
-import Button from "@/components/ui/Button";
 
-import { supabase } from "@/lib/supabase";
-
-type SubscriptionPlan = {
-  id: string;
-  name: string;
-  description: string | null;
-  min_units: number;
-  max_units: number | null;
-  price_per_unit: number;
-  currency: string;
-  is_active: boolean;
-};
+import {
+  getPlatformPackages,
+  updateSubscriptionPlan,
+  SubscriptionPlan,
+} from "@/services/platformPackages";
 
 export default function AdminPackagesPage() {
-
-  const [plans, setPlans] =
-    useState<SubscriptionPlan[]>([]);
+  const [plans, setPlans] = useState<
+    SubscriptionPlan[]
+  >([]);
 
   const [loading, setLoading] =
     useState(true);
 
+  const [saving, setSaving] =
+    useState(false);
+
   const [error, setError] =
     useState<string | null>(null);
 
-  async function loadPlans() {
+  const [editingPlan, setEditingPlan] =
+    useState<SubscriptionPlan | null>(null);
 
+  async function loadPlans() {
     setLoading(true);
     setError(null);
 
-    const {
-      data,
-      error,
-    } = await supabase
-      .from("subscription_plans")
-      .select("*")
-      .order("min_units", {
-        ascending: true,
-      });
+    const result =
+      await getPlatformPackages();
 
-    if (error) {
-
-      console.error(
-        "Failed to load subscription plans:",
-        error
-      );
-
-      setError(
-        "Unable to load subscription packages."
-      );
-
-      setPlans([]);
-
-    } else {
-
-      setPlans(
-        (data ?? []) as SubscriptionPlan[]
-      );
-
+    if (result.error) {
+      setError(result.error);
     }
 
+    setPlans(result.data);
     setLoading(false);
   }
 
@@ -89,12 +62,35 @@ export default function AdminPackagesPage() {
     return `${plan.min_units}–${plan.max_units} units`;
   }
 
+  async function savePlan() {
+    if (!editingPlan) return;
+
+    setSaving(true);
+    setError(null);
+
+    const result =
+      await updateSubscriptionPlan(
+        editingPlan
+      );
+
+    if (result.error) {
+      setError(result.error);
+      setSaving(false);
+      return;
+    }
+
+    await loadPlans();
+
+    setEditingPlan(null);
+    setSaving(false);
+  }
+
   return (
     <div className="space-y-8">
 
       {/* Header */}
 
-      <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
 
         <div>
 
@@ -116,25 +112,28 @@ export default function AdminPackagesPage() {
           </h1>
 
           <p className="mt-2 text-sm text-gray-500">
-            Manage the unit-based pricing available to Ruby Rental customers.
+            Manage Ruby Rental's unit-based monthly pricing.
           </p>
 
         </div>
 
-        <Button
-          onClick={() => {
-            alert(
-              "Package creation will be added after the package list is confirmed."
-            );
-          }}
+        <button
+          type="button"
+          onClick={loadPlans}
+          disabled={loading}
+          className="inline-flex items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 shadow-sm transition hover:bg-gray-50 disabled:opacity-50"
         >
-          <Plus
-            size={18}
-            className="mr-2"
+          <RefreshCw
+            size={17}
+            className={
+              loading
+                ? "animate-spin"
+                : ""
+            }
           />
 
-          New Package
-        </Button>
+          Refresh
+        </button>
 
       </div>
 
@@ -150,10 +149,9 @@ export default function AdminPackagesPage() {
 
       <Card className="border-[#D4AF37]/20 bg-gradient-to-r from-white to-[#D4AF37]/5">
 
-        <div className="grid gap-6 lg:grid-cols-3">
+        <div className="grid gap-6 sm:grid-cols-3">
 
           <div>
-
             <p className="text-xs font-semibold uppercase tracking-[0.15em] text-[#B8941F]">
               Basic
             </p>
@@ -163,13 +161,11 @@ export default function AdminPackagesPage() {
             </p>
 
             <p className="text-sm text-gray-500">
-              per subscribed unit / month
+              1–20 units
             </p>
-
           </div>
 
           <div>
-
             <p className="text-xs font-semibold uppercase tracking-[0.15em] text-[#B8941F]">
               Growth
             </p>
@@ -179,13 +175,11 @@ export default function AdminPackagesPage() {
             </p>
 
             <p className="text-sm text-gray-500">
-              per subscribed unit / month
+              21–100 units
             </p>
-
           </div>
 
           <div>
-
             <p className="text-xs font-semibold uppercase tracking-[0.15em] text-[#B8941F]">
               Professional
             </p>
@@ -195,63 +189,48 @@ export default function AdminPackagesPage() {
             </p>
 
             <p className="text-sm text-gray-500">
-              per subscribed unit / month
+              101+ units
             </p>
-
           </div>
 
         </div>
 
       </Card>
 
-      {/* Plans */}
+      {/* Packages */}
 
-      <div className="grid gap-5 lg:grid-cols-3">
+      {loading ? (
 
-        {loading ? (
+        <Card>
 
-          <Card className="lg:col-span-3">
+          <div className="flex min-h-48 items-center justify-center">
 
-            <div className="flex min-h-40 items-center justify-center">
+            <div className="text-center">
 
-              <p className="text-sm text-gray-500">
+              <div className="mx-auto h-8 w-8 animate-spin rounded-full border-4 border-gray-200 border-t-[#D4AF37]" />
+
+              <p className="mt-3 text-sm text-gray-500">
                 Loading packages...
               </p>
 
             </div>
 
-          </Card>
+          </div>
 
-        ) : plans.length === 0 ? (
+        </Card>
 
-          <Card className="lg:col-span-3">
+      ) : (
 
-            <div className="flex min-h-40 items-center justify-center">
+        <div className="grid gap-5 lg:grid-cols-3">
 
-              <p className="text-sm text-gray-500">
-                No subscription packages found.
-              </p>
-
-            </div>
-
-          </Card>
-
-        ) : (
-
-          plans.map((plan) => (
+          {plans.map((plan) => (
 
             <Card
               key={plan.id}
               className="relative overflow-hidden"
             >
 
-              <div
-                className={`absolute right-0 top-0 h-24 w-24 translate-x-8 -translate-y-8 rounded-full ${
-                  plan.is_active
-                    ? "bg-[#D4AF37]/10"
-                    : "bg-gray-100"
-                }`}
-              />
+              <div className="absolute right-0 top-0 h-24 w-24 translate-x-8 -translate-y-8 rounded-full bg-[#D4AF37]/10" />
 
               <div className="relative">
 
@@ -283,9 +262,9 @@ export default function AdminPackagesPage() {
 
                 </div>
 
-                <p className="mt-3 min-h-10 text-sm leading-5 text-gray-500">
+                <p className="mt-3 min-h-10 text-sm text-gray-500">
                   {plan.description ||
-                    "Unit-based Ruby Rental subscription."}
+                    "Unit-based monthly subscription."}
                 </p>
 
                 <div className="mt-6 rounded-2xl bg-gray-50 p-5">
@@ -301,13 +280,11 @@ export default function AdminPackagesPage() {
                   <div className="mt-4 border-t border-gray-200 pt-4">
 
                     <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">
-                      Rate
+                      Rate per unit
                     </p>
 
                     <p className="mt-1 text-2xl font-bold text-gray-900">
-                      {plan.currency === "KES"
-                        ? "KSh"
-                        : plan.currency}{" "}
+                      KSh{" "}
                       {Number(
                         plan.price_per_unit
                       ).toLocaleString()}
@@ -321,53 +298,280 @@ export default function AdminPackagesPage() {
 
                 </div>
 
-                <div className="mt-5 flex gap-2">
+                <button
+                  type="button"
+                  onClick={() =>
+                    setEditingPlan({
+                      ...plan,
+                    })
+                  }
+                  className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm font-semibold text-gray-700 transition hover:border-[#D4AF37] hover:bg-gray-50"
+                >
+                  <Edit2 size={16} />
 
-                  <Button
-                    variant="ghost"
-                    className="flex-1"
-                    onClick={() => {
-                      alert(
-                        "Package editing will be connected next."
-                      );
-                    }}
-                  >
-                    <Edit2
-                      size={16}
-                      className="mr-2"
-                    />
-
-                    Edit
-                  </Button>
-
-                  <Button
-                    variant="ghost"
-                    className="min-w-0 px-3"
-                    onClick={() => {
-                      alert(
-                        "Package status management will be connected next."
-                      );
-                    }}
-                    title={
-                      plan.is_active
-                        ? "Deactivate"
-                        : "Activate"
-                    }
-                  >
-                    <Power size={16} />
-                  </Button>
-
-                </div>
+                  Edit Package
+                </button>
 
               </div>
 
             </Card>
 
-          ))
+          ))}
 
-        )}
+        </div>
 
-      </div>
+      )}
+
+      {/* Edit modal */}
+
+      {editingPlan && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
+
+          <div className="w-full max-w-lg rounded-2xl bg-white shadow-2xl">
+
+            <div className="flex items-center justify-between border-b border-gray-200 px-6 py-5">
+
+              <div>
+
+                <h2 className="text-lg font-bold text-gray-900">
+                  Edit Package
+                </h2>
+
+                <p className="mt-1 text-sm text-gray-500">
+                  Update the package pricing and limits.
+                </p>
+
+              </div>
+
+              <button
+                type="button"
+                onClick={() =>
+                  setEditingPlan(null)
+                }
+                className="rounded-xl p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-700"
+              >
+                <X size={20} />
+              </button>
+
+            </div>
+
+            <div className="space-y-5 p-6">
+
+              {/* Name */}
+
+              <div>
+
+                <label className="mb-2 block text-sm font-medium text-gray-700">
+                  Package name
+                </label>
+
+                <input
+                  value={editingPlan.name}
+                  onChange={(event) =>
+                    setEditingPlan({
+                      ...editingPlan,
+                      name: event.target.value,
+                    })
+                  }
+                  className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/10"
+                />
+
+              </div>
+
+              {/* Description */}
+
+              <div>
+
+                <label className="mb-2 block text-sm font-medium text-gray-700">
+                  Description
+                </label>
+
+                <textarea
+                  value={
+                    editingPlan.description ??
+                    ""
+                  }
+                  onChange={(event) =>
+                    setEditingPlan({
+                      ...editingPlan,
+                      description:
+                        event.target.value,
+                    })
+                  }
+                  rows={3}
+                  className="w-full resize-none rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/10"
+                />
+
+              </div>
+
+              {/* Units */}
+
+              <div className="grid grid-cols-2 gap-4">
+
+                <div>
+
+                  <label className="mb-2 block text-sm font-medium text-gray-700">
+                    Minimum units
+                  </label>
+
+                  <input
+                    type="number"
+                    min="1"
+                    value={
+                      editingPlan.min_units
+                    }
+                    onChange={(event) =>
+                      setEditingPlan({
+                        ...editingPlan,
+                        min_units:
+                          Number(
+                            event.target.value
+                          ),
+                      })
+                    }
+                    className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/10"
+                  />
+
+                </div>
+
+                <div>
+
+                  <label className="mb-2 block text-sm font-medium text-gray-700">
+                    Maximum units
+                  </label>
+
+                  <input
+                    type="number"
+                    min="1"
+                    placeholder="Unlimited"
+                    value={
+                      editingPlan.max_units ??
+                      ""
+                    }
+                    onChange={(event) =>
+                      setEditingPlan({
+                        ...editingPlan,
+                        max_units:
+                          event.target.value ===
+                          ""
+                            ? null
+                            : Number(
+                                event.target
+                                  .value
+                              ),
+                      })
+                    }
+                    className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/10"
+                  />
+
+                </div>
+
+              </div>
+
+              {/* Rate */}
+
+              <div>
+
+                <label className="mb-2 block text-sm font-medium text-gray-700">
+                  Price per unit / month
+                </label>
+
+                <div className="relative">
+
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-semibold text-gray-400">
+                    KSh
+                  </span>
+
+                  <input
+                    type="number"
+                    min="0.01"
+                    step="0.01"
+                    value={
+                      editingPlan.price_per_unit
+                    }
+                    onChange={(event) =>
+                      setEditingPlan({
+                        ...editingPlan,
+                        price_per_unit:
+                          Number(
+                            event.target.value
+                          ),
+                      })
+                    }
+                    className="w-full rounded-xl border border-gray-200 py-3 pl-14 pr-4 text-sm outline-none focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/10"
+                  />
+
+                </div>
+
+              </div>
+
+              {/* Active */}
+
+              <label className="flex cursor-pointer items-center justify-between rounded-xl border border-gray-200 p-4">
+
+                <div>
+
+                  <p className="text-sm font-semibold text-gray-900">
+                    Package active
+                  </p>
+
+                  <p className="mt-1 text-xs text-gray-500">
+                    Inactive packages cannot be selected for new subscriptions.
+                  </p>
+
+                </div>
+
+                <input
+                  type="checkbox"
+                  checked={
+                    editingPlan.is_active
+                  }
+                  onChange={(event) =>
+                    setEditingPlan({
+                      ...editingPlan,
+                      is_active:
+                        event.target.checked,
+                    })
+                  }
+                  className="h-5 w-5 accent-[#D4AF37]"
+                />
+
+              </label>
+
+            </div>
+
+            {/* Footer */}
+
+            <div className="flex gap-3 border-t border-gray-200 px-6 py-5">
+
+              <button
+                type="button"
+                onClick={() =>
+                  setEditingPlan(null)
+                }
+                disabled={saving}
+                className="flex-1 rounded-xl border border-gray-200 px-4 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+              >
+                Cancel
+              </button>
+
+              <button
+                type="button"
+                onClick={savePlan}
+                disabled={saving}
+                className="flex-1 rounded-xl bg-[#111111] px-4 py-3 text-sm font-semibold text-white transition hover:bg-black disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {saving
+                  ? "Saving..."
+                  : "Save Changes"}
+              </button>
+
+            </div>
+
+          </div>
+
+        </div>
+      )}
 
     </div>
   );
