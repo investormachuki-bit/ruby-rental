@@ -1,7 +1,6 @@
 "use client";
 
 import { FormEvent, useState } from "react";
-import { useRouter } from "next/navigation";
 import {
   LockKeyhole,
   RefreshCw,
@@ -11,17 +10,11 @@ import {
 import { supabase } from "@/lib/supabase";
 
 export default function AdminLoginPage() {
-  const router = useRouter();
-
   const [email, setEmail] = useState("");
-  const [password, setPassword] =
-    useState("");
+  const [password, setPassword] = useState("");
 
-  const [loading, setLoading] =
-    useState(false);
-
-  const [error, setError] =
-    useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   async function handleLogin(
     event: FormEvent<HTMLFormElement>
@@ -31,8 +24,7 @@ export default function AdminLoginPage() {
     setLoading(true);
     setError(null);
 
-    const cleanEmail =
-      email.trim().toLowerCase();
+    const cleanEmail = email.trim().toLowerCase();
 
     if (!cleanEmail || !password) {
       setError(
@@ -42,14 +34,19 @@ export default function AdminLoginPage() {
       return;
     }
 
+    /*
+     * STEP 1
+     * Authenticate with Supabase.
+     */
     const {
+      data: authData,
       error: loginError,
     } = await supabase.auth.signInWithPassword({
       email: cleanEmail,
       password,
     });
 
-    if (loginError) {
+    if (loginError || !authData.user) {
       setError(
         "Invalid administrator email or password."
       );
@@ -58,10 +55,9 @@ export default function AdminLoginPage() {
     }
 
     /*
-     * Authentication succeeded.
-     *
-     * Now verify that this authenticated
-     * user is actually a Platform Admin.
+     * STEP 2
+     * Verify that the authenticated account
+     * is actually a Ruby Rental Platform Admin.
      */
     const {
       data: isAdmin,
@@ -84,8 +80,17 @@ export default function AdminLoginPage() {
       return;
     }
 
-    router.replace("/admin");
-    router.refresh();
+    /*
+     * STEP 3
+     *
+     * Authentication and authorization are both
+     * successful.
+     *
+     * Use a hard navigation instead of router.replace()
+     * so Next.js completely reloads the /admin route
+     * with the authenticated Supabase session.
+     */
+    window.location.assign("/admin");
   }
 
   return (
@@ -95,7 +100,7 @@ export default function AdminLoginPage() {
 
         <div className="w-full max-w-md">
 
-          {/* BRAND / SECURITY */}
+          {/* BRAND */}
 
           <div className="mb-8 text-center">
 
@@ -164,6 +169,8 @@ export default function AdminLoginPage() {
               </div>
             )}
 
+            {/* FORM */}
+
             <form
               onSubmit={handleLogin}
               className="space-y-5"
@@ -185,9 +192,7 @@ export default function AdminLoginPage() {
                   type="email"
                   value={email}
                   onChange={(event) => {
-                    setEmail(
-                      event.target.value
-                    );
+                    setEmail(event.target.value);
                     setError(null);
                   }}
                   placeholder="admin@example.com"
@@ -205,25 +210,19 @@ export default function AdminLoginPage() {
 
               <div>
 
-                <div className="mb-2 flex items-center justify-between">
-
-                  <label
-                    htmlFor="admin-password"
-                    className="text-sm font-semibold text-gray-700"
-                  >
-                    Password
-                  </label>
-
-                </div>
+                <label
+                  htmlFor="admin-password"
+                  className="mb-2 block text-sm font-semibold text-gray-700"
+                >
+                  Password
+                </label>
 
                 <input
                   id="admin-password"
                   type="password"
                   value={password}
                   onChange={(event) => {
-                    setPassword(
-                      event.target.value
-                    );
+                    setPassword(event.target.value);
                     setError(null);
                   }}
                   placeholder="Enter your password"
@@ -235,7 +234,7 @@ export default function AdminLoginPage() {
 
               </div>
 
-              {/* LOGIN */}
+              {/* LOGIN BUTTON */}
 
               <button
                 type="submit"
@@ -258,9 +257,7 @@ export default function AdminLoginPage() {
                   </>
                 ) : (
                   <>
-                    <LockKeyhole
-                      size={17}
-                    />
+                    <LockKeyhole size={17} />
 
                     Sign in to Admin
                   </>
