@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { RefreshCw, ShieldAlert } from "lucide-react";
 
 import { supabase } from "@/lib/supabase";
+import AppShell from "@/components/layout/AppShell";
 
 type AdminLayoutProps = {
   children: ReactNode;
@@ -20,10 +21,8 @@ export default function AdminLayout({
   const [allowed, setAllowed] = useState(false);
 
   /*
-   * The admin login page must remain publicly accessible.
-   *
-   * Otherwise this layout would try to verify administrator
-   * access before the user has had a chance to log in.
+   * Admin login must remain outside
+   * the authenticated application shell.
    */
   const isLoginPage =
     pathname === "/admin/login";
@@ -40,7 +39,7 @@ export default function AdminLayout({
     async function checkAccess() {
       try {
         /*
-         * First check whether a user is signed in.
+         * Check authenticated user.
          */
         const {
           data: { user },
@@ -53,8 +52,7 @@ export default function AdminLayout({
         }
 
         /*
-         * Then verify that the authenticated user
-         * is registered as a Ruby Rental Platform Admin.
+         * Check Platform Admin permission.
          */
         const {
           data,
@@ -77,7 +75,7 @@ export default function AdminLayout({
         }
 
         /*
-         * Administrator verified.
+         * Platform Admin verified.
          */
         if (mounted) {
           setAllowed(true);
@@ -101,9 +99,9 @@ export default function AdminLayout({
   }, [router, isLoginPage]);
 
   /*
-   * LOGIN PAGE
+   * ADMIN LOGIN
    *
-   * Do not run the administrator guard here.
+   * Login page does NOT use AppShell.
    */
   if (isLoginPage) {
     return <>{children}</>;
@@ -139,9 +137,6 @@ export default function AdminLayout({
 
   /*
    * SAFETY FALLBACK
-   *
-   * Normally unauthorized users will already have
-   * been redirected to /admin/login.
    */
   if (!allowed) {
     return (
@@ -173,6 +168,14 @@ export default function AdminLayout({
 
   /*
    * VERIFIED PLATFORM ADMIN
+   *
+   * IMPORTANT:
+   * Put the admin pages back inside the
+   * existing Ruby Rental App Shell.
    */
-  return <>{children}</>;
+  return (
+    <AppShell>
+      {children}
+    </AppShell>
+  );
 }
