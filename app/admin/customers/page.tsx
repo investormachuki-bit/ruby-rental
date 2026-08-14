@@ -33,10 +33,9 @@ type Subscription = {
   currency: string;
   status: string;
   next_billing_date: string | null;
-
-  plan?: {
+  plan: {
     name: string;
-  };
+  } | null;
 };
 
 type CustomerRow = Customer & {
@@ -44,10 +43,18 @@ type CustomerRow = Customer & {
 };
 
 export default function AdminCustomersPage() {
-  const [customers, setCustomers] = useState<CustomerRow[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState("");
-  const [error, setError] = useState<string | null>(null);
+  const [customers, setCustomers] = useState<
+    CustomerRow[]
+  >([]);
+
+  const [loading, setLoading] =
+    useState(true);
+
+  const [search, setSearch] =
+    useState("");
+
+  const [error, setError] =
+    useState<string | null>(null);
 
   async function loadCustomers() {
     setLoading(true);
@@ -101,6 +108,7 @@ export default function AdminCustomersPage() {
 
       setCustomers([]);
       setLoading(false);
+
       return;
     }
 
@@ -122,9 +130,55 @@ export default function AdminCustomersPage() {
       const subscription of
         subscriptionsResult.data ?? []
     ) {
+      /*
+       * Supabase can return the related
+       * subscription plan as an array.
+       * Normalize it to a single object.
+       */
+
+      const rawPlan =
+        subscription.plan;
+
+      const plan = Array.isArray(rawPlan)
+        ? rawPlan[0]
+        : rawPlan;
+
       subscriptionMap.set(
         subscription.workspace_id,
-        subscription as Subscription
+        {
+          id: subscription.id,
+
+          workspace_id:
+            subscription.workspace_id,
+
+          plan_id:
+            subscription.plan_id,
+
+          subscribed_units:
+            Number(
+              subscription.subscribed_units
+            ),
+
+          monthly_amount:
+            Number(
+              subscription.monthly_amount
+            ),
+
+          currency:
+            subscription.currency,
+
+          status:
+            subscription.status,
+
+          next_billing_date:
+            subscription.next_billing_date,
+
+          plan: plan
+            ? {
+                name: plan.name,
+              }
+            : null,
+        }
       );
     }
 
@@ -132,8 +186,11 @@ export default function AdminCustomersPage() {
       (customersResult.data ?? []).map(
         (customer) => ({
           ...customer,
+
           subscription:
-            subscriptionMap.get(customer.id),
+            subscriptionMap.get(
+              customer.id
+            ),
         })
       );
 
@@ -145,46 +202,46 @@ export default function AdminCustomersPage() {
     loadCustomers();
   }, []);
 
-  const filteredCustomers = useMemo(() => {
-    const query = search
-      .trim()
-      .toLowerCase();
+  const filteredCustomers =
+    useMemo(() => {
+      const query =
+        search.trim().toLowerCase();
 
-    if (!query) {
-      return customers;
-    }
+      if (!query) {
+        return customers;
+      }
 
-    return customers.filter((customer) => {
-      const values = [
-        customer.name,
-        customer.brand_name ?? "",
-        customer.email ?? "",
-        customer.phone ?? "",
-        customer.subscription?.plan?.name ??
-          "",
-      ];
+      return customers.filter(
+        (customer) => {
+          const values = [
+            customer.name,
+            customer.brand_name ?? "",
+            customer.email ?? "",
+            customer.phone ?? "",
+            customer.subscription?.plan
+              ?.name ?? "",
+          ];
 
-      return values.some((value) =>
-        value.toLowerCase().includes(query)
+          return values.some(
+            (value) =>
+              value
+                .toLowerCase()
+                .includes(query)
+          );
+        }
       );
-    });
-  }, [customers, search]);
+    }, [customers, search]);
 
   const activeCustomers =
     customers.filter(
-      (customer) => customer.is_active
-    ).length;
-
-  const subscribedCustomers =
-    customers.filter(
       (customer) =>
-        customer.subscription &&
-        customer.subscription.status === "Active"
+        customer.is_active
     ).length;
 
   const customersWithoutSubscription =
     customers.filter(
-      (customer) => !customer.subscription
+      (customer) =>
+        !customer.subscription
     ).length;
 
   function formatMoney(
@@ -308,7 +365,9 @@ export default function AdminCustomersPage() {
 
         <StatCard
           title="Without Subscription"
-          value={customersWithoutSubscription}
+          value={
+            customersWithoutSubscription
+          }
           subtitle="Awaiting subscription"
           icon={
             <Building2
@@ -343,10 +402,13 @@ export default function AdminCustomersPage() {
               </h2>
 
               <p className="mt-1 text-sm text-gray-500">
-                {filteredCustomers.length} customer
-                {filteredCustomers.length === 1
+                {filteredCustomers.length}{" "}
+                customer
+                {filteredCustomers.length ===
+                1
                   ? ""
-                  : "s"} shown
+                  : "s"}{" "}
+                shown
               </p>
 
             </div>
@@ -362,7 +424,9 @@ export default function AdminCustomersPage() {
                 type="text"
                 value={search}
                 onChange={(event) =>
-                  setSearch(event.target.value)
+                  setSearch(
+                    event.target.value
+                  )
                 }
                 placeholder="Search customers..."
                 className="w-full rounded-xl border border-gray-200 bg-gray-50 py-2.5 pl-10 pr-4 text-sm text-gray-900 outline-none transition focus:border-[#D4AF37] focus:bg-white focus:ring-2 focus:ring-[#D4AF37]/10"
@@ -390,7 +454,8 @@ export default function AdminCustomersPage() {
 
           </div>
 
-        ) : filteredCustomers.length === 0 ? (
+        ) : filteredCustomers.length ===
+          0 ? (
 
           <div className="flex min-h-56 items-center justify-center px-6">
 
@@ -463,7 +528,6 @@ export default function AdminCustomersPage() {
 
                 {filteredCustomers.map(
                   (customer) => {
-
                     const subscription =
                       customer.subscription;
 
@@ -554,7 +618,8 @@ export default function AdminCustomersPage() {
 
                           {subscription ? (
                             <span className="inline-flex rounded-lg bg-[#D4AF37]/10 px-3 py-1.5 text-sm font-semibold text-[#8A6D16]">
-                              {subscription.plan?.name ||
+                              {subscription.plan
+                                ?.name ||
                                 "Unknown"}
                             </span>
                           ) : (
