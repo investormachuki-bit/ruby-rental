@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   Building2,
+  ChevronRight,
   Mail,
   Phone,
   RefreshCw,
@@ -43,6 +45,8 @@ type CustomerRow = Customer & {
 };
 
 export default function AdminCustomersPage() {
+  const router = useRouter();
+
   const [customers, setCustomers] = useState<
     CustomerRow[]
   >([]);
@@ -130,12 +134,6 @@ export default function AdminCustomersPage() {
       const subscription of
         subscriptionsResult.data ?? []
     ) {
-      /*
-       * Supabase can return the related
-       * subscription plan as an array.
-       * Normalize it to a single object.
-       */
-
       const rawPlan =
         subscription.plan;
 
@@ -283,10 +281,20 @@ export default function AdminCustomersPage() {
     }
   }
 
+  function openCustomer(
+    customerId: string
+  ) {
+    router.push(
+      `/admin/customers/${customerId}`
+    );
+  }
+
   return (
     <div className="space-y-8">
 
-      {/* Header */}
+      {/* =====================================================
+          HEADER
+      ====================================================== */}
 
       <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
 
@@ -310,7 +318,8 @@ export default function AdminCustomersPage() {
           </h1>
 
           <p className="mt-2 text-sm text-gray-500">
-            View Ruby Rental workspaces and their subscription status.
+            Manage Ruby Rental customers and
+            their subscriptions.
           </p>
 
         </div>
@@ -321,6 +330,7 @@ export default function AdminCustomersPage() {
           disabled={loading}
           className="inline-flex items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 shadow-sm transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
         >
+
           <RefreshCw
             size={17}
             className={
@@ -331,11 +341,14 @@ export default function AdminCustomersPage() {
           />
 
           Refresh
+
         </button>
 
       </div>
 
-      {/* Statistics */}
+      {/* =====================================================
+          STATISTICS
+      ====================================================== */}
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
 
@@ -379,7 +392,9 @@ export default function AdminCustomersPage() {
 
       </div>
 
-      {/* Error */}
+      {/* =====================================================
+          ERROR
+      ====================================================== */}
 
       {error && (
         <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
@@ -387,9 +402,13 @@ export default function AdminCustomersPage() {
         </div>
       )}
 
-      {/* Customer table */}
+      {/* =====================================================
+          CUSTOMER LIST
+      ====================================================== */}
 
       <Card className="overflow-hidden p-0">
+
+        {/* Header */}
 
         <div className="border-b border-gray-200 p-5 sm:p-6">
 
@@ -438,6 +457,10 @@ export default function AdminCustomersPage() {
 
         </div>
 
+        {/* =================================================
+            LOADING
+        ================================================== */}
+
         {loading ? (
 
           <div className="flex min-h-56 items-center justify-center">
@@ -456,6 +479,10 @@ export default function AdminCustomersPage() {
 
         ) : filteredCustomers.length ===
           0 ? (
+
+          /* ===============================================
+             EMPTY
+          ================================================ */
 
           <div className="flex min-h-56 items-center justify-center px-6">
 
@@ -488,220 +515,433 @@ export default function AdminCustomersPage() {
 
         ) : (
 
-          <div className="overflow-x-auto">
+          <>
 
-            <table className="w-full min-w-[950px]">
+            {/* =============================================
+                MOBILE CUSTOMER CARDS
+            ============================================== */}
 
-              <thead>
+            <div className="divide-y divide-gray-100 md:hidden">
 
-                <tr className="border-b border-gray-200 bg-gray-50/80">
+              {filteredCustomers.map(
+                (customer) => {
 
-                  <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-400">
-                    Customer
-                  </th>
+                  const subscription =
+                    customer.subscription;
 
-                  <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-400">
-                    Contact
-                  </th>
+                  return (
+                    <button
+                      key={customer.id}
+                      type="button"
+                      onClick={() =>
+                        openCustomer(
+                          customer.id
+                        )
+                      }
+                      className="block w-full text-left transition active:bg-gray-50"
+                    >
 
-                  <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-400">
-                    Package
-                  </th>
+                      <div className="p-4">
 
-                  <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-400">
-                    Units
-                  </th>
+                        {/* Top row */}
 
-                  <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-400">
-                    Monthly
-                  </th>
+                        <div className="flex items-center gap-3">
 
-                  <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-400">
-                    Status
-                  </th>
+                          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gray-100 text-sm font-bold text-gray-600">
 
-                </tr>
+                            {(
+                              customer.brand_name ||
+                              customer.name ||
+                              "R"
+                            )
+                              .charAt(0)
+                              .toUpperCase()}
 
-              </thead>
+                          </div>
 
-              <tbody className="divide-y divide-gray-100">
+                          <div className="min-w-0 flex-1">
 
-                {filteredCustomers.map(
-                  (customer) => {
-                    const subscription =
-                      customer.subscription;
-
-                    return (
-                      <tr
-                        key={customer.id}
-                        className="transition hover:bg-gray-50/70"
-                      >
-
-                        {/* Customer */}
-
-                        <td className="px-6 py-5">
-
-                          <div className="flex items-center gap-3">
-
-                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gray-100 text-sm font-bold text-gray-600">
-                              {(
-                                customer.brand_name ||
-                                customer.name ||
-                                "R"
-                              )
-                                .charAt(0)
-                                .toUpperCase()}
-                            </div>
-
-                            <div className="min-w-0">
+                            <div className="flex items-center justify-between gap-3">
 
                               <p className="truncate font-semibold text-gray-900">
                                 {customer.brand_name ||
                                   customer.name}
                               </p>
 
-                              {customer.brand_name &&
-                                customer.name && (
-                                  <p className="truncate text-xs text-gray-400">
-                                    {customer.name}
-                                  </p>
-                                )}
+                              <ChevronRight
+                                size={18}
+                                className="shrink-0 text-gray-300"
+                              />
 
                             </div>
 
+                            {customer.brand_name &&
+                              customer.name && (
+                                <p className="mt-0.5 truncate text-xs text-gray-400">
+                                  {customer.name}
+                                </p>
+                              )}
+
                           </div>
 
-                        </td>
+                        </div>
 
                         {/* Contact */}
 
-                        <td className="px-6 py-5">
+                        <div className="mt-4 space-y-1.5">
 
-                          <div className="space-y-1">
+                          {customer.email && (
+                            <div className="flex items-center gap-2 text-xs text-gray-500">
 
-                            {customer.email ? (
-                              <div className="flex items-center gap-2 text-sm text-gray-600">
+                              <Mail
+                                size={13}
+                                className="shrink-0 text-gray-400"
+                              />
 
-                                <Mail
-                                  size={14}
-                                  className="text-gray-400"
-                                />
-
+                              <span className="truncate">
                                 {customer.email}
-
-                              </div>
-                            ) : (
-                              <span className="text-sm text-gray-400">
-                                No email
                               </span>
-                            )}
 
-                            {customer.phone && (
-                              <div className="flex items-center gap-2 text-xs text-gray-400">
+                            </div>
+                          )}
 
-                                <Phone
-                                  size={13}
-                                />
+                          {customer.phone && (
+                            <div className="flex items-center gap-2 text-xs text-gray-500">
 
+                              <Phone
+                                size={13}
+                                className="shrink-0 text-gray-400"
+                              />
+
+                              <span>
                                 {customer.phone}
+                              </span>
 
-                              </div>
-                            )}
+                            </div>
+                          )}
+
+                        </div>
+
+                        {/* Subscription summary */}
+
+                        <div className="mt-4 grid grid-cols-2 gap-2">
+
+                          <div className="rounded-xl bg-gray-50 px-3 py-2.5">
+
+                            <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-400">
+                              Package
+                            </p>
+
+                            <p className="mt-1 truncate text-sm font-semibold text-gray-900">
+
+                              {subscription?.plan
+                                ?.name ||
+                                "No subscription"}
+
+                            </p>
 
                           </div>
 
-                        </td>
+                          <div className="rounded-xl bg-gray-50 px-3 py-2.5">
 
-                        {/* Package */}
-
-                        <td className="px-6 py-5">
-
-                          {subscription ? (
-                            <span className="inline-flex rounded-lg bg-[#D4AF37]/10 px-3 py-1.5 text-sm font-semibold text-[#8A6D16]">
-                              {subscription.plan
-                                ?.name ||
-                                "Unknown"}
-                            </span>
-                          ) : (
-                            <span className="text-sm text-gray-400">
-                              No subscription
-                            </span>
-                          )}
-
-                        </td>
-
-                        {/* Units */}
-
-                        <td className="px-6 py-5">
-
-                          {subscription ? (
-                            <>
-                              <p className="font-semibold text-gray-900">
-                                {subscription.subscribed_units.toLocaleString()}
-                              </p>
-
-                              <p className="mt-1 text-xs text-gray-400">
-                                subscribed units
-                              </p>
-                            </>
-                          ) : (
-                            <span className="text-sm text-gray-400">
-                              —
-                            </span>
-                          )}
-
-                        </td>
-
-                        {/* Monthly */}
-
-                        <td className="px-6 py-5">
-
-                          {subscription ? (
-                            <p className="font-bold text-gray-900">
-                              {formatMoney(
-                                Number(
-                                  subscription.monthly_amount
-                                ),
-                                subscription.currency
-                              )}
+                            <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-400">
+                              Monthly
                             </p>
-                          ) : (
-                            <span className="text-sm text-gray-400">
-                              —
+
+                            <p className="mt-1 text-sm font-semibold text-gray-900">
+
+                              {subscription
+                                ? formatMoney(
+                                    Number(
+                                      subscription.monthly_amount
+                                    ),
+                                    subscription.currency
+                                  )
+                                : "—"}
+
+                            </p>
+
+                          </div>
+
+                        </div>
+
+                        {/* Bottom status */}
+
+                        <div className="mt-3 flex items-center justify-between">
+
+                          <div className="flex items-center gap-2">
+
+                            <span
+                              className={`h-2 w-2 rounded-full ${
+                                customer.is_active
+                                  ? "bg-green-500"
+                                  : "bg-gray-400"
+                              }`}
+                            />
+
+                            <span className="text-xs font-medium text-gray-500">
+                              {customer.is_active
+                                ? "Active account"
+                                : "Inactive account"}
+                            </span>
+
+                          </div>
+
+                          {subscription && (
+                            <span
+                              className={`rounded-full px-2.5 py-1 text-[10px] font-semibold ${statusClass(
+                                subscription.status
+                              )}`}
+                            >
+                              {subscription.status}
                             </span>
                           )}
 
-                        </td>
+                        </div>
 
-                        {/* Status */}
+                      </div>
 
-                        <td className="px-6 py-5">
+                    </button>
+                  );
+                }
+              )}
 
-                          <span
-                            className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${
-                              subscription
-                                ? statusClass(
-                                    subscription.status
-                                  )
-                                : "bg-gray-100 text-gray-500"
-                            }`}
+            </div>
+
+            {/* =============================================
+                DESKTOP TABLE
+            ============================================== */}
+
+            <div className="hidden md:block">
+
+              <div className="overflow-x-auto">
+
+                <table className="w-full">
+
+                  <thead>
+
+                    <tr className="border-b border-gray-200 bg-gray-50/80">
+
+                      <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-400">
+                        Customer
+                      </th>
+
+                      <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-400">
+                        Contact
+                      </th>
+
+                      <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-400">
+                        Package
+                      </th>
+
+                      <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-400">
+                        Units
+                      </th>
+
+                      <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-400">
+                        Monthly
+                      </th>
+
+                      <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-400">
+                        Status
+                      </th>
+
+                    </tr>
+
+                  </thead>
+
+                  <tbody className="divide-y divide-gray-100">
+
+                    {filteredCustomers.map(
+                      (customer) => {
+
+                        const subscription =
+                          customer.subscription;
+
+                        return (
+                          <tr
+                            key={customer.id}
+                            onClick={() =>
+                              openCustomer(
+                                customer.id
+                              )
+                            }
+                            className="cursor-pointer transition hover:bg-gray-50/70"
                           >
-                            {subscription?.status ||
-                              "No subscription"}
-                          </span>
 
-                        </td>
+                            {/* Customer */}
 
-                      </tr>
-                    );
-                  }
-                )}
+                            <td className="px-6 py-5">
 
-              </tbody>
+                              <div className="flex items-center gap-3">
 
-            </table>
+                                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gray-100 text-sm font-bold text-gray-600">
 
-          </div>
+                                  {(
+                                    customer.brand_name ||
+                                    customer.name ||
+                                    "R"
+                                  )
+                                    .charAt(0)
+                                    .toUpperCase()}
+
+                                </div>
+
+                                <div className="min-w-0">
+
+                                  <p className="truncate font-semibold text-gray-900">
+                                    {customer.brand_name ||
+                                      customer.name}
+                                  </p>
+
+                                  {customer.brand_name &&
+                                    customer.name && (
+                                      <p className="truncate text-xs text-gray-400">
+                                        {customer.name}
+                                      </p>
+                                    )}
+
+                                </div>
+
+                              </div>
+
+                            </td>
+
+                            {/* Contact */}
+
+                            <td className="px-6 py-5">
+
+                              <div className="space-y-1">
+
+                                {customer.email ? (
+                                  <div className="flex items-center gap-2 text-sm text-gray-600">
+
+                                    <Mail
+                                      size={14}
+                                      className="text-gray-400"
+                                    />
+
+                                    <span className="max-w-[220px] truncate">
+                                      {customer.email}
+                                    </span>
+
+                                  </div>
+                                ) : (
+                                  <span className="text-sm text-gray-400">
+                                    No email
+                                  </span>
+                                )}
+
+                                {customer.phone && (
+                                  <div className="flex items-center gap-2 text-xs text-gray-400">
+
+                                    <Phone
+                                      size={13}
+                                    />
+
+                                    {customer.phone}
+
+                                  </div>
+                                )}
+
+                              </div>
+
+                            </td>
+
+                            {/* Package */}
+
+                            <td className="px-6 py-5">
+
+                              {subscription ? (
+                                <span className="inline-flex rounded-lg bg-[#D4AF37]/10 px-3 py-1.5 text-sm font-semibold text-[#8A6D16]">
+                                  {subscription.plan
+                                    ?.name ||
+                                    "Unknown"}
+                                </span>
+                              ) : (
+                                <span className="text-sm text-gray-400">
+                                  No subscription
+                                </span>
+                              )}
+
+                            </td>
+
+                            {/* Units */}
+
+                            <td className="px-6 py-5">
+
+                              {subscription ? (
+                                <>
+                                  <p className="font-semibold text-gray-900">
+                                    {subscription.subscribed_units.toLocaleString()}
+                                  </p>
+
+                                  <p className="mt-1 text-xs text-gray-400">
+                                    subscribed units
+                                  </p>
+                                </>
+                              ) : (
+                                <span className="text-sm text-gray-400">
+                                  —
+                                </span>
+                              )}
+
+                            </td>
+
+                            {/* Monthly */}
+
+                            <td className="px-6 py-5">
+
+                              {subscription ? (
+                                <p className="font-bold text-gray-900">
+                                  {formatMoney(
+                                    Number(
+                                      subscription.monthly_amount
+                                    ),
+                                    subscription.currency
+                                  )}
+                                </p>
+                              ) : (
+                                <span className="text-sm text-gray-400">
+                                  —
+                                </span>
+                              )}
+
+                            </td>
+
+                            {/* Status */}
+
+                            <td className="px-6 py-5">
+
+                              <span
+                                className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${
+                                  subscription
+                                    ? statusClass(
+                                        subscription.status
+                                      )
+                                    : "bg-gray-100 text-gray-500"
+                                }`}
+                              >
+                                {subscription?.status ||
+                                  "No subscription"}
+                              </span>
+
+                            </td>
+
+                          </tr>
+                        );
+                      }
+                    )}
+
+                  </tbody>
+
+                </table>
+
+              </div>
+
+            </div>
+
+          </>
 
         )}
 
