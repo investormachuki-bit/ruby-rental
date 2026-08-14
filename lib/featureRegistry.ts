@@ -44,6 +44,10 @@ export type Feature = {
 };
 
 export const FEATURE_REGISTRY: Feature[] = [
+  /* ===========================
+       CORE
+     =========================== */
+
   {
     moduleKey: "dashboard",
     name: "Dashboard",
@@ -56,6 +60,22 @@ export const FEATURE_REGISTRY: Feature[] = [
     sidebar: true,
     searchable: true,
     aiEnabled: true,
+    core: true,
+  },
+
+  {
+    moduleKey: "subscription",
+    name: "Subscription",
+    description:
+      "Manage your Ruby Rental subscription and payments.",
+    route: "/dashboard/subscription",
+    icon: CreditCard,
+    category: "Core",
+    permission: "subscription.view",
+    minimumPlan: "starter",
+    sidebar: true,
+    searchable: true,
+    aiEnabled: false,
     core: true,
   },
 
@@ -126,7 +146,8 @@ export const FEATURE_REGISTRY: Feature[] = [
   {
     moduleKey: "finance",
     name: "Finance",
-    description: "Financial dashboard and accounting.",
+    description:
+      "Financial dashboard and accounting.",
     route: "/dashboard/finance",
     icon: BarChart3,
     category: "Finance",
@@ -146,7 +167,8 @@ export const FEATURE_REGISTRY: Feature[] = [
   {
     moduleKey: "recurringCharges",
     name: "Recurring Charges",
-    description: "Manage recurring rent and utility charges.",
+    description:
+      "Manage recurring rent and utility charges.",
     route: "/dashboard/recurring-charges",
     icon: Repeat,
     category: "Finance",
@@ -161,7 +183,8 @@ export const FEATURE_REGISTRY: Feature[] = [
   {
     moduleKey: "invoices",
     name: "Invoices",
-    description: "Generate and manage tenant invoices.",
+    description:
+      "Generate and manage tenant invoices.",
     route: "/dashboard/invoices",
     icon: ReceiptText,
     category: "Finance",
@@ -176,7 +199,8 @@ export const FEATURE_REGISTRY: Feature[] = [
   {
     moduleKey: "payments",
     name: "Payments",
-    description: "Record and manage tenant payments.",
+    description:
+      "Record and manage tenant payments.",
     route: "/dashboard/payments",
     icon: CreditCard,
     category: "Finance",
@@ -191,7 +215,8 @@ export const FEATURE_REGISTRY: Feature[] = [
   {
     moduleKey: "expenses",
     name: "Expenses",
-    description: "Track operational expenses.",
+    description:
+      "Track operational expenses.",
     route: "/dashboard/expenses",
     icon: Receipt,
     category: "Finance",
@@ -210,7 +235,8 @@ export const FEATURE_REGISTRY: Feature[] = [
   {
     moduleKey: "maintenance",
     name: "Maintenance",
-    description: "Manage maintenance requests and repairs.",
+    description:
+      "Manage maintenance requests and repairs.",
     route: "/dashboard/maintenance",
     icon: Wrench,
     category: "Operations",
@@ -225,7 +251,8 @@ export const FEATURE_REGISTRY: Feature[] = [
   {
     moduleKey: "reports",
     name: "Reports",
-    description: "View business reports and analytics.",
+    description:
+      "View business reports and analytics.",
     route: "/dashboard/reports",
     icon: BarChart3,
     category: "Reports",
@@ -244,7 +271,8 @@ export const FEATURE_REGISTRY: Feature[] = [
   {
     moduleKey: "employees",
     name: "Employees",
-    description: "Manage staff and assign operational roles.",
+    description:
+      "Manage staff and assign operational roles.",
     route: "/dashboard/settings/employees",
     icon: Users,
     category: "Administration",
@@ -259,7 +287,8 @@ export const FEATURE_REGISTRY: Feature[] = [
   {
     moduleKey: "roles",
     name: "Roles & Permissions",
-    description: "Manage employee roles and permissions.",
+    description:
+      "Manage employee roles and permissions.",
     route: "/dashboard/settings/roles",
     icon: Shield,
     category: "Administration",
@@ -274,7 +303,8 @@ export const FEATURE_REGISTRY: Feature[] = [
   {
     moduleKey: "settings",
     name: "Settings",
-    description: "Configure your workspace.",
+    description:
+      "Configure your workspace.",
     route: "/dashboard/settings",
     icon: Settings,
     category: "Administration",
