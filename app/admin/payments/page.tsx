@@ -13,14 +13,13 @@ import {
 
 import Card from "@/components/ui/Card";
 import StatCard from "@/components/ui/StatCard";
-import { supabase } from "@/lib/supabase";
 
 import {
   getPendingSubscriptionPayments,
-  rejectSubscriptionPayment,
-  verifySubscriptionPayment,
   SubscriptionPaymentRequest,
 } from "@/services/subscriptionPayments";
+
+import { supabase } from "@/lib/supabase";
 
 type Workspace = {
   id: string;
@@ -46,40 +45,29 @@ type PaymentRow = SubscriptionPaymentRequest & {
 };
 
 export default function AdminPaymentsPage() {
-  const [payments, setPayments] = useState<
-    PaymentRow[]
-  >([]);
+  const [payments, setPayments] = useState<PaymentRow[]>([]);
 
-  const [loading, setLoading] =
-    useState(true);
+  const [loading, setLoading] = useState(true);
 
-  const [refreshing, setRefreshing] =
-    useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
-  const [search, setSearch] =
-    useState("");
+  const [search, setSearch] = useState("");
 
   const [selectedPayment, setSelectedPayment] =
     useState<PaymentRow | null>(null);
 
-  const [processing, setProcessing] =
-    useState(false);
+  const [processing, setProcessing] = useState(false);
 
-  const [error, setError] =
-    useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  const [success, setSuccess] =
-    useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
 
-  const [rejectionReason, setRejectionReason] =
-    useState("");
+  const [rejectionReason, setRejectionReason] = useState("");
 
   const [showRejectModal, setShowRejectModal] =
     useState(false);
 
-  async function loadPayments(
-    showLoader = true
-  ) {
+  async function loadPayments(showLoader = true) {
     if (showLoader) {
       setLoading(true);
     } else {
@@ -88,8 +76,7 @@ export default function AdminPaymentsPage() {
 
     setError(null);
 
-    const result =
-      await getPendingSubscriptionPayments();
+    const result = await getPendingSubscriptionPayments();
 
     if (result.error) {
       setError(result.error);
@@ -99,8 +86,7 @@ export default function AdminPaymentsPage() {
       return;
     }
 
-    const paymentRequests =
-      result.data;
+    const paymentRequests = result.data ?? [];
 
     if (paymentRequests.length === 0) {
       setPayments([]);
@@ -112,8 +98,7 @@ export default function AdminPaymentsPage() {
     const workspaceIds = [
       ...new Set(
         paymentRequests.map(
-          (payment) =>
-            payment.workspace_id
+          (payment) => payment.workspace_id
         )
       ),
     ];
@@ -121,8 +106,7 @@ export default function AdminPaymentsPage() {
     const subscriptionIds = [
       ...new Set(
         paymentRequests.map(
-          (payment) =>
-            payment.subscription_id
+          (payment) => payment.subscription_id
         )
       ),
     ];
@@ -140,10 +124,7 @@ export default function AdminPaymentsPage() {
           email,
           phone
         `)
-        .in(
-          "id",
-          workspaceIds
-        ),
+        .in("id", workspaceIds),
 
       supabase
         .from("subscriptions")
@@ -156,35 +137,21 @@ export default function AdminPaymentsPage() {
           status,
           next_billing_date
         `)
-        .in(
-          "id",
-          subscriptionIds
-        ),
+        .in("id", subscriptionIds),
     ]);
 
     if (workspaceResult.error) {
-      setError(
-        workspaceResult.error.message
-      );
+      setError(workspaceResult.error.message);
     }
 
     if (subscriptionResult.error) {
-      setError(
-        subscriptionResult.error.message
-      );
+      setError(subscriptionResult.error.message);
     }
 
-    const workspaceMap =
-      new Map<string, Workspace>();
+    const workspaceMap = new Map<string, Workspace>();
 
-    for (
-      const workspace of
-        workspaceResult.data ?? []
-    ) {
-      workspaceMap.set(
-        workspace.id,
-        workspace
-      );
+    for (const workspace of workspaceResult.data ?? []) {
+      workspaceMap.set(workspace.id, workspace);
     }
 
     const subscriptionMap =
@@ -194,42 +161,30 @@ export default function AdminPaymentsPage() {
       const subscription of
         subscriptionResult.data ?? []
     ) {
-      subscriptionMap.set(
-        subscription.id,
-        {
-          ...subscription,
-          subscribed_units:
-            Number(
-              subscription.subscribed_units
-            ),
-          monthly_amount:
-            Number(
-              subscription.monthly_amount
-            ),
-        }
-      );
+      subscriptionMap.set(subscription.id, {
+        ...subscription,
+        subscribed_units: Number(
+          subscription.subscribed_units
+        ),
+        monthly_amount: Number(
+          subscription.monthly_amount
+        ),
+      });
     }
 
     const rows: PaymentRow[] =
-      paymentRequests.map(
-        (payment) => ({
-          ...payment,
-
-          amount: Number(
-            payment.amount
-          ),
-
-          workspace:
-            workspaceMap.get(
-              payment.workspace_id
-            ) ?? null,
-
-          subscription:
-            subscriptionMap.get(
-              payment.subscription_id
-            ) ?? null,
-        })
-      );
+      paymentRequests.map((payment) => ({
+        ...payment,
+        amount: Number(payment.amount),
+        workspace:
+          workspaceMap.get(
+            payment.workspace_id
+          ) ?? null,
+        subscription:
+          subscriptionMap.get(
+            payment.subscription_id
+          ) ?? null,
+      }));
 
     setPayments(rows);
     setLoading(false);
@@ -240,80 +195,50 @@ export default function AdminPaymentsPage() {
     loadPayments();
   }, []);
 
-  const filteredPayments =
-    useMemo(() => {
-      const query =
-        search.trim().toLowerCase();
+  const filteredPayments = useMemo(() => {
+    const query = search.trim().toLowerCase();
 
-      if (!query) {
-        return payments;
-      }
+    if (!query) {
+      return payments;
+    }
 
-      return payments.filter(
-        (payment) => {
-          const workspaceName =
-            payment.workspace?.name ??
-            "";
+    return payments.filter((payment) => {
+      const workspaceName =
+        payment.workspace?.name ?? "";
 
-          const brandName =
-            payment.workspace?.brand_name ??
-            "";
+      const brandName =
+        payment.workspace?.brand_name ?? "";
 
-          const email =
-            payment.workspace?.email ??
-            "";
+      const email =
+        payment.workspace?.email ?? "";
 
-          const reference =
-            payment.transaction_reference ??
-            "";
+      const reference =
+        payment.transaction_reference ?? "";
 
-          return [
-            workspaceName,
-            brandName,
-            email,
-            reference,
-          ].some((value) =>
-            value
-              .toLowerCase()
-              .includes(query)
-          );
-        }
+      return [
+        workspaceName,
+        brandName,
+        email,
+        reference,
+      ].some((value) =>
+        value.toLowerCase().includes(query)
       );
-    }, [payments, search]);
+    });
+  }, [payments, search]);
 
   function formatMoney(
     amount: number,
     currency = "KES"
   ) {
     return `${
-      currency === "KES"
-        ? "KSh"
-        : currency
-    } ${amount.toLocaleString(
-      "en-KE",
-      {
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 2,
-      }
-    )}`;
+      currency === "KES" ? "KSh" : currency
+    } ${amount.toLocaleString("en-KE", {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2,
+    })}`;
   }
 
-  function formatDate(
-    date: string
-  ) {
-    return new Date(date).toLocaleDateString(
-      "en-KE",
-      {
-        day: "numeric",
-        month: "short",
-        year: "numeric",
-      }
-    );
-  }
-
-  function formatDateTime(
-    date: string
-  ) {
+  function formatDateTime(date: string) {
     return new Date(date).toLocaleString(
       "en-KE",
       {
@@ -327,7 +252,13 @@ export default function AdminPaymentsPage() {
   }
 
   /*
-   * Verify payment AND activate subscription.
+   * SECURE VERIFICATION
+   *
+   * The browser does NOT update the payment
+   * or subscription directly.
+   *
+   * Supabase checks Platform Admin status
+   * inside the RPC function.
    */
   async function handleVerify() {
     if (!selectedPayment) {
@@ -338,82 +269,27 @@ export default function AdminPaymentsPage() {
     setError(null);
     setSuccess(null);
 
-    /*
-     * First mark the payment as verified.
-     */
-    const paymentResult =
-      await verifySubscriptionPayment(
-        selectedPayment.id
+    const { data, error: rpcError } =
+      await supabase.rpc(
+        "verify_subscription_payment",
+        {
+          p_payment_request_id:
+            selectedPayment.id,
+        }
       );
 
-    if (paymentResult.error) {
-      setError(
-        paymentResult.error
-      );
+    if (rpcError) {
+      setError(rpcError.message);
       setProcessing(false);
       return;
     }
 
-    /*
-     * Then activate the subscription.
-     */
-    const { data: subscriptionData } =
-      await supabase
-        .from("subscriptions")
-        .update({
-          status: "Active",
-        })
-        .eq(
-          "id",
-          selectedPayment.subscription_id
-        )
-        .select(`
-          id,
-          status,
-          next_billing_date
-        `)
-        .single();
-
-    if (
-      !subscriptionData
-    ) {
+    if (!data?.success) {
       setError(
-        "Payment was verified, but the subscription could not be activated. Please check the subscription manually."
+        "Payment verification could not be completed."
       );
-
       setProcessing(false);
       return;
-    }
-
-    /*
-     * Set the next billing date if it
-     * does not already exist.
-     */
-    if (
-      !subscriptionData.next_billing_date
-    ) {
-      const nextBilling =
-        new Date();
-
-      nextBilling.setMonth(
-        nextBilling.getMonth() + 1
-      );
-
-      const nextBillingDate =
-        nextBilling
-          .toISOString()
-          .split("T")[0];
-
-      await supabase
-        .from("subscriptions")
-        .update({
-          next_billing_date:
-            nextBillingDate,
-        })
-        .eq(
-          "id",
-          selectedPayment.subscription_id
-        );
     }
 
     setSuccess(
@@ -436,6 +312,12 @@ export default function AdminPaymentsPage() {
     setShowRejectModal(true);
   }
 
+  /*
+   * SECURE REJECTION
+   *
+   * The database function checks that
+   * the current user is a Platform Admin.
+   */
   async function handleReject() {
     if (!selectedPayment) {
       return;
@@ -453,16 +335,28 @@ export default function AdminPaymentsPage() {
 
     setProcessing(true);
     setError(null);
+    setSuccess(null);
 
-    const result =
-      await rejectSubscriptionPayment(
-        selectedPayment.id,
-        reason
+    const { data, error: rpcError } =
+      await supabase.rpc(
+        "reject_subscription_payment",
+        {
+          p_payment_request_id:
+            selectedPayment.id,
+
+          p_reason: reason,
+        }
       );
 
-    if (result.error) {
+    if (rpcError) {
+      setError(rpcError.message);
+      setProcessing(false);
+      return;
+    }
+
+    if (!data?.success) {
       setError(
-        result.error
+        "Payment rejection could not be completed."
       );
       setProcessing(false);
       return;
@@ -473,7 +367,7 @@ export default function AdminPaymentsPage() {
     setRejectionReason("");
 
     setSuccess(
-      "Payment request rejected."
+      "Payment request rejected successfully."
     );
 
     await loadPayments(false);
@@ -484,9 +378,7 @@ export default function AdminPaymentsPage() {
   return (
     <div className="space-y-8">
 
-      {/* =====================================================
-          HEADER
-      ====================================================== */}
+      {/* HEADER */}
 
       <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
 
@@ -542,9 +434,7 @@ export default function AdminPaymentsPage() {
 
       </div>
 
-      {/* =====================================================
-          SUCCESS
-      ====================================================== */}
+      {/* SUCCESS */}
 
       {success && (
         <div className="flex items-start gap-3 rounded-xl border border-green-200 bg-green-50 px-4 py-4 text-sm text-green-700">
@@ -561,8 +451,8 @@ export default function AdminPaymentsPage() {
             </p>
 
             <p className="mt-1 text-green-600">
-              The payment verification
-              queue has been updated.
+              The payment verification queue
+              has been updated.
             </p>
 
           </div>
@@ -570,9 +460,7 @@ export default function AdminPaymentsPage() {
         </div>
       )}
 
-      {/* =====================================================
-          ERROR
-      ====================================================== */}
+      {/* ERROR */}
 
       {error && (
         <div className="flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-4 text-sm text-red-700">
@@ -587,9 +475,7 @@ export default function AdminPaymentsPage() {
         </div>
       )}
 
-      {/* =====================================================
-          STAT
-      ====================================================== */}
+      {/* STATS */}
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
 
@@ -611,9 +497,7 @@ export default function AdminPaymentsPage() {
             payments.reduce(
               (total, payment) =>
                 total +
-                Number(
-                  payment.amount
-                ),
+                Number(payment.amount),
               0
             )
           )}
@@ -640,9 +524,7 @@ export default function AdminPaymentsPage() {
 
       </div>
 
-      {/* =====================================================
-          SEARCH
-      ====================================================== */}
+      {/* SEARCH */}
 
       <Card className="p-5">
 
@@ -669,9 +551,7 @@ export default function AdminPaymentsPage() {
 
       </Card>
 
-      {/* =====================================================
-          PAYMENT QUEUE
-      ====================================================== */}
+      {/* PAYMENT QUEUE */}
 
       <Card className="overflow-hidden p-0">
 
@@ -683,7 +563,7 @@ export default function AdminPaymentsPage() {
 
           <p className="mt-1 text-sm text-gray-500">
             Verify the payment against your
-            M-Pesa/bank records before activating
+            M-Pesa/I&M records before activating
             the subscription.
           </p>
 
@@ -705,8 +585,7 @@ export default function AdminPaymentsPage() {
 
           </div>
 
-        ) : filteredPayments.length ===
-          0 ? (
+        ) : filteredPayments.length === 0 ? (
 
           <div className="flex min-h-64 items-center justify-center px-6">
 
@@ -726,8 +605,8 @@ export default function AdminPaymentsPage() {
               </h3>
 
               <p className="mt-1 text-sm text-gray-500">
-                New customer payment
-                submissions will appear here.
+                New customer payment submissions
+                will appear here.
               </p>
 
             </div>
@@ -738,7 +617,7 @@ export default function AdminPaymentsPage() {
 
           <>
 
-            {/* Desktop */}
+            {/* DESKTOP */}
 
             <div className="hidden overflow-x-auto md:block">
 
@@ -886,7 +765,7 @@ export default function AdminPaymentsPage() {
 
             </div>
 
-            {/* Mobile */}
+            {/* MOBILE */}
 
             <div className="divide-y divide-gray-100 md:hidden">
 
@@ -980,8 +859,6 @@ export default function AdminPaymentsPage() {
 
             <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-white shadow-2xl">
 
-              {/* Header */}
-
               <div className="flex items-start justify-between border-b border-gray-100 p-5 sm:p-6">
 
                 <div>
@@ -1028,11 +905,9 @@ export default function AdminPaymentsPage() {
 
               </div>
 
-              {/* Body */}
-
               <div className="space-y-6 p-5 sm:p-6">
 
-                {/* Customer */}
+                {/* CUSTOMER */}
 
                 <div>
 
@@ -1050,20 +925,18 @@ export default function AdminPaymentsPage() {
                   </p>
 
                   {selectedPayment
-                    .workspace
-                    ?.email && (
+                    .workspace?.email && (
                     <p className="mt-1 text-sm text-gray-500">
                       {
                         selectedPayment
-                          .workspace
-                          .email
+                          .workspace.email
                       }
                     </p>
                   )}
 
                 </div>
 
-                {/* Payment summary */}
+                {/* SUMMARY */}
 
                 <div className="grid gap-3 sm:grid-cols-3">
 
@@ -1113,7 +986,7 @@ export default function AdminPaymentsPage() {
 
                 </div>
 
-                {/* Payment instructions */}
+                {/* PAYMENT DETAILS */}
 
                 <div className="rounded-xl border border-[#D4AF37]/30 bg-[#D4AF37]/5 p-4">
 
@@ -1151,7 +1024,7 @@ export default function AdminPaymentsPage() {
 
                 </div>
 
-                {/* Transaction reference */}
+                {/* TRANSACTION REFERENCE */}
 
                 <div>
 
@@ -1171,7 +1044,7 @@ export default function AdminPaymentsPage() {
 
                 </div>
 
-                {/* Confirmation message */}
+                {/* CUSTOMER MESSAGE */}
 
                 <div>
 
@@ -1182,23 +1055,25 @@ export default function AdminPaymentsPage() {
                   <div className="mt-2 rounded-xl border border-gray-200 bg-gray-50 p-4">
 
                     {selectedPayment.notes ? (
+
                       <p className="whitespace-pre-wrap text-sm leading-6 text-gray-700">
-                        {
-                          selectedPayment.notes
-                        }
+                        {selectedPayment.notes}
                       </p>
+
                     ) : (
+
                       <p className="text-sm italic text-gray-400">
                         No payment confirmation
                         message provided.
                       </p>
+
                     )}
 
                   </div>
 
                 </div>
 
-                {/* Submitted */}
+                {/* SUBMITTED */}
 
                 <div className="flex items-center gap-2 text-xs text-gray-400">
 
@@ -1211,7 +1086,7 @@ export default function AdminPaymentsPage() {
 
                 </div>
 
-                {/* Actions */}
+                {/* ACTIONS */}
 
                 <div className="grid gap-3 border-t border-gray-100 pt-5 sm:grid-cols-2">
 
@@ -1267,9 +1142,9 @@ export default function AdminPaymentsPage() {
                 </div>
 
                 <p className="text-center text-xs leading-5 text-gray-400">
-                  Only verify after confirming
-                  the payment against your
-                  actual M-Pesa/I&M records.
+                  Verification is protected by
+                  Ruby Rental Platform Admin
+                  permissions.
                 </p>
 
               </div>
@@ -1280,7 +1155,7 @@ export default function AdminPaymentsPage() {
         )}
 
       {/* =====================================================
-          REJECT MODAL
+          REJECTION MODAL
       ====================================================== */}
 
       {showRejectModal &&
@@ -1340,6 +1215,12 @@ export default function AdminPaymentsPage() {
                   placeholder="e.g. Transaction could not be verified."
                   className="mt-2 w-full resize-none rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-[#D4AF37] focus:ring-4 focus:ring-[#D4AF37]/10"
                 />
+
+                {error && (
+                  <div className="mt-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                    {error}
+                  </div>
+                )}
 
                 <div className="mt-5 grid gap-3 sm:grid-cols-2">
 
