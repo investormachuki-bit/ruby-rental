@@ -1,7 +1,7 @@
 "use client";
 
 import { ReactNode, useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { RefreshCw, ShieldAlert } from "lucide-react";
 
 import { supabase } from "@/lib/supabase";
@@ -14,15 +14,34 @@ export default function AdminLayout({
   children,
 }: AdminLayoutProps) {
   const router = useRouter();
+  const pathname = usePathname();
 
   const [checking, setChecking] = useState(true);
   const [allowed, setAllowed] = useState(false);
 
+  /*
+   * The admin login page must remain publicly accessible.
+   *
+   * Otherwise this layout would try to verify administrator
+   * access before the user has had a chance to log in.
+   */
+  const isLoginPage =
+    pathname === "/admin/login";
+
   useEffect(() => {
+    if (isLoginPage) {
+      setChecking(false);
+      setAllowed(false);
+      return;
+    }
+
     let mounted = true;
 
     async function checkAccess() {
       try {
+        /*
+         * First check whether a user is signed in.
+         */
         const {
           data: { user },
           error: userError,
@@ -33,8 +52,16 @@ export default function AdminLayout({
           return;
         }
 
-        const { data, error } =
-          await supabase.rpc("is_platform_admin");
+        /*
+         * Then verify that the authenticated user
+         * is registered as a Ruby Rental Platform Admin.
+         */
+        const {
+          data,
+          error,
+        } = await supabase.rpc(
+          "is_platform_admin"
+        );
 
         if (
           error ||
@@ -49,11 +76,19 @@ export default function AdminLayout({
           return;
         }
 
+        /*
+         * Administrator verified.
+         */
         if (mounted) {
           setAllowed(true);
           setChecking(false);
         }
       } catch {
+        if (mounted) {
+          setAllowed(false);
+          setChecking(false);
+        }
+
         router.replace("/admin/login");
       }
     }
@@ -63,21 +98,30 @@ export default function AdminLayout({
     return () => {
       mounted = false;
     };
-  }, [router]);
+  }, [router, isLoginPage]);
 
+  /*
+   * LOGIN PAGE
+   *
+   * Do not run the administrator guard here.
+   */
+  if (isLoginPage) {
+    return <>{children}</>;
+  }
+
+  /*
+   * ACCESS CHECK
+   */
   if (checking) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center px-6">
-
         <div className="text-center">
 
           <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-[#D4AF37]/10">
-
             <RefreshCw
               size={22}
               className="animate-spin text-[#B8941F]"
             />
-
           </div>
 
           <p className="mt-4 text-sm font-semibold text-gray-900">
@@ -89,11 +133,16 @@ export default function AdminLayout({
           </p>
 
         </div>
-
       </div>
     );
   }
 
+  /*
+   * SAFETY FALLBACK
+   *
+   * Normally unauthorized users will already have
+   * been redirected to /admin/login.
+   */
   if (!allowed) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center px-6">
@@ -101,12 +150,10 @@ export default function AdminLayout({
         <div className="max-w-md text-center">
 
           <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-red-50">
-
             <ShieldAlert
               size={24}
               className="text-red-600"
             />
-
           </div>
 
           <h1 className="mt-5 text-xl font-bold text-gray-900">
@@ -124,5 +171,8 @@ export default function AdminLayout({
     );
   }
 
+  /*
+   * VERIFIED PLATFORM ADMIN
+   */
   return <>{children}</>;
 }
