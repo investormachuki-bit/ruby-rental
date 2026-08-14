@@ -7,8 +7,8 @@ import {
   CreditCard,
   RefreshCw,
   ShieldCheck,
-  X,
   Clock3,
+  AlertCircle,
 } from "lucide-react";
 
 import Card from "@/components/ui/Card";
@@ -55,19 +55,21 @@ export default function SubscriptionPage() {
   const [success, setSuccess] =
     useState(false);
 
-  const [showPaymentModal, setShowPaymentModal] =
-    useState(false);
-
+  /*
+   * Only the I&M Bank confirmation message
+   * is collected from the customer.
+   *
+   * The old M-Pesa transaction_reference
+   * remains in the database for future use.
+   */
   const [
-    transactionReference,
-    setTransactionReference,
+    bankConfirmationMessage,
+    setBankConfirmationMessage,
   ] = useState("");
 
-  const [
-    confirmationMessage,
-    setConfirmationMessage,
-  ] = useState("");
-
+  /*
+   * Load the customer's latest payment request.
+   */
   async function loadPaymentRequest(
     subscriptionId?: string
   ) {
@@ -86,15 +88,14 @@ export default function SubscriptionPage() {
 
     if (!result.error) {
       setPaymentRequest(result.data);
-
-      if (result.data?.status === "Pending") {
-        setSuccess(true);
-      }
     }
 
     setPaymentLoading(false);
   }
 
+  /*
+   * Calculate subscription price.
+   */
   async function calculate() {
     const numberOfUnits = Number(units);
 
@@ -125,143 +126,164 @@ export default function SubscriptionPage() {
     setLoading(false);
   }
 
-  function openPaymentModal() {
-    setPaymentError(null);
-    setTransactionReference("");
-    setConfirmationMessage("");
-    setShowPaymentModal(true);
-  }
-
+  /*
+   * Submit payment confirmation.
+   *
+   * IMPORTANT:
+   *
+   * This does NOT activate the subscription.
+   *
+   * It creates/submits a Pending payment
+   * verification request for Platform Admin.
+   *
+   * The customer only needs to provide
+   * the I&M Bank confirmation message.
+   *
+   * transactionReference is deliberately
+   * left empty because that field remains
+   * available in the database for future use.
+   */
   async function handleSubmitPayment() {
     if (!quote) {
       return;
     }
 
-    const reference =
-      transactionReference
-        .trim()
-        .toUpperCase();
+    const bankMessage =
+      bankConfirmationMessage.trim();
 
-    const message =
-      confirmationMessage.trim();
-
-    if (!reference) {
+    if (!bankMessage) {
       setPaymentError(
-        "Enter your M-Pesa transaction code."
-      );
-      return;
-    }
-
-    if (!message) {
-      setPaymentError(
-        "Paste your I&M Bank payment confirmation message."
+        "Please paste your I&M Bank payment confirmation message."
       );
       return;
     }
 
     setSubmittingPayment(true);
     setPaymentError(null);
+    setSuccess(false);
 
-    const {
-      data: {
-        user,
-      },
-      error: userError,
-    } = await supabase.auth.getUser();
+    try {
+      /*
+       * Get authenticated user.
+       */
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser();
 
-    if (userError || !user) {
-      setPaymentError(
-        "Your session has expired. Please log in again."
+      if (userError || !user) {
+        setPaymentError(
+          "Your session has expired. Please log in again."
+        );
+        return;
+      }
+
+      /*
+       * Find workspace.
+       */
+      const {
+        data: profile,
+        error: profileError,
+      } = await supabase
+        .from("profiles")
+        .select("workspace_id")
+        .eq("id", user.id)
+        .single();
+
+      if (
+        profileError ||
+        !profile?.workspace_id
+      ) {
+        setPaymentError(
+          "Your workspace could not be found."
+        );
+        return;
+      }
+
+      /*
+       * Find the customer's latest subscription.
+       */
+      const {
+        data: subscription,
+        error: subscriptionError,
+      } = await supabase
+        .from("subscriptions")
+        .select("id")
+        .eq(
+          "workspace_id",
+          profile.workspace_id
+        )
+        .order("created_at", {
+          ascending: false,
+        })
+        .limit(1)
+        .maybeSingle();
+
+      if (
+        subscriptionError ||
+        !subscription
+      ) {
+        setPaymentError(
+          "No subscription was found. Please contact Ruby Rental support."
+        );
+        return;
+      }
+
+      /*
+       * Create the payment verification request.
+       *
+       * The existing M-Pesa transaction reference
+       * field remains in the database but is not
+       * requested from the customer.
+       */
+      const result =
+        await submitSubscriptionPayment({
+          subscriptionId:
+            subscription.id,
+
+          amount:
+            quote.monthly_amount,
+
+          currency: "KES",
+
+          transactionReference: "",
+
+          bankConfirmationMessage:
+            bankMessage,
+        });
+
+      if (result.error) {
+        setPaymentError(result.error);
+        return;
+      }
+
+      /*
+       * Store the returned payment request.
+       */
+      setPaymentRequest(result.data);
+
+      /*
+       * Clear the form.
+       */
+      setBankConfirmationMessage("");
+
+      /*
+       * Show confirmation.
+       */
+      setSuccess(true);
+
+    } catch (submissionError) {
+      console.error(
+        "Payment submission failed:",
+        submissionError
       );
 
-      setSubmittingPayment(false);
-      return;
-    }
-
-    const {
-      data: profile,
-      error: profileError,
-    } = await supabase
-      .from("profiles")
-      .select("workspace_id")
-      .eq("id", user.id)
-      .single();
-
-    if (
-      profileError ||
-      !profile?.workspace_id
-    ) {
       setPaymentError(
-        "Your workspace could not be found."
+        "Something went wrong while submitting your payment. Please try again."
       );
-
+    } finally {
       setSubmittingPayment(false);
-      return;
     }
-
-    const {
-      data: subscription,
-      error: subscriptionError,
-    } = await supabase
-      .from("subscriptions")
-      .select("id")
-      .eq(
-        "workspace_id",
-        profile.workspace_id
-      )
-      .order("created_at", {
-        ascending: false,
-      })
-      .limit(1)
-      .maybeSingle();
-
-    if (
-      subscriptionError ||
-      !subscription
-    ) {
-      setPaymentError(
-        "No subscription was found. Please contact Ruby Rental support."
-      );
-
-      setSubmittingPayment(false);
-      return;
-    }
-
-    const result =
-      await submitSubscriptionPayment({
-        subscriptionId:
-          subscription.id,
-
-        amount:
-          quote.monthly_amount,
-
-        currency: "KES",
-
-        transactionReference:
-          reference,
-
-        notes: message,
-      });
-
-    if (result.error) {
-      setPaymentError(
-        result.error
-      );
-
-      setSubmittingPayment(false);
-      return;
-    }
-
-    setPaymentRequest(
-      result.data
-    );
-
-    setShowPaymentModal(false);
-    setTransactionReference("");
-    setConfirmationMessage("");
-    setSuccess(true);
-
-    setSubmittingPayment(false);
   }
 
   function formatMoney(amount: number) {
@@ -275,9 +297,7 @@ export default function SubscriptionPage() {
   }
 
   function formatDate(date: string) {
-    return new Date(
-      date
-    ).toLocaleDateString(
+    return new Date(date).toLocaleDateString(
       "en-KE",
       {
         day: "numeric",
@@ -299,6 +319,9 @@ export default function SubscriptionPage() {
     paymentRequest?.status ===
     "Rejected";
 
+  /*
+   * Automatically calculate pricing.
+   */
   useEffect(() => {
     const numberOfUnits = Number(units);
 
@@ -318,12 +341,13 @@ export default function SubscriptionPage() {
     return () => clearTimeout(timer);
   }, [units]);
 
+  /*
+   * Load customer's current subscription.
+   */
   useEffect(() => {
     async function loadCurrentSubscription() {
       const {
-        data: {
-          user,
-        },
+        data: { user },
       } = await supabase.auth.getUser();
 
       if (!user) {
@@ -383,7 +407,9 @@ export default function SubscriptionPage() {
   return (
     <div className="min-h-full space-y-8">
 
-      {/* HEADER */}
+      {/* =====================================================
+          HEADER
+      ====================================================== */}
 
       <div>
 
@@ -405,20 +431,30 @@ export default function SubscriptionPage() {
         </h1>
 
         <p className="mt-2 max-w-2xl text-sm leading-6 text-gray-500 sm:text-base">
-          Choose the number of rental units you want to manage and see your monthly Ruby Rental subscription cost.
+          Choose the number of rental units you want
+          to manage and see your monthly Ruby Rental
+          subscription cost.
         </p>
 
       </div>
 
-      {/* GENERAL ERROR */}
+      {/* =====================================================
+          GENERAL ERROR
+      ====================================================== */}
 
       {error && (
-        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-          {error}
+        <div className="flex items-center gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+
+          <AlertCircle size={18} />
+
+          <span>{error}</span>
+
         </div>
       )}
 
-      {/* PAYMENT SUBMITTED */}
+      {/* =====================================================
+          PAYMENT SUBMITTED
+      ====================================================== */}
 
       {success && paymentPending && (
         <div className="flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-4 text-sm text-amber-800">
@@ -434,14 +470,16 @@ export default function SubscriptionPage() {
               Payment submitted successfully.
             </p>
 
-            <p className="mt-1 text-amber-700">
-              Your payment is awaiting
+            <p className="mt-1 leading-5 text-amber-700">
+              Your payment confirmation has been
+              sent to Ruby Rental Admin for
               verification.
             </p>
 
             <p className="mt-2 font-semibold text-amber-800">
               Your subscription will be immediately
-              activated once payment is verified by Admin.
+              activated once payment is verified by
+              Admin.
             </p>
 
           </div>
@@ -449,7 +487,9 @@ export default function SubscriptionPage() {
         </div>
       )}
 
-      {/* PAYMENT VERIFIED */}
+      {/* =====================================================
+          PAYMENT VERIFIED
+      ====================================================== */}
 
       {paymentVerified && (
         <div className="flex items-start gap-3 rounded-xl border border-green-200 bg-green-50 px-4 py-4 text-sm text-green-700">
@@ -465,9 +505,9 @@ export default function SubscriptionPage() {
               Payment verified.
             </p>
 
-            <p className="mt-1 text-green-600">
-              Your subscription payment has
-              been verified by Admin.
+            <p className="mt-1 leading-5 text-green-600">
+              Your Ruby Rental subscription payment
+              has been verified by Admin.
             </p>
 
           </div>
@@ -475,7 +515,9 @@ export default function SubscriptionPage() {
         </div>
       )}
 
-      {/* PAYMENT REJECTED */}
+      {/* =====================================================
+          PAYMENT REJECTED
+      ====================================================== */}
 
       {paymentRejected && (
         <div className="flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-4 text-sm text-red-700">
@@ -491,10 +533,10 @@ export default function SubscriptionPage() {
               Payment requires attention.
             </p>
 
-            <p className="mt-1">
+            <p className="mt-1 leading-5">
               {paymentRequest
                 ?.rejection_reason ||
-                "Your previous payment could not be verified. Please make the payment again and submit the new transaction code."}
+                "Your previous payment could not be verified. Please submit your payment confirmation again."}
             </p>
 
           </div>
@@ -502,9 +544,15 @@ export default function SubscriptionPage() {
         </div>
       )}
 
-      {/* CALCULATOR */}
+      {/* =====================================================
+          MAIN SUBSCRIPTION AREA
+      ====================================================== */}
 
       <div className="grid gap-6 lg:grid-cols-5">
+
+        {/* ===================================================
+            CALCULATOR
+        ==================================================== */}
 
         <Card className="lg:col-span-3">
 
@@ -526,12 +574,15 @@ export default function SubscriptionPage() {
               </h2>
 
               <p className="mt-1 text-sm text-gray-500">
-                Your monthly charge depends on the number of units you subscribe to.
+                Your monthly charge depends on the
+                number of units you subscribe to.
               </p>
 
             </div>
 
           </div>
+
+          {/* UNIT INPUT */}
 
           <div className="mt-8">
 
@@ -569,7 +620,8 @@ export default function SubscriptionPage() {
             </div>
 
             <p className="mt-2 text-xs text-gray-400">
-              Enter the total number of units you want your subscription to cover.
+              Enter the total number of units you
+              want your subscription to cover.
             </p>
 
           </div>
@@ -653,14 +705,17 @@ export default function SubscriptionPage() {
             <ShieldCheck size={15} />
 
             <span>
-              Pricing is calculated securely by Ruby Rental.
+              Pricing is calculated securely by Ruby
+              Rental.
             </span>
 
           </div>
 
         </Card>
 
-        {/* QUOTE */}
+        {/* ===================================================
+            SUBSCRIPTION / PAYMENT
+        ==================================================== */}
 
         <Card className="relative overflow-hidden lg:col-span-2">
 
@@ -674,20 +729,16 @@ export default function SubscriptionPage() {
 
             {loading ? (
 
-              <div className="mt-8">
+              <div className="mt-8 flex items-center gap-3">
 
-                <div className="flex items-center gap-3">
+                <RefreshCw
+                  size={20}
+                  className="animate-spin text-[#B8941F]"
+                />
 
-                  <RefreshCw
-                    size={20}
-                    className="animate-spin text-[#B8941F]"
-                  />
-
-                  <span className="text-sm text-gray-500">
-                    Calculating...
-                  </span>
-
-                </div>
+                <span className="text-sm text-gray-500">
+                  Calculating...
+                </span>
 
               </div>
 
@@ -695,7 +746,67 @@ export default function SubscriptionPage() {
 
               <>
 
-                <div className="mt-5">
+                {/* =================================================
+                    PAYMENT INSTRUCTIONS — TOP
+                ================================================== */}
+
+                <div className="mt-5 rounded-2xl border border-[#D4AF37]/30 bg-[#D4AF37]/5 p-5">
+
+                  <div className="flex items-center gap-2">
+
+                    <CreditCard
+                      size={18}
+                      className="text-[#B8941F]"
+                    />
+
+                    <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#8D6D12]">
+                      Payment instructions
+                    </p>
+
+                  </div>
+
+                  <p className="mt-2 text-sm leading-5 text-gray-600">
+                    Make your payment using the
+                    details below, then return here
+                    and submit your I&M Bank
+                    confirmation message.
+                  </p>
+
+                  <div className="mt-4 grid grid-cols-2 gap-3">
+
+                    <div className="rounded-xl bg-white px-4 py-4">
+
+                      <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-400">
+                        Paybill
+                      </p>
+
+                      <p className="mt-1 text-xl font-bold tracking-tight text-gray-900">
+                        542 542
+                      </p>
+
+                    </div>
+
+                    <div className="rounded-xl bg-white px-4 py-4">
+
+                      <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-400">
+                        Account
+                      </p>
+
+                      <p className="mt-1 text-xl font-bold tracking-tight text-gray-900">
+                        460 500
+                      </p>
+
+                    </div>
+
+                  </div>
+
+                </div>
+
+                {/* =================================================
+                    AMOUNT
+                ================================================== */}
+
+                <div className="mt-6">
 
                   <p className="text-4xl font-bold tracking-tight text-gray-900">
                     {formatMoney(
@@ -709,7 +820,11 @@ export default function SubscriptionPage() {
 
                 </div>
 
-                <div className="mt-7 space-y-3">
+                {/* =================================================
+                    SUBSCRIPTION DETAILS
+                ================================================== */}
+
+                <div className="mt-6 space-y-3">
 
                   <div className="flex items-center justify-between rounded-xl bg-gray-50 px-4 py-3">
 
@@ -752,7 +867,9 @@ export default function SubscriptionPage() {
 
                 </div>
 
-                {/* PAYMENT STATUS */}
+                {/* =================================================
+                    PAYMENT STATUS
+                ================================================== */}
 
                 {paymentLoading ? (
 
@@ -769,7 +886,7 @@ export default function SubscriptionPage() {
 
                 ) : paymentPending ? (
 
-                  <div className="mt-7 rounded-xl border border-amber-200 bg-amber-50 p-4">
+                  <div className="mt-7 rounded-2xl border border-amber-200 bg-amber-50 p-5">
 
                     <div className="flex items-start gap-3">
 
@@ -785,23 +902,18 @@ export default function SubscriptionPage() {
                         </p>
 
                         <p className="mt-1 text-xs leading-5 text-amber-700">
-                          Your payment was submitted on{" "}
-                          {paymentRequest
-                            ?.submitted_at
-                            ? formatDate(
-                                paymentRequest.submitted_at
-                              )
-                            : "today"}
-                          .
+                          Your payment confirmation
+                          has been received and sent
+                          to Ruby Rental Admin.
                         </p>
 
                         {paymentRequest
-                          ?.transaction_reference && (
-                          <p className="mt-2 text-xs font-semibold text-amber-800">
-                            Reference:{" "}
-                            {
-                              paymentRequest.transaction_reference
-                            }
+                          ?.submitted_at && (
+                          <p className="mt-2 text-xs text-amber-700">
+                            Submitted{" "}
+                            {formatDate(
+                              paymentRequest.submitted_at
+                            )}
                           </p>
                         )}
 
@@ -813,7 +925,7 @@ export default function SubscriptionPage() {
 
                 ) : paymentVerified ? (
 
-                  <div className="mt-7 rounded-xl border border-green-200 bg-green-50 p-4">
+                  <div className="mt-7 rounded-2xl border border-green-200 bg-green-50 p-5">
 
                     <div className="flex items-start gap-3">
 
@@ -829,8 +941,9 @@ export default function SubscriptionPage() {
                         </p>
 
                         <p className="mt-1 text-xs leading-5 text-green-700">
-                          Your payment has been
-                          verified by Ruby Rental Admin.
+                          Your subscription payment has
+                          been verified by Ruby Rental
+                          Admin.
                         </p>
 
                       </div>
@@ -841,29 +954,133 @@ export default function SubscriptionPage() {
 
                 ) : (
 
-                  <button
-                    type="button"
-                    onClick={
-                      openPaymentModal
-                    }
-                    className="mt-7 flex w-full items-center justify-center gap-2 rounded-xl bg-[#111111] px-5 py-3.5 text-sm font-semibold text-white transition hover:bg-black"
-                  >
+                  <>
+                    {/* =================================================
+                        AFTER PAYMENT
+                    ================================================== */}
 
-                    <CreditCard
-                      size={17}
-                    />
+                    <div className="mt-7">
 
-                    I Have Paid
+                      <p className="text-xs font-bold uppercase tracking-[0.16em] text-gray-400">
+                        After payment
+                      </p>
 
-                  </button>
+                      <p className="mt-1 text-sm leading-5 text-gray-500">
+                        Paste the I&M Bank payment
+                        confirmation message below.
+                      </p>
+
+                    </div>
+
+                    {/* =================================================
+                        I&M BANK MESSAGE ONLY
+                    ================================================== */}
+
+                    <div className="mt-5">
+
+                      <label
+                        htmlFor="bank-confirmation"
+                        className="mb-2 block text-sm font-semibold text-gray-700"
+                      >
+                        I&M Bank Payment Confirmation
+                      </label>
+
+                      <textarea
+                        id="bank-confirmation"
+                        value={
+                          bankConfirmationMessage
+                        }
+                        onChange={(event) => {
+                          setBankConfirmationMessage(
+                            event.target.value
+                          );
+
+                          setPaymentError(null);
+                          setSuccess(false);
+                        }}
+                        rows={6}
+                        placeholder="Paste or share your I&M Bank payment confirmation message here..."
+                        className="w-full resize-none rounded-xl border border-gray-200 bg-white px-4 py-3.5 text-sm leading-6 text-gray-900 outline-none transition focus:border-[#D4AF37] focus:ring-4 focus:ring-[#D4AF37]/10"
+                      />
+
+                      <p className="mt-2 text-xs leading-5 text-gray-400">
+                        Please provide the full payment
+                        confirmation message so Admin
+                        can verify your payment.
+                      </p>
+
+                    </div>
+
+                    {/* =================================================
+                        PAYMENT ERROR
+                    ================================================== */}
+
+                    {paymentError && (
+                      <div className="mt-4 flex items-start gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm leading-5 text-red-700">
+
+                        <AlertCircle
+                          size={17}
+                          className="mt-0.5 shrink-0"
+                        />
+
+                        <span>
+                          {paymentError}
+                        </span>
+
+                      </div>
+                    )}
+
+                    {/* =================================================
+                        FINAL BUTTON
+                    ================================================== */}
+
+                    <button
+                      type="button"
+                      onClick={
+                        handleSubmitPayment
+                      }
+                      disabled={
+                        submittingPayment ||
+                        !bankConfirmationMessage.trim()
+                      }
+                      className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-[#111111] px-5 py-4 text-sm font-bold text-white shadow-sm transition hover:bg-black disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+
+                      {submittingPayment ? (
+
+                        <>
+                          <RefreshCw
+                            size={18}
+                            className="animate-spin"
+                          />
+
+                          Submitting payment...
+
+                        </>
+
+                      ) : (
+
+                        <>
+                          <CheckCircle2
+                            size={18}
+                          />
+
+                          I Have Paid
+                        </>
+
+                      )}
+
+                    </button>
+
+                    <p className="mt-3 text-center text-xs leading-5 text-gray-400">
+                      Your subscription will be immediately
+                      activated once payment is verified
+                      by Admin.
+                    </p>
+
+                  </>
 
                 )}
-
-                <p className="mt-3 text-center text-xs leading-5 text-gray-400">
-                  Make your payment manually,
-                  then submit your payment
-                  confirmation for verification.
-                </p>
 
               </>
 
@@ -876,7 +1093,8 @@ export default function SubscriptionPage() {
                 </p>
 
                 <p className="mt-1 text-sm leading-5 text-gray-500">
-                  Your applicable package and monthly charge will appear here automatically.
+                  Your applicable package and monthly
+                  charge will appear here automatically.
                 </p>
 
               </div>
@@ -889,7 +1107,9 @@ export default function SubscriptionPage() {
 
       </div>
 
-      {/* HOW PRICING WORKS */}
+      {/* =====================================================
+          HOW IT WORKS
+      ====================================================== */}
 
       <Card>
 
@@ -898,11 +1118,12 @@ export default function SubscriptionPage() {
           <div>
 
             <p className="text-sm font-semibold text-gray-900">
-              1. Enter your units
+              1. Choose your units
             </p>
 
             <p className="mt-1 text-sm leading-5 text-gray-500">
-              Tell Ruby Rental how many rental units your subscription needs to cover.
+              Enter the number of rental units you
+              want Ruby Rental to manage.
             </p>
 
           </div>
@@ -914,7 +1135,8 @@ export default function SubscriptionPage() {
             </p>
 
             <p className="mt-1 text-sm leading-5 text-gray-500">
-              Pay the displayed monthly amount using the Ruby Rental payment details.
+              Pay the exact amount shown using
+              Paybill 542 542 and Account 460 500.
             </p>
 
           </div>
@@ -922,11 +1144,12 @@ export default function SubscriptionPage() {
           <div>
 
             <p className="text-sm font-semibold text-gray-900">
-              3. Submit your payment
+              3. Confirm payment
             </p>
 
             <p className="mt-1 text-sm leading-5 text-gray-500">
-              Submit your M-Pesa transaction code and I&M Bank confirmation message for verification.
+              Paste your I&M Bank confirmation message
+              and click I Have Paid.
             </p>
 
           </div>
@@ -934,281 +1157,6 @@ export default function SubscriptionPage() {
         </div>
 
       </Card>
-
-      {/* =====================================================
-          PAYMENT MODAL
-      ====================================================== */}
-
-      {showPaymentModal && quote && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-
-          <div className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-2xl bg-white shadow-2xl">
-
-            {/* MODAL HEADER */}
-
-            <div className="flex items-start justify-between border-b border-gray-100 p-5">
-
-              <div>
-
-                <div className="flex items-center gap-3">
-
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#D4AF37]/10">
-
-                    <CreditCard
-                      size={19}
-                      className="text-[#B8941F]"
-                    />
-
-                  </div>
-
-                  <div>
-
-                    <h2 className="font-semibold text-gray-900">
-                      Payment Confirmation
-                    </h2>
-
-                    <p className="text-xs text-gray-400">
-                      Submit your payment details
-                    </p>
-
-                  </div>
-
-                </div>
-
-              </div>
-
-              <button
-                type="button"
-                onClick={() =>
-                  setShowPaymentModal(false)
-                }
-                disabled={
-                  submittingPayment
-                }
-                className="rounded-lg p-2 text-gray-400 transition hover:bg-gray-100 hover:text-gray-700"
-              >
-                <X size={19} />
-              </button>
-
-            </div>
-
-            {/* MODAL BODY */}
-
-            <div className="p-5">
-
-              {/* AMOUNT */}
-
-              <div className="rounded-xl bg-gray-50 p-4">
-
-                <div className="flex items-center justify-between">
-
-                  <span className="text-sm text-gray-500">
-                    Amount to pay
-                  </span>
-
-                  <span className="text-lg font-bold text-gray-900">
-                    {formatMoney(
-                      quote.monthly_amount
-                    )}
-                  </span>
-
-                </div>
-
-                <div className="mt-3 flex items-center justify-between">
-
-                  <span className="text-sm text-gray-500">
-                    Units
-                  </span>
-
-                  <span className="text-sm font-semibold text-gray-900">
-                    {quote.subscribed_units.toLocaleString()}
-                  </span>
-
-                </div>
-
-                <div className="mt-3 flex items-center justify-between">
-
-                  <span className="text-sm text-gray-500">
-                    Package
-                  </span>
-
-                  <span className="text-sm font-semibold text-gray-900">
-                    {quote.plan_name}
-                  </span>
-
-                </div>
-
-              </div>
-
-              {/* PAYMENT INSTRUCTIONS */}
-
-              <div className="mt-5 rounded-xl border border-[#D4AF37]/30 bg-[#D4AF37]/5 p-4">
-
-                <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#8A6D16]">
-                  M-Pesa Payment Instructions
-                </p>
-
-                <div className="mt-4 grid grid-cols-2 gap-3">
-
-                  <div className="rounded-xl bg-white/80 p-3">
-
-                    <p className="text-xs text-gray-500">
-                      Paybill
-                    </p>
-
-                    <p className="mt-1 text-lg font-bold tracking-wide text-gray-900">
-                      542 542
-                    </p>
-
-                  </div>
-
-                  <div className="rounded-xl bg-white/80 p-3">
-
-                    <p className="text-xs text-gray-500">
-                      Account
-                    </p>
-
-                    <p className="mt-1 text-lg font-bold tracking-wide text-gray-900">
-                      460 500
-                    </p>
-
-                  </div>
-
-                </div>
-
-                <p className="mt-3 text-xs leading-5 text-gray-600">
-                  Pay the exact amount shown above.
-                  After payment, use the confirmation
-                  message from I&M Bank to complete
-                  this submission.
-                </p>
-
-              </div>
-
-              {/* TRANSACTION CODE */}
-
-              <div className="mt-5">
-
-                <label
-                  htmlFor="transaction-reference"
-                  className="mb-2 block text-sm font-semibold text-gray-700"
-                >
-                  M-Pesa Transaction Code
-                </label>
-
-                <input
-                  id="transaction-reference"
-                  type="text"
-                  value={
-                    transactionReference
-                  }
-                  onChange={(event) => {
-                    setTransactionReference(
-                      event.target.value
-                    );
-                    setPaymentError(null);
-                  }}
-                  placeholder="e.g. QGH7XXXXXX"
-                  autoComplete="off"
-                  className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm font-semibold uppercase tracking-wide text-gray-900 outline-none transition focus:border-[#D4AF37] focus:ring-4 focus:ring-[#D4AF37]/10"
-                />
-
-              </div>
-
-              {/* CONFIRMATION MESSAGE */}
-
-              <div className="mt-5">
-
-                <label
-                  htmlFor="confirmation-message"
-                  className="mb-2 block text-sm font-semibold text-gray-700"
-                >
-                  I&M Bank Payment Confirmation Message
-                </label>
-
-                <textarea
-                  id="confirmation-message"
-                  value={
-                    confirmationMessage
-                  }
-                  onChange={(event) => {
-                    setConfirmationMessage(
-                      event.target.value
-                    );
-                    setPaymentError(null);
-                  }}
-                  rows={5}
-                  placeholder="Paste/share your I&M Bank payment confirmation message here..."
-                  className="w-full resize-none rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm leading-6 text-gray-900 outline-none transition focus:border-[#D4AF37] focus:ring-4 focus:ring-[#D4AF37]/10"
-                />
-
-                <p className="mt-2 text-xs leading-5 text-gray-400">
-                  Please provide the full payment
-                  confirmation message so Admin can
-                  verify the payment.
-                </p>
-
-              </div>
-
-              {/* ERROR */}
-
-              {paymentError && (
-                <div className="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-                  {paymentError}
-                </div>
-              )}
-
-              {/* SUBMIT */}
-
-              <button
-                type="button"
-                onClick={
-                  handleSubmitPayment
-                }
-                disabled={
-                  submittingPayment ||
-                  !transactionReference.trim() ||
-                  !confirmationMessage.trim()
-                }
-                className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-[#111111] px-5 py-3.5 text-sm font-semibold text-white transition hover:bg-black disabled:cursor-not-allowed disabled:opacity-50"
-              >
-
-                {submittingPayment ? (
-                  <>
-                    <RefreshCw
-                      size={17}
-                      className="animate-spin"
-                    />
-
-                    Submitting...
-
-                  </>
-                ) : (
-                  <>
-                    <CheckCircle2
-                      size={17}
-                    />
-
-                    Submit Payment
-
-                  </>
-                )}
-
-              </button>
-
-              {/* EXACT AGREED MESSAGE */}
-
-              <p className="mt-4 text-center text-xs font-medium leading-5 text-gray-500">
-                Your subscription will be immediately
-                activated once payment is verified by Admin.
-              </p>
-
-            </div>
-
-          </div>
-
-        </div>
-      )}
 
     </div>
   );
