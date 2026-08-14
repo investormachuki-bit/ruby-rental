@@ -5,7 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { RefreshCw, ShieldAlert } from "lucide-react";
 
 import { supabase } from "@/lib/supabase";
-import AppShell from "@/components/layout/AppShell";
+import AdminShell from "@/components/admin/AdminShell";
 
 type AdminLayoutProps = {
   children: ReactNode;
@@ -21,8 +21,8 @@ export default function AdminLayout({
   const [allowed, setAllowed] = useState(false);
 
   /*
-   * Admin login must remain outside
-   * the authenticated application shell.
+   * The admin login page must NOT use AdminShell
+   * and must NOT require an existing admin session.
    */
   const isLoginPage =
     pathname === "/admin/login";
@@ -55,15 +55,15 @@ export default function AdminLayout({
          * Check Platform Admin permission.
          */
         const {
-          data,
-          error,
+          data: isAdmin,
+          error: adminError,
         } = await supabase.rpc(
           "is_platform_admin"
         );
 
         if (
-          error ||
-          data !== true
+          adminError ||
+          isAdmin !== true
         ) {
           if (mounted) {
             setAllowed(false);
@@ -75,7 +75,7 @@ export default function AdminLayout({
         }
 
         /*
-         * Platform Admin verified.
+         * Access approved.
          */
         if (mounted) {
           setAllowed(true);
@@ -101,7 +101,8 @@ export default function AdminLayout({
   /*
    * ADMIN LOGIN
    *
-   * Login page does NOT use AppShell.
+   * Keep this page completely separate from
+   * the authenticated admin shell.
    */
   if (isLoginPage) {
     return <>{children}</>;
@@ -112,7 +113,7 @@ export default function AdminLayout({
    */
   if (checking) {
     return (
-      <div className="flex min-h-[60vh] items-center justify-center px-6">
+      <div className="flex min-h-screen items-center justify-center bg-[#F8FAFC] px-6">
         <div className="text-center">
 
           <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-[#D4AF37]/10">
@@ -140,7 +141,7 @@ export default function AdminLayout({
    */
   if (!allowed) {
     return (
-      <div className="flex min-h-[60vh] items-center justify-center px-6">
+      <div className="flex min-h-screen items-center justify-center bg-[#F8FAFC] px-6">
 
         <div className="max-w-md text-center">
 
@@ -170,12 +171,12 @@ export default function AdminLayout({
    * VERIFIED PLATFORM ADMIN
    *
    * IMPORTANT:
-   * Put the admin pages back inside the
-   * existing Ruby Rental App Shell.
+   * This restores the original dedicated
+   * Platform Admin interface.
    */
   return (
-    <AppShell>
+    <AdminShell>
       {children}
-    </AppShell>
+    </AdminShell>
   );
 }
