@@ -5,6 +5,7 @@ import {
   LayoutDashboard,
   Package,
   CreditCard,
+  WalletCards,
   Users,
   Menu,
   X,
@@ -34,6 +35,11 @@ const navigation = [
     label: "Subscriptions",
     href: "/admin/subscriptions",
     icon: CreditCard,
+  },
+  {
+    label: "Payment Verification",
+    href: "/admin/payments",
+    icon: WalletCards,
   },
   {
     label: "Customers",
@@ -123,6 +129,7 @@ export default function AdminShell({
               setMobileOpen(false)
             }
             className="rounded-lg p-2 text-gray-400 hover:bg-white/10 hover:text-white lg:hidden"
+            aria-label="Close navigation"
           >
             <X size={20} />
           </button>
@@ -169,8 +176,11 @@ export default function AdminShell({
                     }
                   `}
                 >
+
                   <Icon size={18} />
+
                   {item.label}
+
                 </button>
               );
 
@@ -210,8 +220,11 @@ export default function AdminShell({
             onClick={signOut}
             className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium text-gray-300 hover:bg-white/10 hover:text-white"
           >
+
             <LogOut size={18} />
+
             Sign out
+
           </button>
 
         </div>
@@ -222,6 +235,8 @@ export default function AdminShell({
 
       <div className="min-h-screen lg:pl-72">
 
+        {/* Topbar */}
+
         <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-gray-200 bg-white/95 px-4 backdrop-blur sm:px-6">
 
           <button
@@ -230,6 +245,7 @@ export default function AdminShell({
               setMobileOpen(true)
             }
             className="rounded-xl border border-gray-200 p-2 text-gray-600 hover:bg-gray-50 lg:hidden"
+            aria-label="Open navigation"
           >
             <Menu size={20} />
           </button>
@@ -245,6 +261,8 @@ export default function AdminShell({
           </div>
 
         </header>
+
+        {/* Page content */}
 
         <main className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
           {children}
