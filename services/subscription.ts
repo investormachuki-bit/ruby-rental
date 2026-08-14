@@ -55,12 +55,15 @@ export async function calculateSubscriptionQuote(
     data: {
       plan_id: quote.plan_id,
       plan_name: quote.plan_name,
-      subscribed_units:
-        Number(quote.subscribed_units),
-      rate_per_unit:
-        Number(quote.rate_per_unit),
-      monthly_amount:
-        Number(quote.monthly_amount),
+      subscribed_units: Number(
+        quote.subscribed_units
+      ),
+      rate_per_unit: Number(
+        quote.rate_per_unit
+      ),
+      monthly_amount: Number(
+        quote.monthly_amount
+      ),
       currency: quote.currency,
     },
     error: null,
