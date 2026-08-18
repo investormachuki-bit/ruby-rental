@@ -6,8 +6,12 @@ import {
   CheckCircle2,
   Clock3,
   CreditCard,
+  FileText,
   RefreshCw,
   Search,
+  ShieldCheck,
+  User,
+  X,
   XCircle,
 } from "lucide-react";
 
@@ -48,7 +52,6 @@ export default function AdminPaymentsPage() {
   const [payments, setPayments] = useState<PaymentRow[]>([]);
 
   const [loading, setLoading] = useState(true);
-
   const [refreshing, setRefreshing] = useState(false);
 
   const [search, setSearch] = useState("");
@@ -58,11 +61,14 @@ export default function AdminPaymentsPage() {
 
   const [processing, setProcessing] = useState(false);
 
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] =
+    useState<string | null>(null);
 
-  const [success, setSuccess] = useState<string | null>(null);
+  const [success, setSuccess] =
+    useState<string | null>(null);
 
-  const [rejectionReason, setRejectionReason] = useState("");
+  const [rejectionReason, setRejectionReason] =
+    useState("");
 
   const [showRejectModal, setShowRejectModal] =
     useState(false);
@@ -76,169 +82,222 @@ export default function AdminPaymentsPage() {
 
     setError(null);
 
-    const result = await getPendingSubscriptionPayments();
+    try {
+      const result =
+        await getPendingSubscriptionPayments();
 
-    if (result.error) {
-      setError(result.error);
-      setPayments([]);
+      if (result.error) {
+        setError(result.error);
+        setPayments([]);
+        return;
+      }
+
+      const paymentRequests =
+        result.data ?? [];
+
+      if (paymentRequests.length === 0) {
+        setPayments([]);
+        return;
+      }
+
+      const workspaceIds = [
+        ...new Set(
+          paymentRequests.map(
+            (payment) =>
+              payment.workspace_id
+          )
+        ),
+      ];
+
+      const subscriptionIds = [
+        ...new Set(
+          paymentRequests.map(
+            (payment) =>
+              payment.subscription_id
+          )
+        ),
+      ];
+
+      const [
+        workspaceResult,
+        subscriptionResult,
+      ] = await Promise.all([
+        supabase
+          .from("workspaces")
+          .select(`
+            id,
+            name,
+            brand_name,
+            email,
+            phone
+          `)
+          .in("id", workspaceIds),
+
+        supabase
+          .from("subscriptions")
+          .select(`
+            id,
+            workspace_id,
+            subscribed_units,
+            monthly_amount,
+            currency,
+            status,
+            next_billing_date
+          `)
+          .in("id", subscriptionIds),
+      ]);
+
+      if (workspaceResult.error) {
+        setError(
+          workspaceResult.error.message
+        );
+      }
+
+      if (subscriptionResult.error) {
+        setError(
+          subscriptionResult.error.message
+        );
+      }
+
+      const workspaceMap =
+        new Map<string, Workspace>();
+
+      for (
+        const workspace of
+          workspaceResult.data ?? []
+      ) {
+        workspaceMap.set(
+          workspace.id,
+          workspace
+        );
+      }
+
+      const subscriptionMap =
+        new Map<string, Subscription>();
+
+      for (
+        const subscription of
+          subscriptionResult.data ?? []
+      ) {
+        subscriptionMap.set(
+          subscription.id,
+          {
+            ...subscription,
+            subscribed_units:
+              Number(
+                subscription.subscribed_units
+              ),
+            monthly_amount:
+              Number(
+                subscription.monthly_amount
+              ),
+          }
+        );
+      }
+
+      const rows: PaymentRow[] =
+        paymentRequests.map(
+          (payment) => ({
+            ...payment,
+
+            amount:
+              Number(payment.amount),
+
+            workspace:
+              workspaceMap.get(
+                payment.workspace_id
+              ) ?? null,
+
+            subscription:
+              subscriptionMap.get(
+                payment.subscription_id
+              ) ?? null,
+          })
+        );
+
+      setPayments(rows);
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to load payment requests."
+      );
+    } finally {
       setLoading(false);
       setRefreshing(false);
-      return;
     }
-
-    const paymentRequests = result.data ?? [];
-
-    if (paymentRequests.length === 0) {
-      setPayments([]);
-      setLoading(false);
-      setRefreshing(false);
-      return;
-    }
-
-    const workspaceIds = [
-      ...new Set(
-        paymentRequests.map(
-          (payment) => payment.workspace_id
-        )
-      ),
-    ];
-
-    const subscriptionIds = [
-      ...new Set(
-        paymentRequests.map(
-          (payment) => payment.subscription_id
-        )
-      ),
-    ];
-
-    const [
-      workspaceResult,
-      subscriptionResult,
-    ] = await Promise.all([
-      supabase
-        .from("workspaces")
-        .select(`
-          id,
-          name,
-          brand_name,
-          email,
-          phone
-        `)
-        .in("id", workspaceIds),
-
-      supabase
-        .from("subscriptions")
-        .select(`
-          id,
-          workspace_id,
-          subscribed_units,
-          monthly_amount,
-          currency,
-          status,
-          next_billing_date
-        `)
-        .in("id", subscriptionIds),
-    ]);
-
-    if (workspaceResult.error) {
-      setError(workspaceResult.error.message);
-    }
-
-    if (subscriptionResult.error) {
-      setError(subscriptionResult.error.message);
-    }
-
-    const workspaceMap = new Map<string, Workspace>();
-
-    for (const workspace of workspaceResult.data ?? []) {
-      workspaceMap.set(workspace.id, workspace);
-    }
-
-    const subscriptionMap =
-      new Map<string, Subscription>();
-
-    for (
-      const subscription of
-        subscriptionResult.data ?? []
-    ) {
-      subscriptionMap.set(subscription.id, {
-        ...subscription,
-        subscribed_units: Number(
-          subscription.subscribed_units
-        ),
-        monthly_amount: Number(
-          subscription.monthly_amount
-        ),
-      });
-    }
-
-    const rows: PaymentRow[] =
-      paymentRequests.map((payment) => ({
-        ...payment,
-        amount: Number(payment.amount),
-        workspace:
-          workspaceMap.get(
-            payment.workspace_id
-          ) ?? null,
-        subscription:
-          subscriptionMap.get(
-            payment.subscription_id
-          ) ?? null,
-      }));
-
-    setPayments(rows);
-    setLoading(false);
-    setRefreshing(false);
   }
 
   useEffect(() => {
     loadPayments();
   }, []);
 
-  const filteredPayments = useMemo(() => {
-    const query = search.trim().toLowerCase();
+  const filteredPayments =
+    useMemo(() => {
+      const query =
+        search.trim().toLowerCase();
 
-    if (!query) {
-      return payments;
-    }
+      if (!query) {
+        return payments;
+      }
 
-    return payments.filter((payment) => {
-      const workspaceName =
-        payment.workspace?.name ?? "";
+      return payments.filter(
+        (payment) => {
+          const workspaceName =
+            payment.workspace?.name ??
+            "";
 
-      const brandName =
-        payment.workspace?.brand_name ?? "";
+          const brandName =
+            payment.workspace
+              ?.brand_name ?? "";
 
-      const email =
-        payment.workspace?.email ?? "";
+          const email =
+            payment.workspace?.email ??
+            "";
 
-      const reference =
-        payment.transaction_reference ?? "";
+          const reference =
+            payment.transaction_reference ??
+            "";
 
-      return [
-        workspaceName,
-        brandName,
-        email,
-        reference,
-      ].some((value) =>
-        value.toLowerCase().includes(query)
+          const bankMessage =
+            payment.bank_confirmation_message ??
+            "";
+
+          return [
+            workspaceName,
+            brandName,
+            email,
+            reference,
+            bankMessage,
+          ].some((value) =>
+            value
+              .toLowerCase()
+              .includes(query)
+          );
+        }
       );
-    });
-  }, [payments, search]);
+    }, [payments, search]);
 
   function formatMoney(
     amount: number,
     currency = "KES"
   ) {
     return `${
-      currency === "KES" ? "KSh" : currency
-    } ${amount.toLocaleString("en-KE", {
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 2,
-    })}`;
+      currency === "KES"
+        ? "KSh"
+        : currency
+    } ${amount.toLocaleString(
+      "en-KE",
+      {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 2,
+      }
+    )}`;
   }
 
-  function formatDateTime(date: string) {
+  function formatDateTime(
+    date: string
+  ) {
     return new Date(date).toLocaleString(
       "en-KE",
       {
@@ -251,15 +310,6 @@ export default function AdminPaymentsPage() {
     );
   }
 
-  /*
-   * SECURE VERIFICATION
-   *
-   * The browser does NOT update the payment
-   * or subscription directly.
-   *
-   * Supabase checks Platform Admin status
-   * inside the RPC function.
-   */
   async function handleVerify() {
     if (!selectedPayment) {
       return;
@@ -269,14 +319,16 @@ export default function AdminPaymentsPage() {
     setError(null);
     setSuccess(null);
 
-    const { data, error: rpcError } =
-      await supabase.rpc(
-        "verify_subscription_payment",
-        {
-          p_payment_request_id:
-            selectedPayment.id,
-        }
-      );
+    const {
+      data,
+      error: rpcError,
+    } = await supabase.rpc(
+      "verify_subscription_payment",
+      {
+        p_payment_request_id:
+          selectedPayment.id,
+      }
+    );
 
     if (rpcError) {
       setError(rpcError.message);
@@ -312,12 +364,6 @@ export default function AdminPaymentsPage() {
     setShowRejectModal(true);
   }
 
-  /*
-   * SECURE REJECTION
-   *
-   * The database function checks that
-   * the current user is a Platform Admin.
-   */
   async function handleReject() {
     if (!selectedPayment) {
       return;
@@ -337,16 +383,18 @@ export default function AdminPaymentsPage() {
     setError(null);
     setSuccess(null);
 
-    const { data, error: rpcError } =
-      await supabase.rpc(
-        "reject_subscription_payment",
-        {
-          p_payment_request_id:
-            selectedPayment.id,
+    const {
+      data,
+      error: rpcError,
+    } = await supabase.rpc(
+      "reject_subscription_payment",
+      {
+        p_payment_request_id:
+          selectedPayment.id,
 
-          p_reason: reason,
-        }
-      );
+        p_reason: reason,
+      }
+    );
 
     if (rpcError) {
       setError(rpcError.message);
@@ -401,9 +449,10 @@ export default function AdminPaymentsPage() {
             Payment Verification
           </h1>
 
-          <p className="mt-2 max-w-2xl text-sm text-gray-500">
-            Review customer subscription payments
-            and activate verified accounts.
+          <p className="mt-2 max-w-2xl text-sm text-gray-500 sm:text-base">
+            Review customer payment
+            confirmations and activate
+            verified subscriptions.
           </p>
 
         </div>
@@ -451,8 +500,8 @@ export default function AdminPaymentsPage() {
             </p>
 
             <p className="mt-1 text-green-600">
-              The payment verification queue
-              has been updated.
+              The payment verification
+              queue has been updated.
             </p>
 
           </div>
@@ -495,9 +544,14 @@ export default function AdminPaymentsPage() {
           title="Amount Pending"
           value={formatMoney(
             payments.reduce(
-              (total, payment) =>
+              (
+                total,
+                payment
+              ) =>
                 total +
-                Number(payment.amount),
+                Number(
+                  payment.amount
+                ),
               0
             )
           )}
@@ -512,10 +566,10 @@ export default function AdminPaymentsPage() {
 
         <StatCard
           title="Payment Method"
-          value="M-Pesa"
+          value="I&M Bank"
           subtitle="Manual verification"
           icon={
-            <CheckCircle2
+            <ShieldCheck
               size={21}
               className="text-[#B8941F]"
             />
@@ -543,7 +597,7 @@ export default function AdminPaymentsPage() {
                 event.target.value
               )
             }
-            placeholder="Search customer or transaction..."
+            placeholder="Search customer, email or bank message..."
             className="w-full rounded-xl border border-gray-200 bg-gray-50 py-2.5 pl-10 pr-4 text-sm text-gray-900 outline-none transition focus:border-[#D4AF37] focus:bg-white focus:ring-2 focus:ring-[#D4AF37]/10"
           />
 
@@ -562,9 +616,10 @@ export default function AdminPaymentsPage() {
           </h2>
 
           <p className="mt-1 text-sm text-gray-500">
-            Verify the payment against your
-            M-Pesa/I&M records before activating
-            the subscription.
+            Compare the customer's
+            I&M Bank confirmation message
+            with your bank records before
+            activating the subscription.
           </p>
 
         </div>
@@ -605,8 +660,8 @@ export default function AdminPaymentsPage() {
               </h3>
 
               <p className="mt-1 text-sm text-gray-500">
-                New customer payment submissions
-                will appear here.
+                New customer payment
+                submissions will appear here.
               </p>
 
             </div>
@@ -621,7 +676,7 @@ export default function AdminPaymentsPage() {
 
             <div className="hidden overflow-x-auto md:block">
 
-              <table className="w-full min-w-[1000px]">
+              <table className="w-full min-w-[1100px]">
 
                 <thead>
 
@@ -640,7 +695,7 @@ export default function AdminPaymentsPage() {
                     </th>
 
                     <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-400">
-                      Reference
+                      I&M Confirmation
                     </th>
 
                     <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-400">
@@ -658,105 +713,157 @@ export default function AdminPaymentsPage() {
                 <tbody className="divide-y divide-gray-100">
 
                   {filteredPayments.map(
-                    (payment) => (
+                    (payment) => {
 
-                      <tr
-                        key={payment.id}
-                        className="transition hover:bg-gray-50/70"
-                      >
+                      const bankMessage =
+                        payment.bank_confirmation_message?.trim() ||
+                        "No bank message provided.";
 
-                        <td className="px-6 py-5">
+                      return (
+                        <tr
+                          key={payment.id}
+                          className="transition hover:bg-gray-50"
+                        >
 
-                          <p className="font-semibold text-gray-900">
-                            {payment.workspace
-                              ?.brand_name ||
-                              payment.workspace
-                                ?.name ||
-                              "Unknown customer"}
-                          </p>
+                          {/* CUSTOMER */}
 
-                          {payment.workspace
-                            ?.email && (
-                            <p className="mt-1 text-xs text-gray-400">
-                              {
-                                payment.workspace
-                                  .email
-                              }
+                          <td className="px-6 py-5">
+
+                            <div className="flex items-center gap-3">
+
+                              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gray-100 text-gray-600">
+
+                                <User
+                                  size={18}
+                                />
+
+                              </div>
+
+                              <div className="min-w-0">
+
+                                <p className="max-w-[180px] truncate font-semibold text-gray-900">
+                                  {payment.workspace?.brand_name ||
+                                    payment.workspace?.name ||
+                                    "Unnamed customer"}
+                                </p>
+
+                                <p className="mt-1 max-w-[180px] truncate text-xs text-gray-400">
+                                  {payment.workspace?.email ||
+                                    "No email"}
+                                </p>
+
+                              </div>
+
+                            </div>
+
+                          </td>
+
+                          {/* SUBSCRIPTION */}
+
+                          <td className="px-6 py-5">
+
+                            <p className="font-semibold text-gray-900">
+                              {payment.subscription
+                                ? `${payment.subscription.subscribed_units.toLocaleString()} units`
+                                : "Unknown"}
                             </p>
-                          )}
 
-                        </td>
+                            <p className="mt-1 text-xs text-gray-400">
+                              {payment.subscription
+                                ? formatMoney(
+                                    Number(
+                                      payment.subscription.monthly_amount
+                                    ),
+                                    payment.subscription.currency
+                                  )
+                                : "Subscription unavailable"}
+                            </p>
 
-                        <td className="px-6 py-5">
+                          </td>
 
-                          <p className="font-semibold text-gray-900">
-                            {payment.subscription
-                              ?.subscribed_units ??
-                              "—"}{" "}
-                            units
-                          </p>
+                          {/* AMOUNT */}
 
-                          <p className="mt-1 text-xs text-gray-400">
-                            Monthly subscription
-                          </p>
+                          <td className="px-6 py-5">
 
-                        </td>
+                            <p className="font-bold text-gray-900">
+                              {formatMoney(
+                                Number(
+                                  payment.amount
+                                ),
+                                payment.currency
+                              )}
+                            </p>
 
-                        <td className="px-6 py-5">
+                            <span className="mt-1 inline-flex rounded-full bg-amber-50 px-2.5 py-1 text-[11px] font-semibold text-amber-700">
+                              Awaiting review
+                            </span>
 
-                          <p className="font-bold text-gray-900">
-                            {formatMoney(
-                              Number(
-                                payment.amount
-                              ),
-                              payment.currency
-                            )}
-                          </p>
+                          </td>
 
-                        </td>
+                          {/* BANK MESSAGE */}
 
-                        <td className="px-6 py-5">
+                          <td className="max-w-[300px] px-6 py-5">
 
-                          <span className="font-mono text-sm font-semibold text-gray-700">
-                            {payment.transaction_reference ||
-                              "—"}
-                          </span>
+                            <div className="rounded-xl border border-gray-200 bg-gray-50 px-3 py-3">
 
-                        </td>
+                              <div className="mb-1 flex items-center gap-2">
 
-                        <td className="px-6 py-5">
+                                <FileText
+                                  size={14}
+                                  className="text-[#B8941F]"
+                                />
 
-                          <p className="text-sm font-medium text-gray-700">
-                            {formatDateTime(
-                              payment.submitted_at
-                            )}
-                          </p>
+                                <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400">
+                                  I&M Bank Message
+                                </span>
 
-                        </td>
+                              </div>
 
-                        <td className="px-6 py-5">
+                              <p className="line-clamp-3 text-xs leading-5 text-gray-700">
+                                {bankMessage}
+                              </p>
 
-                          <div className="flex justify-end">
+                            </div>
 
-                            <button
-                              type="button"
-                              onClick={() =>
-                                setSelectedPayment(
-                                  payment
-                                )
-                              }
-                              className="rounded-xl bg-[#111111] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-black"
-                            >
-                              Review
-                            </button>
+                          </td>
 
-                          </div>
+                          {/* SUBMITTED */}
 
-                        </td>
+                          <td className="px-6 py-5">
 
-                      </tr>
+                            <p className="whitespace-nowrap text-sm text-gray-600">
+                              {formatDateTime(
+                                payment.created_at
+                              )}
+                            </p>
 
-                    )
+                          </td>
+
+                          {/* ACTION */}
+
+                          <td className="px-6 py-5">
+
+                            <div className="flex justify-end">
+
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  setSelectedPayment(
+                                    payment
+                                  )
+                                }
+                                className="inline-flex items-center justify-center rounded-xl bg-[#111111] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-black"
+                              >
+                                Review
+                              </button>
+
+                            </div>
+
+                          </td>
+
+                        </tr>
+                      );
+                    }
                   )}
 
                 </tbody>
@@ -770,123 +877,160 @@ export default function AdminPaymentsPage() {
             <div className="divide-y divide-gray-100 md:hidden">
 
               {filteredPayments.map(
-                (payment) => (
+                (payment) => {
 
-                  <button
-                    key={payment.id}
-                    type="button"
-                    onClick={() =>
-                      setSelectedPayment(
-                        payment
-                      )
-                    }
-                    className="block w-full p-5 text-left transition active:bg-gray-50"
-                  >
+                  const bankMessage =
+                    payment.bank_confirmation_message?.trim() ||
+                    "No bank message provided.";
 
-                    <div className="flex items-start justify-between gap-4">
+                  return (
+                    <div
+                      key={payment.id}
+                      className="space-y-4 p-5"
+                    >
 
-                      <div className="min-w-0">
+                      {/* CUSTOMER */}
 
-                        <p className="truncate font-semibold text-gray-900">
-                          {payment.workspace
-                            ?.brand_name ||
-                            payment.workspace
-                              ?.name ||
-                            "Unknown customer"}
-                        </p>
+                      <div className="flex items-center gap-3">
 
-                        <p className="mt-1 text-xs text-gray-500">
-                          {payment.subscription
-                            ?.subscribed_units ??
-                            "—"}{" "}
-                          units
+                        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gray-100 text-gray-600">
+
+                          <User size={19} />
+
+                        </div>
+
+                        <div className="min-w-0">
+
+                          <p className="truncate font-semibold text-gray-900">
+                            {payment.workspace?.brand_name ||
+                              payment.workspace?.name ||
+                              "Unnamed customer"}
+                          </p>
+
+                          <p className="truncate text-xs text-gray-400">
+                            {payment.workspace?.email ||
+                              "No email"}
+                          </p>
+
+                        </div>
+
+                      </div>
+
+                      {/* AMOUNT */}
+
+                      <div className="rounded-xl bg-gray-50 p-4">
+
+                        <div className="flex items-center justify-between">
+
+                          <span className="text-xs font-semibold uppercase tracking-wide text-gray-400">
+                            Amount
+                          </span>
+
+                          <span className="text-lg font-bold text-gray-900">
+                            {formatMoney(
+                              Number(
+                                payment.amount
+                              ),
+                              payment.currency
+                            )}
+                          </span>
+
+                        </div>
+
+                        <div className="mt-3 flex items-center justify-between border-t border-gray-200 pt-3">
+
+                          <span className="text-xs text-gray-400">
+                            Units
+                          </span>
+
+                          <span className="text-sm font-semibold text-gray-700">
+                            {payment.subscription
+                              ?.subscribed_units ??
+                              "—"}
+                          </span>
+
+                        </div>
+
+                      </div>
+
+                      {/* BANK MESSAGE */}
+
+                      <div className="rounded-xl border border-[#D4AF37]/30 bg-[#D4AF37]/5 p-4">
+
+                        <div className="mb-2 flex items-center gap-2">
+
+                          <FileText
+                            size={16}
+                            className="text-[#B8941F]"
+                          />
+
+                          <span className="text-xs font-bold uppercase tracking-wider text-[#8C6D14]">
+                            I&M Bank Confirmation
+                          </span>
+
+                        </div>
+
+                        <p className="text-sm leading-6 text-gray-700">
+                          {bankMessage}
                         </p>
 
                       </div>
 
-                      <span className="shrink-0 rounded-full bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-700">
-                        Pending
-                      </span>
+                      <div className="flex items-center justify-between">
 
-                    </div>
-
-                    <div className="mt-4 flex items-end justify-between gap-4">
-
-                      <div>
-
-                        <p className="text-lg font-bold text-gray-900">
-                          {formatMoney(
-                            Number(
-                              payment.amount
-                            ),
-                            payment.currency
+                        <p className="text-xs text-gray-400">
+                          {formatDateTime(
+                            payment.created_at
                           )}
                         </p>
 
-                        <p className="mt-1 font-mono text-xs text-gray-400">
-                          {payment.transaction_reference ||
-                            "No reference"}
-                        </p>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setSelectedPayment(
+                              payment
+                            )
+                          }
+                          className="rounded-xl bg-[#111111] px-4 py-2.5 text-sm font-semibold text-white"
+                        >
+                          Review Payment
+                        </button>
 
                       </div>
 
-                      <span className="text-xs font-semibold text-gray-400">
-                        Review →
-                      </span>
-
                     </div>
-
-                  </button>
-
-                )
+                  );
+                }
               )}
 
             </div>
 
           </>
-
         )}
 
       </Card>
 
-      {/* =====================================================
-          REVIEW MODAL
-      ====================================================== */}
+      {/* REVIEW MODAL */}
 
       {selectedPayment &&
         !showRejectModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4">
 
-            <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-white shadow-2xl">
+            <div className="max-h-[92vh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-white shadow-2xl">
 
-              <div className="flex items-start justify-between border-b border-gray-100 p-5 sm:p-6">
+              {/* MODAL HEADER */}
+
+              <div className="sticky top-0 z-10 flex items-center justify-between border-b border-gray-200 bg-white px-5 py-4 sm:px-6">
 
                 <div>
 
-                  <div className="flex items-center gap-3">
+                  <p className="text-xs font-semibold uppercase tracking-[0.15em] text-[#B8941F]">
+                    Payment Review
+                  </p>
 
-                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#D4AF37]/10">
-
-                      <CreditCard
-                        size={19}
-                        className="text-[#B8941F]"
-                      />
-
-                    </div>
-
-                    <div>
-
-                      <h2 className="font-semibold text-gray-900">
-                        Review Payment
-                      </h2>
-
-                      <p className="text-xs text-gray-400">
-                        Verify before activating
-                      </p>
-
-                    </div>
-
-                  </div>
+                  <h2 className="mt-1 text-xl font-bold text-gray-900">
+                    Verify Customer Payment
+                  </h2>
 
                 </div>
 
@@ -898,9 +1042,9 @@ export default function AdminPaymentsPage() {
                     )
                   }
                   disabled={processing}
-                  className="rounded-lg p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-700"
+                  className="flex h-9 w-9 items-center justify-center rounded-xl bg-gray-100 text-gray-500 transition hover:bg-gray-200"
                 >
-                  <XCircle size={20} />
+                  <X size={18} />
                 </button>
 
               </div>
@@ -909,44 +1053,49 @@ export default function AdminPaymentsPage() {
 
                 {/* CUSTOMER */}
 
-                <div>
+                <div className="rounded-2xl border border-gray-200 p-4">
 
-                  <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">
-                    Customer
-                  </p>
+                  <div className="flex items-center gap-3">
 
-                  <p className="mt-2 text-xl font-bold text-gray-900">
-                    {selectedPayment
-                      .workspace
-                      ?.brand_name ||
-                      selectedPayment
-                        .workspace?.name ||
-                      "Unknown customer"}
-                  </p>
+                    <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gray-100">
 
-                  {selectedPayment
-                    .workspace?.email && (
-                    <p className="mt-1 text-sm text-gray-500">
-                      {
-                        selectedPayment
-                          .workspace.email
-                      }
-                    </p>
-                  )}
+                      <User
+                        size={19}
+                        className="text-gray-600"
+                      />
+
+                    </div>
+
+                    <div>
+
+                      <p className="font-semibold text-gray-900">
+                        {selectedPayment.workspace?.brand_name ||
+                          selectedPayment.workspace?.name ||
+                          "Unnamed customer"}
+                      </p>
+
+                      <p className="mt-1 text-xs text-gray-400">
+                        {selectedPayment.workspace?.email ||
+                          "No email available"}
+                      </p>
+
+                    </div>
+
+                  </div>
 
                 </div>
 
-                {/* SUMMARY */}
+                {/* PAYMENT SUMMARY */}
 
                 <div className="grid gap-3 sm:grid-cols-3">
 
                   <div className="rounded-xl bg-gray-50 p-4">
 
-                    <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">
+                    <p className="text-xs text-gray-400">
                       Amount
                     </p>
 
-                    <p className="mt-2 text-lg font-bold text-gray-900">
+                    <p className="mt-1 text-lg font-bold text-gray-900">
                       {formatMoney(
                         Number(
                           selectedPayment.amount
@@ -959,13 +1108,12 @@ export default function AdminPaymentsPage() {
 
                   <div className="rounded-xl bg-gray-50 p-4">
 
-                    <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">
+                    <p className="text-xs text-gray-400">
                       Units
                     </p>
 
-                    <p className="mt-2 text-lg font-bold text-gray-900">
-                      {selectedPayment
-                        .subscription
+                    <p className="mt-1 text-lg font-bold text-gray-900">
+                      {selectedPayment.subscription
                         ?.subscribed_units ??
                         "—"}
                     </p>
@@ -974,131 +1122,148 @@ export default function AdminPaymentsPage() {
 
                   <div className="rounded-xl bg-gray-50 p-4">
 
-                    <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">
-                      Method
+                    <p className="text-xs text-gray-400">
+                      Subscription
                     </p>
 
-                    <p className="mt-2 text-lg font-bold text-gray-900">
-                      M-Pesa
+                    <p className="mt-1 text-sm font-bold text-gray-900">
+                      {selectedPayment.subscription?.status ||
+                        "Unknown"}
                     </p>
 
                   </div>
 
                 </div>
 
-                {/* PAYMENT DETAILS */}
+                {/* I&M MESSAGE — MAIN FIX */}
 
-                <div className="rounded-xl border border-[#D4AF37]/30 bg-[#D4AF37]/5 p-4">
+                <div className="rounded-2xl border-2 border-[#D4AF37]/40 bg-[#D4AF37]/5 p-5">
 
-                  <p className="text-xs font-semibold uppercase tracking-wider text-[#8A6D16]">
-                    Payment Details
-                  </p>
+                  <div className="flex items-center gap-2">
 
-                  <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#D4AF37]/15">
 
-                    <div>
-
-                      <p className="text-xs text-gray-500">
-                        Paybill
-                      </p>
-
-                      <p className="mt-1 text-lg font-bold text-gray-900">
-                        542 542
-                      </p>
+                      <FileText
+                        size={17}
+                        className="text-[#9A7818]"
+                      />
 
                     </div>
 
                     <div>
 
-                      <p className="text-xs text-gray-500">
-                        Account
+                      <p className="text-sm font-bold text-gray-900">
+                        I&M Bank Confirmation Message
                       </p>
 
-                      <p className="mt-1 text-lg font-bold text-gray-900">
-                        460 500
+                      <p className="text-xs text-gray-500">
+                        Customer-provided payment confirmation
                       </p>
 
                     </div>
 
                   </div>
+
+                  <div className="mt-4 rounded-xl border border-gray-200 bg-white p-4">
+
+                    <p className="whitespace-pre-wrap break-words text-sm leading-6 text-gray-800">
+                      {selectedPayment.bank_confirmation_message?.trim() ||
+                        "No I&M Bank confirmation message was provided."}
+                    </p>
+
+                  </div>
+
+                  {!selectedPayment.bank_confirmation_message?.trim() && (
+                    <div className="mt-3 flex items-start gap-2 text-xs text-amber-700">
+
+                      <AlertCircle
+                        size={15}
+                        className="mt-0.5 shrink-0"
+                      />
+
+                      <span>
+                        No bank confirmation
+                        message was submitted.
+                        Verify the payment
+                        manually before
+                        activating the account.
+                      </span>
+
+                    </div>
+                  )}
 
                 </div>
 
                 {/* TRANSACTION REFERENCE */}
 
-                <div>
+                {selectedPayment.transaction_reference && (
+                  <div className="rounded-xl border border-gray-200 p-4">
 
-                  <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">
-                    Transaction Reference
-                  </p>
+                    <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">
+                      Transaction Reference
+                    </p>
 
-                  <div className="mt-2 rounded-xl border border-gray-200 bg-gray-50 px-4 py-3">
+                    <p className="mt-2 break-all font-mono text-sm text-gray-700">
+                      {
+                        selectedPayment.transaction_reference
+                      }
+                    </p>
 
-                    <p className="font-mono text-sm font-bold text-gray-900">
-                      {selectedPayment
-                        .transaction_reference ||
-                        "Not provided"}
+                  </div>
+                )}
+
+                {/* SUBMISSION TIME */}
+
+                <div className="text-xs text-gray-400">
+
+                  Submitted{" "}
+                  {formatDateTime(
+                    selectedPayment.created_at
+                  )}
+
+                </div>
+
+                {/* VERIFICATION WARNING */}
+
+                <div className="flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4">
+
+                  <ShieldCheck
+                    size={18}
+                    className="mt-0.5 shrink-0 text-amber-700"
+                  />
+
+                  <div>
+
+                    <p className="text-sm font-semibold text-amber-900">
+                      Verify before activating
+                    </p>
+
+                    <p className="mt-1 text-xs leading-5 text-amber-800">
+                      Compare the customer's
+                      I&M Bank message with
+                      your actual bank records.
+                      Only verify the payment
+                      when the funds have been
+                      confirmed.
                     </p>
 
                   </div>
 
                 </div>
 
-                {/* CUSTOMER MESSAGE */}
-
-                <div>
-
-                  <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">
-                    Customer Payment Confirmation
-                  </p>
-
-                  <div className="mt-2 rounded-xl border border-gray-200 bg-gray-50 p-4">
-
-                    {selectedPayment.notes ? (
-
-                      <p className="whitespace-pre-wrap text-sm leading-6 text-gray-700">
-                        {selectedPayment.notes}
-                      </p>
-
-                    ) : (
-
-                      <p className="text-sm italic text-gray-400">
-                        No payment confirmation
-                        message provided.
-                      </p>
-
-                    )}
-
-                  </div>
-
-                </div>
-
-                {/* SUBMITTED */}
-
-                <div className="flex items-center gap-2 text-xs text-gray-400">
-
-                  <Clock3 size={14} />
-
-                  Submitted{" "}
-                  {formatDateTime(
-                    selectedPayment.submitted_at
-                  )}
-
-                </div>
-
                 {/* ACTIONS */}
 
-                <div className="grid gap-3 border-t border-gray-100 pt-5 sm:grid-cols-2">
+                <div className="grid gap-3 sm:grid-cols-2">
 
                   <button
                     type="button"
-                    disabled={processing}
                     onClick={() =>
                       openRejectModal(
                         selectedPayment
                       )
                     }
-                    className="inline-flex items-center justify-center gap-2 rounded-xl border border-red-200 bg-red-50 px-5 py-3.5 text-sm font-semibold text-red-700 transition hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-50"
+                    disabled={processing}
+                    className="inline-flex items-center justify-center gap-2 rounded-xl border border-red-200 bg-white px-4 py-3 text-sm font-semibold text-red-600 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
                   >
 
                     <XCircle size={17} />
@@ -1109,11 +1274,11 @@ export default function AdminPaymentsPage() {
 
                   <button
                     type="button"
-                    disabled={processing}
                     onClick={
                       handleVerify
                     }
-                    className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#111111] px-5 py-3.5 text-sm font-semibold text-white transition hover:bg-black disabled:cursor-not-allowed disabled:opacity-50"
+                    disabled={processing}
+                    className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#111111] px-4 py-3 text-sm font-semibold text-white transition hover:bg-black disabled:cursor-not-allowed disabled:opacity-50"
                   >
 
                     {processing ? (
@@ -1123,8 +1288,7 @@ export default function AdminPaymentsPage() {
                           className="animate-spin"
                         />
 
-                        Processing...
-
+                        Verifying...
                       </>
                     ) : (
                       <>
@@ -1133,19 +1297,12 @@ export default function AdminPaymentsPage() {
                         />
 
                         Verify & Activate
-
                       </>
                     )}
 
                   </button>
 
                 </div>
-
-                <p className="text-center text-xs leading-5 text-gray-400">
-                  Verification is protected by
-                  Ruby Rental Platform Admin
-                  permissions.
-                </p>
 
               </div>
 
@@ -1154,85 +1311,98 @@ export default function AdminPaymentsPage() {
           </div>
         )}
 
-      {/* =====================================================
-          REJECTION MODAL
-      ====================================================== */}
+      {/* REJECTION MODAL */}
 
       {showRejectModal &&
         selectedPayment && (
-          <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 p-4">
+          <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/60 p-4">
 
             <div className="w-full max-w-md rounded-2xl bg-white shadow-2xl">
 
-              <div className="flex items-start justify-between border-b border-gray-100 p-5">
+              <div className="flex items-center justify-between border-b border-gray-200 px-5 py-4">
 
                 <div>
 
-                  <h2 className="font-semibold text-gray-900">
+                  <p className="text-xs font-semibold uppercase tracking-[0.15em] text-red-500">
                     Reject Payment
-                  </h2>
-
-                  <p className="mt-1 text-xs text-gray-400">
-                    {selectedPayment
-                      .workspace
-                      ?.brand_name ||
-                      selectedPayment
-                        .workspace?.name}
                   </p>
+
+                  <h2 className="mt-1 text-lg font-bold text-gray-900">
+                    Reject this payment?
+                  </h2>
 
                 </div>
 
                 <button
                   type="button"
-                  onClick={() =>
+                  onClick={() => {
                     setShowRejectModal(
                       false
-                    )
-                  }
+                    );
+                    setRejectionReason(
+                      ""
+                    );
+                  }}
                   disabled={processing}
-                  className="rounded-lg p-2 text-gray-400 hover:bg-gray-100"
+                  className="flex h-9 w-9 items-center justify-center rounded-xl bg-gray-100 text-gray-500"
                 >
-                  <XCircle size={20} />
+
+                  <X size={18} />
+
                 </button>
 
               </div>
 
-              <div className="p-5">
+              <div className="space-y-5 p-5">
 
-                <label className="text-sm font-semibold text-gray-700">
-                  Reason for rejection
-                </label>
+                <p className="text-sm leading-6 text-gray-500">
+                  Give the reason why this
+                  payment cannot be verified.
+                  The reason can be used when
+                  communicating with the
+                  customer.
+                </p>
 
                 <textarea
                   value={rejectionReason}
-                  onChange={(event) => {
+                  onChange={(event) =>
                     setRejectionReason(
                       event.target.value
-                    );
-                    setError(null);
-                  }}
+                    )
+                  }
                   rows={4}
-                  placeholder="e.g. Transaction could not be verified."
-                  className="mt-2 w-full resize-none rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-[#D4AF37] focus:ring-4 focus:ring-[#D4AF37]/10"
+                  placeholder="e.g. Payment not found in I&M Bank records..."
+                  disabled={processing}
+                  className="w-full resize-none rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-red-300 focus:ring-4 focus:ring-red-500/10 disabled:bg-gray-50"
                 />
 
                 {error && (
-                  <div className="mt-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-                    {error}
+                  <div className="flex items-start gap-2 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+
+                    <AlertCircle
+                      size={17}
+                      className="mt-0.5 shrink-0"
+                    />
+
+                    <span>{error}</span>
+
                   </div>
                 )}
 
-                <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                <div className="grid grid-cols-2 gap-3">
 
                   <button
                     type="button"
-                    onClick={() =>
+                    onClick={() => {
                       setShowRejectModal(
                         false
-                      )
-                    }
+                      );
+                      setRejectionReason(
+                        ""
+                      );
+                    }}
                     disabled={processing}
-                    className="rounded-xl border border-gray-200 px-4 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                    className="rounded-xl border border-gray-200 px-4 py-3 text-sm font-semibold text-gray-700 transition hover:bg-gray-50 disabled:opacity-50"
                   >
                     Cancel
                   </button>
@@ -1246,19 +1416,27 @@ export default function AdminPaymentsPage() {
                       processing ||
                       !rejectionReason.trim()
                     }
-                    className="inline-flex items-center justify-center gap-2 rounded-xl bg-red-600 px-4 py-3 text-sm font-semibold text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="inline-flex items-center justify-center gap-2 rounded-xl bg-red-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
                   >
 
                     {processing ? (
-                      <RefreshCw
-                        size={16}
-                        className="animate-spin"
-                      />
-                    ) : (
-                      <XCircle size={16} />
-                    )}
+                      <>
+                        <RefreshCw
+                          size={16}
+                          className="animate-spin"
+                        />
 
-                    Reject Payment
+                        Rejecting...
+                      </>
+                    ) : (
+                      <>
+                        <XCircle
+                          size={16}
+                        />
+
+                        Reject Payment
+                      </>
+                    )}
 
                   </button>
 
