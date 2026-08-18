@@ -1,3 +1,4 @@
+
 import { supabase } from "@/lib/supabase";
 import { getProfile } from "@/services/auth/getProfile";
 import { createDefaultUtilityMeters } from "@/services/utilities/createDefaultUtilityMeters";
@@ -19,64 +20,189 @@ export type BulkUnitInput = {
 export async function bulkCreateUnits(
   input: BulkUnitInput
 ) {
-  // Get logged-in user
+  /*
+   * ============================================================
+   * 1. GET LOGGED-IN SESSION
+   * ============================================================
+   */
+
   const {
     data: { session },
+    error: sessionError,
   } = await supabase.auth.getSession();
 
-  if (!session) {
-    throw new Error("You are not logged in.");
+  if (sessionError) {
+    throw sessionError;
   }
 
-  // Get workspace
-  const profile = await getProfile(session.user.id);
+  if (!session) {
+    throw new Error(
+      "You are not logged in."
+    );
+  }
+
+
+  /*
+   * ============================================================
+   * 2. GET USER PROFILE / WORKSPACE
+   * ============================================================
+   */
+
+  const profile =
+    await getProfile(session.user.id);
 
   if (!profile) {
-    throw new Error("Profile not found.");
+    throw new Error(
+      "Profile not found."
+    );
   }
 
-  const units: any[] = [];
 
-  // Build units
-  for (let i = input.start; i <= input.end; i++) {
-    units.push({
-      workspace_id: profile.workspace_id,
-      property_id: input.propertyId,
-      unit_number: `${input.prefix}${i}`,
-      unit_sequence: i,
-      floor_number: input.floorNumber ?? null,
-      unit_type: input.unitType,
-      bedrooms: input.bedrooms,
-      bathrooms: input.bathrooms,
-      size_sqm: input.sizeSqm,
-      monthly_rent: input.monthlyRent,
-      deposit: input.deposit,
-      status: "Vacant",
-      notes: null,
-    });
+  /*
+   * ============================================================
+   * 3. VALIDATE BASIC INPUT
+   * ============================================================
+   */
+
+  if (!input.propertyId) {
+    throw new Error(
+      "Please select a property."
+    );
   }
 
-  // Create units
+  if (!input.prefix?.trim()) {
+    throw new Error(
+      "Please enter a unit prefix."
+    );
+  }
+
+  if (
+    !Number.isInteger(input.start) ||
+    !Number.isInteger(input.end)
+  ) {
+    throw new Error(
+      "Unit numbers must be valid whole numbers."
+    );
+  }
+
+  if (input.end < input.start) {
+    throw new Error(
+      "The ending unit number must be greater than or equal to the starting unit number."
+    );
+  }
+
+  const requestedUnits =
+    input.end - input.start + 1;
+
+  if (requestedUnits <= 0) {
+    throw new Error(
+      "The number of units must be greater than zero."
+    );
+  }
+
+
+  /*
+   * ============================================================
+   * 4. CALL SECURE DATABASE RPC
+   *
+   * The database is the final authority.
+   *
+   * This protects against:
+   *
+   * - frontend bypass
+   * - direct API calls
+   * - simultaneous requests
+   * - bulk-generator manipulation
+   * ============================================================
+   */
+
   const {
     data: createdUnits,
-    error,
-  } = await supabase
-    .from("units")
-    .insert(units)
-    .select();
+    error: createError,
+  } = await supabase.rpc(
+    "bulk_create_units",
+    {
+      p_property_id:
+        input.propertyId,
 
-  if (error) {
-    throw error;
+      p_prefix:
+        input.prefix.trim(),
+
+      p_floor_number:
+        input.floorNumber ?? null,
+
+      p_unit_type:
+        input.unitType ?? null,
+
+      p_bedrooms:
+        input.bedrooms,
+
+      p_bathrooms:
+        input.bathrooms,
+
+      p_size_sqm:
+        input.sizeSqm,
+
+      p_start:
+        input.start,
+
+      p_end:
+        input.end,
+
+      p_monthly_rent:
+        input.monthlyRent,
+
+      p_deposit:
+        input.deposit,
+    }
+  );
+
+  /*
+   * Return the database's entitlement error
+   * directly to the UI.
+   */
+
+  if (createError) {
+    throw new Error(
+      createError.message ||
+        "Unable to create units."
+    );
   }
 
-  // Automatically create utility meters
+  if (!createdUnits) {
+    throw new Error(
+      "No units were created."
+    );
+  }
+
+
+  /*
+   * ============================================================
+   * 5. CREATE DEFAULT UTILITY METERS
+   *
+   * Preserve the existing Ruby Rental behavior.
+   * ============================================================
+   */
+
   for (const unit of createdUnits) {
     await createDefaultUtilityMeters({
-      workspace_id: profile.workspace_id,
-      property_id: input.propertyId,
-      unit_id: unit.id,
+      workspace_id:
+        profile.workspace_id,
+
+      property_id:
+        input.propertyId,
+
+      unit_id:
+        unit.id,
     });
   }
+
+
+  /*
+   * ============================================================
+   * 6. RETURN CREATED UNITS
+   * ============================================================
+   */
 
   return createdUnits;
 }
