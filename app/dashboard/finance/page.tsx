@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 
 import AppShell from "@/components/layout/AppShell";
+import Breadcrumb from "@/components/common/Breadcrumb";
 import PageContainer from "@/components/ui/PageContainer";
 import PageHeader from "@/components/ui/PageHeader";
 import Section from "@/components/ui/Section";
@@ -32,12 +33,8 @@ export default function FinanceDashboardPage() {
   async function loadDashboard() {
     try {
       setLoading(true);
-
-      const data =
-        await getFinanceDashboard();
-
+      const data = await getFinanceDashboard();
       setDashboard(data);
-
     } finally {
       setLoading(false);
     }
@@ -45,8 +42,13 @@ export default function FinanceDashboardPage() {
 
   return (
     <AppShell>
-
       <PageContainer>
+        <Breadcrumb
+          items={[
+            { label: "Dashboard", href: "/" },
+            { label: "Finance" },
+          ]}
+        />
 
         <PageHeader
           title="Finance Dashboard"
@@ -54,63 +56,39 @@ export default function FinanceDashboardPage() {
         />
 
         <Section>
-
           <FinanceKPICards
-            revenueThisMonth={
-              dashboard?.revenueThisMonth ?? 0
-            }
-            outstandingRent={
-              dashboard?.outstandingRent ?? 0
-            }
-            collectionsToday={
-              dashboard?.collectionsToday ?? 0
-            }
-            collectionRate={
-              dashboard?.collectionRate ?? 0
-            }
+            revenueThisMonth={dashboard?.revenueThisMonth ?? 0}
+            outstandingRent={dashboard?.outstandingRent ?? 0}
+            collectionsToday={dashboard?.collectionsToday ?? 0}
+            collectionRate={dashboard?.collectionRate ?? 0}
           />
-
         </Section>
 
         <Section>
-
           <RevenueChartCard
             loading={loading}
             data={dashboard?.revenueTrend ?? []}
           />
-
         </Section>
 
         <Section>
-
           <div className="grid gap-6 lg:grid-cols-2">
-
             <RecentPaymentsCard
               loading={loading}
-              payments={
-                dashboard?.recentPayments ?? []
-              }
+              payments={dashboard?.recentPayments ?? []}
             />
 
             <OutstandingInvoicesCard
               loading={loading}
-              invoices={
-                dashboard?.outstandingInvoices ?? []
-              }
+              invoices={dashboard?.outstandingInvoices ?? []}
             />
-
           </div>
-
         </Section>
 
         <Section>
-
           <QuickActionsCard />
-
         </Section>
-
       </PageContainer>
-
     </AppShell>
   );
 }
