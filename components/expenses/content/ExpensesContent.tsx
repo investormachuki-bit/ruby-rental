@@ -5,8 +5,10 @@ import { useEffect, useState } from "react";
 import { Plus, Receipt } from "lucide-react";
 
 import AppShell from "@/components/layout/AppShell";
-
+import Breadcrumb from "@/components/common/Breadcrumb";
+import PageContainer from "@/components/ui/PageContainer";
 import PageHeader from "@/components/ui/PageHeader";
+import Section from "@/components/ui/Section";
 import StatCard from "@/components/ui/StatCard";
 import FilterBar from "@/components/ui/FilterBar";
 import Button from "@/components/ui/Button";
@@ -27,217 +29,139 @@ import ExpensesList from "../ExpensesList";
 import ExpenseForm from "../ExpenseForm";
 
 export default function ExpensesContent() {
-
-  const [expenses, setExpenses] =
-    useState<Expense[]>([]);
-
-  const [dashboard, setDashboard] =
-    useState<ExpenseDashboard | null>(null);
-
-  const [loading, setLoading] =
-    useState(true);
-
-  const [search, setSearch] =
-    useState("");
-
-  const [showExpenseForm, setShowExpenseForm] =
-    useState(false);
-
-  const [selectedExpense, setSelectedExpense] =
-    useState<Expense | undefined>();
+  const [expenses, setExpenses] = useState<Expense[]>([]);
+  const [dashboard, setDashboard] = useState<ExpenseDashboard | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const [showExpenseForm, setShowExpenseForm] = useState(false);
+  const [selectedExpense, setSelectedExpense] = useState<Expense | undefined>();
 
   async function loadData() {
-
     try {
-
       setLoading(true);
 
-      const [
-        expenseData,
-        dashboardData,
-      ] = await Promise.all([
+      const [expenseData, dashboardData] = await Promise.all([
         getExpenses(),
         getExpenseDashboard(),
       ]);
 
       setExpenses(expenseData);
-
       setDashboard(dashboardData);
-
     } catch (error) {
-
       console.error(error);
-
     } finally {
-
       setLoading(false);
-
     }
-
   }
 
   useEffect(() => {
-
     loadData();
-
   }, []);
 
-  const filteredExpenses =
-    expenses.filter((expense) => {
+  const filteredExpenses = expenses.filter((expense) => {
+    const query = search.toLowerCase();
 
-      const query =
-        search.toLowerCase();
-
-      return (
-
-        expense.expense_number
-          .toLowerCase()
-          .includes(query) ||
-
-        expense.category
-          .toLowerCase()
-          .includes(query) ||
-
-        (expense.vendor ?? "")
-          .toLowerCase()
-          .includes(query) ||
-
-        (expense.reference ?? "")
-          .toLowerCase()
-          .includes(query)
-
-      );
-
-    });
+    return (
+      expense.expense_number.toLowerCase().includes(query) ||
+      expense.category.toLowerCase().includes(query) ||
+      (expense.vendor ?? "").toLowerCase().includes(query) ||
+      (expense.reference ?? "").toLowerCase().includes(query)
+    );
+  });
 
   return (
-
     <AppShell>
-
-      <div className="space-y-6">
+      <PageContainer>
+        <Breadcrumb
+          items={[
+            { label: "Dashboard", href: "/" },
+            { label: "Expenses" },
+          ]}
+        />
 
         <PageHeader
           title="Expenses"
           description="Track and manage business expenses."
         >
-
           <Button
             onClick={() => {
-
               setSelectedExpense(undefined);
-
               setShowExpenseForm(true);
-
             }}
           >
-
             <Plus size={18} />
-
             Add Expense
-
           </Button>
-
         </PageHeader>
 
-        {loading ? (
+        <Section>
+          {loading ? (
+            <Loading />
+          ) : (
+            <>
+              <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
+                <StatCard
+                  title="Total Expenses"
+                  value={dashboard?.totalExpenses ?? 0}
+                />
+                <StatCard
+                  title="This Month"
+                  value={dashboard?.thisMonth ?? 0}
+                />
+                <StatCard
+                  title="Paid"
+                  value={dashboard?.totalPaid ?? 0}
+                />
+                <StatCard
+                  title="Pending"
+                  value={dashboard?.totalPending ?? 0}
+                />
+              </div>
 
-          <Loading />
+              <div className="mt-6">
+                <FilterBar
+                  search={search}
+                  onSearchChange={setSearch}
+                  searchPlaceholder="Search expenses..."
+                />
+              </div>
 
-        ) : (
-
-          <>
-
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-
-              <StatCard
-                title="Total Expenses"
-                value={
-                  dashboard?.totalExpenses ?? 0
-                }
-              />
-
-              <StatCard
-                title="This Month"
-                value={
-                  dashboard?.thisMonth ?? 0
-                }
-              />
-
-              <StatCard
-                title="Paid"
-                value={
-                  dashboard?.totalPaid ?? 0
-                }
-              />
-
-              <StatCard
-                title="Pending"
-                value={
-                  dashboard?.totalPending ?? 0
-                }
-              />
-
-            </div>
-
-            <FilterBar
-              search={search}
-              onSearchChange={setSearch}
-              searchPlaceholder="Search expenses..."
-            />
-
-            {filteredExpenses.length === 0 ? (
-
-              <EmptyState
-                icon={<Receipt size={48} />}
-                title="No expenses found"
-                description="Start by recording your first expense."
-              />
-
-            ) : (
-
-              <ExpensesList
-                expenses={filteredExpenses}
-                onRefresh={loadData}
-                onEdit={(expense) => {
-
-                  setSelectedExpense(expense);
-
-                  setShowExpenseForm(true);
-
-                }}
-              />
-
-            )}
-
-          </>
-
-        )}
-
-      </div>
+              <div className="mt-6">
+                {filteredExpenses.length === 0 ? (
+                  <EmptyState
+                    icon={<Receipt size={48} />}
+                    title="No expenses found"
+                    description="Start by recording your first expense."
+                  />
+                ) : (
+                  <ExpensesList
+                    expenses={filteredExpenses}
+                    onRefresh={loadData}
+                    onEdit={(expense) => {
+                      setSelectedExpense(expense);
+                      setShowExpenseForm(true);
+                    }}
+                  />
+                )}
+              </div>
+            </>
+          )}
+        </Section>
+      </PageContainer>
 
       <ExpenseForm
         open={showExpenseForm}
         expense={selectedExpense}
         onClose={() => {
-
           setShowExpenseForm(false);
-
           setSelectedExpense(undefined);
-
         }}
         onSaved={() => {
-
           setShowExpenseForm(false);
-
           setSelectedExpense(undefined);
-
           loadData();
-
         }}
       />
-
     </AppShell>
-
   );
-
 }
