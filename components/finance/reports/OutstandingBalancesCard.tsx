@@ -2,7 +2,6 @@
 
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
-
 import { exportPdf } from "@/services/reports/pdf/exportPdf";
 import { exportExcel } from "@/services/reports/excel/exportExcel";
 
@@ -19,19 +18,21 @@ export type OutstandingBalanceRow = {
   status: string;
 };
 
-type Props = {
-  rows: OutstandingBalanceRow[];
-};
+type Props = { rows: OutstandingBalanceRow[] };
 
 function money(value: number) {
   return `KES ${Number(value ?? 0).toLocaleString("en-KE")}`;
 }
 
+function formatDate(value: string) {
+  if (!value) return "—";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return date.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+}
+
 export default function OutstandingBalancesCard({ rows }: Props) {
-  const totalOutstanding = rows.reduce(
-    (sum, row) => sum + Number(row.balance ?? 0),
-    0
-  );
+  const totalOutstanding = rows.reduce((sum, row) => sum + Number(row.balance ?? 0), 0);
 
   async function handlePdf() {
     await exportPdf({
@@ -49,9 +50,7 @@ export default function OutstandingBalancesCard({ rows }: Props) {
         Balance: money(row.balance),
         Status: row.status,
       })),
-      totals: {
-        "Total Outstanding": totalOutstanding,
-      },
+      totals: { "Total Outstanding": totalOutstanding },
     });
   }
 
@@ -77,104 +76,52 @@ export default function OutstandingBalancesCard({ rows }: Props) {
     <Card>
       <div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h2 className="text-xl font-bold">
-            Outstanding Balances
-          </h2>
-
-          <p className="text-sm text-gray-500">
-            Tenant receivables requiring collection
-          </p>
+          <h2 className="text-xl font-bold">Outstanding Balances</h2>
+          <p className="text-sm text-gray-500">Tenant receivables requiring collection</p>
         </div>
-
         <div className="flex gap-2">
-          <Button
-            variant="secondary"
-            onClick={handlePdf}
-          >
-            Export PDF
-          </Button>
-
-          <Button
-            variant="secondary"
-            onClick={handleExcel}
-          >
-            Export Excel
-          </Button>
+          <Button variant="secondary" onClick={handlePdf}>Export PDF</Button>
+          <Button variant="secondary" onClick={handleExcel}>Export Excel</Button>
         </div>
       </div>
 
       <div className="mb-5 rounded-2xl border border-[#D4AF37]/30 bg-[#D4AF37]/5 p-5">
-        <p className="text-sm text-gray-500">
-          Total Outstanding
-        </p>
-
-        <p className="mt-1 text-2xl font-bold">
-          {money(totalOutstanding)}
-        </p>
+        <p className="text-sm text-gray-500">Total Outstanding</p>
+        <p className="mt-1 text-2xl font-bold">{money(totalOutstanding)}</p>
       </div>
 
       {rows.length === 0 ? (
-        <div className="rounded-xl border p-8 text-center text-gray-500">
-          No outstanding balances.
-        </div>
+        <div className="rounded-xl border p-8 text-center text-gray-500">No outstanding balances.</div>
       ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[900px] text-sm">
-            <thead>
-              <tr className="border-b text-left text-gray-500">
-                <th className="px-3 py-3">Invoice</th>
-                <th className="px-3 py-3">Tenant</th>
-                <th className="px-3 py-3">Property</th>
-                <th className="px-3 py-3">Unit</th>
-                <th className="px-3 py-3">Due Date</th>
-                <th className="px-3 py-3 text-right">
-                  Amount
-                </th>
-                <th className="px-3 py-3 text-right">
-                  Paid
-                </th>
-                <th className="px-3 py-3 text-right">
-                  Balance
-                </th>
+        <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white">
+          <table className="w-full table-fixed text-sm">
+            <thead className="bg-gray-50/80">
+              <tr>
+                <th className="w-[32%] px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Invoice / Tenant</th>
+                <th className="w-[18%] px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Due</th>
+                <th className="w-[32%] px-3 py-3 text-right text-xs font-semibold uppercase tracking-wide text-gray-500">Financial</th>
+                <th className="w-[18%] px-3 py-3 text-center text-xs font-semibold uppercase tracking-wide text-gray-500">Status</th>
               </tr>
             </thead>
-
             <tbody>
               {rows.map((row) => (
-                <tr
-                  key={row.invoice_number}
-                  className="border-b last:border-0"
-                >
-                  <td className="px-3 py-3 font-semibold">
-                    {row.invoice_number}
+                <tr key={row.invoice_number} className="border-b border-gray-100 last:border-0 transition hover:bg-gray-50">
+                  <td className="px-3 py-4 align-middle">
+                    <p className="font-semibold text-gray-900">{row.invoice_number}</p>
+                    <p className="mt-1 truncate text-gray-700">{row.tenant}</p>
+                    <p className="mt-1 truncate text-xs text-gray-400">{row.property} · Unit {row.unit}</p>
                   </td>
-
-                  <td className="px-3 py-3">
-                    {row.tenant}
+                  <td className="px-3 py-4 align-middle">
+                    <p className="font-medium text-gray-800">{formatDate(row.due_date)}</p>
+                    <p className="mt-1 text-xs text-gray-400">{row.billing_period}</p>
                   </td>
-
-                  <td className="px-3 py-3">
-                    {row.property}
+                  <td className="px-3 py-4 text-right align-middle">
+                    <p className="font-semibold text-gray-900">{money(row.amount)}</p>
+                    <p className="mt-1 text-xs text-gray-400">Paid {money(row.amount_paid)}</p>
+                    <p className={`mt-1 text-sm font-bold ${row.balance > 0 ? "text-gray-900" : "text-green-600"}`}>Balance {money(row.balance)}</p>
                   </td>
-
-                  <td className="px-3 py-3">
-                    {row.unit}
-                  </td>
-
-                  <td className="px-3 py-3">
-                    {row.due_date || "-"}
-                  </td>
-
-                  <td className="px-3 py-3 text-right">
-                    {money(row.amount)}
-                  </td>
-
-                  <td className="px-3 py-3 text-right">
-                    {money(row.amount_paid)}
-                  </td>
-
-                  <td className="px-3 py-3 text-right font-bold">
-                    {money(row.balance)}
+                  <td className="px-3 py-4 text-center align-middle">
+                    <span className="inline-flex max-w-full rounded-full bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-700">{row.status}</span>
                   </td>
                 </tr>
               ))}
