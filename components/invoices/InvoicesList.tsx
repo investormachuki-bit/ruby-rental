@@ -57,55 +57,23 @@ export default function InvoicesList({
 
   return (
     <div className="space-y-4">
-      <div className="overflow-x-auto rounded-2xl border border-gray-200 bg-white shadow-sm">
-        <table className="min-w-[980px] w-full divide-y divide-gray-200">
+      <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+        <table className="ruby-invoice-table w-full divide-y divide-gray-200">
           <thead className="bg-gray-50/80">
             <tr>
+              <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Invoice</th>
+              <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Tenant / Unit</th>
               <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
-                Invoice
+                <button type="button" onClick={() => onSortChange?.("due_date")} className="font-semibold uppercase">Due Date</button>
               </th>
-
-              <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
-                Tenant / Unit
-              </th>
-
-              <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
-                <button
-                  type="button"
-                  onClick={() => onSortChange?.("due_date")}
-                  className="font-semibold uppercase"
-                >
-                  Due Date
-                </button>
-              </th>
-
               <th className="px-5 py-3.5 text-right text-xs font-semibold uppercase tracking-wide text-gray-500">
-                <button
-                  type="button"
-                  onClick={() => onSortChange?.("amount")}
-                  className="font-semibold uppercase"
-                >
-                  Amount
-                </button>
+                <button type="button" onClick={() => onSortChange?.("amount")} className="font-semibold uppercase">Amount</button>
               </th>
-
               <th className="px-5 py-3.5 text-right text-xs font-semibold uppercase tracking-wide text-gray-500">
-                <button
-                  type="button"
-                  onClick={() => onSortChange?.("balance")}
-                  className="font-semibold uppercase"
-                >
-                  Balance
-                </button>
+                <button type="button" onClick={() => onSortChange?.("balance")} className="font-semibold uppercase">Balance</button>
               </th>
-
-              <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
-                Status
-              </th>
-
-              <th className="px-5 py-3.5 text-right text-xs font-semibold uppercase tracking-wide text-gray-500">
-                Actions
-              </th>
+              <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Status</th>
+              <th className="px-5 py-3.5 text-right text-xs font-semibold uppercase tracking-wide text-gray-500">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100 bg-white">
@@ -131,25 +99,9 @@ export default function InvoicesList({
             Showing {(page - 1) * pageSize + 1}–{Math.min(page * pageSize, totalItems)} of {totalItems} invoices
           </p>
           <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => onPageChange?.(page - 1)}
-              disabled={page <= 1}
-              className="rounded-xl border border-gray-200 px-3 py-2 text-sm font-medium text-gray-600 disabled:cursor-not-allowed disabled:opacity-40"
-            >
-              Previous
-            </button>
-            <span className="rounded-xl bg-gray-100 px-3 py-2 text-sm font-semibold text-gray-700">
-              Page {page} of {totalPages}
-            </span>
-            <button
-              type="button"
-              onClick={() => onPageChange?.(page + 1)}
-              disabled={page >= totalPages}
-              className="rounded-xl border border-gray-200 px-3 py-2 text-sm font-medium text-gray-600 disabled:cursor-not-allowed disabled:opacity-40"
-            >
-              Next
-            </button>
+            <button type="button" onClick={() => onPageChange?.(page - 1)} disabled={page <= 1} className="rounded-xl border border-gray-200 px-3 py-2 text-sm font-medium text-gray-600 disabled:cursor-not-allowed disabled:opacity-40">Previous</button>
+            <span className="rounded-xl bg-gray-100 px-3 py-2 text-sm font-semibold text-gray-700">Page {page} of {totalPages}</span>
+            <button type="button" onClick={() => onPageChange?.(page + 1)} disabled={page >= totalPages} className="rounded-xl border border-gray-200 px-3 py-2 text-sm font-medium text-gray-600 disabled:cursor-not-allowed disabled:opacity-40">Next</button>
           </div>
         </div>
       )}
