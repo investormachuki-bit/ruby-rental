@@ -46,21 +46,25 @@ input:focus,select:focus,textarea:focus { outline: none; }
 /* ===========================
    RESPONSIVE DATA TABLES
 
-   Data remains horizontal like the invoice ledger, but columns shrink and
-   wrap instead of forcing the entire page to scroll horizontally.
+   Every application table stays horizontal and fits its containing card.
+   The invoice ledger remains the visual reference; other tables use the
+   same compact proportions without creating a page-level horizontal scroll.
 =========================== */
 
 table {
-  width: 100%;
-  max-width: 100%;
-  table-layout: fixed;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  table-layout: fixed !important;
+  border-collapse: separate;
+  border-spacing: 0;
 }
 
 table th,
 table td {
-  min-width: 0;
-  max-width: 100%;
-  white-space: normal;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  white-space: normal !important;
   overflow-wrap: anywhere;
   word-break: normal;
   vertical-align: middle;
@@ -69,8 +73,32 @@ table td {
 table th { line-height: 1.25; }
 table td { line-height: 1.35; }
 
-/* The invoice ledger is the reference presentation: keep its natural
-   column proportions while removing the old forced 980px minimum. */
+/* Any table wrapped by a legacy overflow-x-auto container must still fit
+   the viewport. The table itself is responsible for wrapping its content. */
+div.overflow-x-auto:has(> table),
+div.overflow-x-auto:has(table) {
+  width: 100% !important;
+  max-width: 100% !important;
+  overflow-x: hidden !important;
+}
+
+/* Prevent common child elements from reintroducing a wider cell. */
+table .min-w-full,
+table .min-w-max,
+table .min-w-fit,
+table .whitespace-nowrap {
+  min-width: 0 !important;
+  max-width: 100% !important;
+  white-space: normal !important;
+}
+
+table button,
+table a {
+  max-width: 100%;
+}
+
+/* The invoice ledger is the reference presentation: preserve its natural
+   column proportions while removing the old forced minimum width. */
 .ruby-invoice-table {
   min-width: 0 !important;
   width: 100% !important;
@@ -90,7 +118,6 @@ table td { line-height: 1.35; }
   }
 
   table td { font-size: 0.78rem; }
-  table .whitespace-nowrap { white-space: normal !important; }
 }
 
 /* ===========================
