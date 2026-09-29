@@ -93,41 +93,73 @@ export default function OutstandingBalancesCard({ rows }: Props) {
       {rows.length === 0 ? (
         <div className="rounded-xl border p-8 text-center text-gray-500">No outstanding balances.</div>
       ) : (
-        <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white">
-          <table className="w-full table-fixed text-sm">
-            <thead className="bg-gray-50/80">
-              <tr>
-                <th className="w-[32%] px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Invoice / Tenant</th>
-                <th className="w-[18%] px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Due</th>
-                <th className="w-[32%] px-3 py-3 text-right text-xs font-semibold uppercase tracking-wide text-gray-500">Financial</th>
-                <th className="w-[18%] px-3 py-3 text-center text-xs font-semibold uppercase tracking-wide text-gray-500">Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((row) => (
-                <tr key={row.invoice_number} className="border-b border-gray-100 last:border-0 transition hover:bg-gray-50">
-                  <td className="px-3 py-4 align-middle">
-                    <p className="font-semibold text-gray-900">{row.invoice_number}</p>
-                    <p className="mt-1 truncate text-gray-700">{row.tenant}</p>
-                    <p className="mt-1 truncate text-xs text-gray-400">{row.property} · Unit {row.unit}</p>
-                  </td>
-                  <td className="px-3 py-4 align-middle">
-                    <p className="font-medium text-gray-800">{formatDate(row.due_date)}</p>
-                    <p className="mt-1 text-xs text-gray-400">{row.billing_period}</p>
-                  </td>
-                  <td className="px-3 py-4 text-right align-middle">
-                    <p className="font-semibold text-gray-900">{money(row.amount)}</p>
-                    <p className="mt-1 text-xs text-gray-400">Paid {money(row.amount_paid)}</p>
-                    <p className={`mt-1 text-sm font-bold ${row.balance > 0 ? "text-gray-900" : "text-green-600"}`}>Balance {money(row.balance)}</p>
-                  </td>
-                  <td className="px-3 py-4 text-center align-middle">
-                    <span className="inline-flex max-w-full rounded-full bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-700">{row.status}</span>
-                  </td>
+        <>
+          {/* Desktop */}
+          <div className="hidden md:block overflow-hidden rounded-2xl border border-gray-200 bg-white">
+            <table className="w-full table-fixed text-sm">
+              <thead className="bg-gray-50/80">
+                <tr>
+                  <th className="w-[32%] px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Invoice / Tenant</th>
+                  <th className="w-[18%] px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Due</th>
+                  <th className="w-[32%] px-3 py-3 text-right text-xs font-semibold uppercase tracking-wide text-gray-500">Financial</th>
+                  <th className="w-[18%] px-3 py-3 text-center text-xs font-semibold uppercase tracking-wide text-gray-500">Status</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {rows.map((row) => (
+                  <tr key={row.invoice_number} className="border-b border-gray-100 last:border-0 transition hover:bg-gray-50">
+                    <td className="px-3 py-4 align-middle">
+                      <p className="font-semibold text-gray-900">{row.invoice_number}</p>
+                      <p className="mt-1 truncate text-gray-700">{row.tenant}</p>
+                      <p className="mt-1 truncate text-xs text-gray-400">{row.property} · Unit {row.unit}</p>
+                    </td>
+                    <td className="px-3 py-4 align-middle">
+                      <p className="font-medium text-gray-800">{formatDate(row.due_date)}</p>
+                      <p className="mt-1 text-xs text-gray-400">{row.billing_period}</p>
+                    </td>
+                    <td className="px-3 py-4 text-right align-middle">
+                      <p className="font-semibold text-gray-900">{money(row.amount)}</p>
+                      <p className="mt-1 text-xs text-gray-400">Paid {money(row.amount_paid)}</p>
+                      <p className={`mt-1 text-sm font-bold ${row.balance > 0 ? "text-gray-900" : "text-green-600"}`}>Balance {money(row.balance)}</p>
+                    </td>
+                    <td className="px-3 py-4 text-center align-middle">
+                      <span className="inline-flex max-w-full rounded-full bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-700">{row.status}</span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Mobile — invoice-style cards */}
+          <div className="space-y-3 md:hidden">
+            {rows.map((row) => (
+              <div key={row.invoice_number} className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
+                <div className="grid grid-cols-[1.1fr_0.9fr_1fr_auto] gap-2">
+                  <div className="min-w-0">
+                    <p className="truncate font-semibold text-gray-900">{row.invoice_number}</p>
+                    <p className="mt-1 truncate text-sm text-gray-700">{row.tenant}</p>
+                    <p className="mt-1 truncate text-xs text-gray-400">{row.property} · Unit {row.unit}</p>
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[10px] uppercase tracking-wide text-gray-400">Due</p>
+                    <p className="mt-1 text-xs font-medium text-gray-800">{formatDate(row.due_date)}</p>
+                    <p className="mt-1 text-[10px] text-gray-400">{row.billing_period}</p>
+                  </div>
+                  <div className="min-w-0 text-right">
+                    <p className="text-[10px] uppercase tracking-wide text-gray-400">Financial</p>
+                    <p className="mt-1 text-xs font-semibold text-gray-900">{money(row.amount)}</p>
+                    <p className="mt-1 text-[10px] text-gray-400">Paid {money(row.amount_paid)}</p>
+                    <p className={`mt-1 text-xs font-bold ${row.balance > 0 ? "text-gray-900" : "text-green-600"}`}>{money(row.balance)} due</p>
+                  </div>
+                  <div className="flex min-w-[58px] items-start justify-end">
+                    <span className="inline-flex rounded-full bg-gray-100 px-2 py-1 text-[10px] font-medium text-gray-700">{row.status}</span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
       )}
     </Card>
   );
